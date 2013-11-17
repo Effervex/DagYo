@@ -10,7 +10,9 @@ This was created for multiple purposes: to provide a simple graph based structur
 HOW:
 To run as a command-line interface, simply compile the java files and launch DAGCommandLineInterface. Optional arguments include -p <portNumber> -r <rootDirectory> -n <numCachedNodes> -e <numCachedEdges>. The various config files define additional aspects such as which commands and modules are in use (many are defined within the java files).
 
+To connect to DagYo, run 'telnet localhost 2425' (or whatever port number is used). Type 'list' to see all available commands and type 'help <command>' to see more information on each command.
+
 WHO & WHERE:
 The DAG was initially developed by Dr Sam Sarjant at the University of Waikato, New Zealand. It was built upon Dr Craig Taube-Schock's CLI wrapper for WikipediaMiner (GenericCLI.jar). The idea came about as a solution for both OpenCyc's shortcomings, and a framework for future work with Wikipedia and other projects.
 
-Contact: Sam Sarjant sam.sarjant@waikato
+Contact: Sam Sarjant sarjant@waikato.ac.nz
