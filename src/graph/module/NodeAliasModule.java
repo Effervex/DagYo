@@ -147,12 +147,6 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> {
 			return new ArrayList<>(0);
 
 		// Converting ID to node
-		if (idModule_) {
-			Collection<DAGNode> dagNodes = new ArrayList<>(nodes.size());
-			for (DAGNode node : nodes)
-				dagNodes.add(dag_.getNodeByID(node.getID()));
-			return dagNodes;
-		}
 		return nodes;
 	}
 

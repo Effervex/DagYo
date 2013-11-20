@@ -33,6 +33,59 @@ public class RelatedEdgeModule extends DAGModule<Collection<Edge>> {
 	private static final long serialVersionUID = 1588174113071358990L;
 	protected ConcurrentMap<Node, MultiMap<Object, Edge>> relatedEdges_ = new ConcurrentHashMap<>();
 
+	protected final Collection<Edge> filterNonDAGs(Collection<Edge> edges,
+			Object[] args) {
+		Collection<Pair<Node, Object>> nonDAGNodes = findNonDAGs(args);
+
+		if (nonDAGNodes.isEmpty() || edges == null) {
+			return edges;
+		}
+
+		// Check every edge (EXPENSIVE)
+		Collection<Edge> filtered = new HashSet<>();
+		for (Edge e : edges) {
+			Node[] edgeNodes = e.getNodes();
+			boolean matches = true;
+			for (Pair<Node, Object> nonDAG : nonDAGNodes) {
+				if (nonDAG.objB_ == defaultKey()) {
+					if (!ArrayUtils.contains(edgeNodes, nonDAG.objA_)) {
+						matches = false;
+						break;
+					}
+				} else if (!matchingNonDAG(nonDAG, edgeNodes)) {
+					matches = false;
+					break;
+				}
+			}
+
+			if (matches)
+				filtered.add(e);
+		}
+		return filtered;
+	}
+
+	protected final Collection<Pair<Node, Object>> findNonDAGs(Object[] args) {
+		Collection<Pair<Node, Object>> nonDAGNodes = new ArrayList<>();
+		for (int i = 0; i < args.length; i++) {
+			Node node = (Node) args[i];
+			Object key = defaultKey();
+			if (i < args.length - 1 && !(args[i + 1] instanceof Node)) {
+				i++;
+				key = parseKeyArg(args[i]);
+			}
+
+			addIfNonDAG(node, key, nonDAGNodes);
+		}
+
+		return nonDAGNodes;
+	}
+
+	protected void addIfNonDAG(Node node, Object key,
+			Collection<Pair<Node, Object>> nonDAGNodes) {
+		if (!(node instanceof DAGNode))
+			nonDAGNodes.add(new Pair<Node, Object>(node, key));
+	}
+
 	protected Object[] asIndexed(Node... nodes) {
 		Object[] indexedNodes = new Object[nodes.length * 2];
 		for (int i = 0; i < nodes.length; i++) {
@@ -42,57 +95,8 @@ public class RelatedEdgeModule extends DAGModule<Collection<Edge>> {
 		return indexedNodes;
 	}
 
-	protected Collection<Edge> filterNonDAGs(Collection<Edge> edges,
-			Object[] args) {
-		Collection<Pair<Node, Integer>> nonDAGNodes = new ArrayList<>(
-				args.length);
-		for (int i = 0; i < args.length; i++) {
-			Node node = (Node) args[i];
-			int index = -1;
-			if (i < args.length - 1 && args[i + 1] instanceof Integer) {
-				i++;
-				index = (int) args[i] - 1;
-			}
-
-			if (!(node instanceof DAGNode))
-				nonDAGNodes.add(new Pair<Node, Integer>(node, index));
-		}
-
-		if (nonDAGNodes.isEmpty() || edges == null) {
-			if (idModule_) {
-				Collection<Edge> dagEdges = new ArrayList<>(edges.size());
-				for (Edge edge : edges)
-					dagEdges.add(dag_.getEdgeByID(edge.getID()));
-				return dagEdges;
-			}
-			return edges;
-		}
-
-		// Check every edge (EXPENSIVE)
-		Collection<Edge> filtered = new HashSet<>();
-		for (Edge e : edges) {
-			Node[] edgeNodes = e.getNodes();
-			boolean matches = true;
-			for (Pair<Node, Integer> nonDAG : nonDAGNodes) {
-				if (nonDAG.objB_ == -1) {
-					if (!ArrayUtils.contains(edgeNodes, nonDAG.objA_)) {
-						matches = false;
-						break;
-					}
-				} else if (!edgeNodes[nonDAG.objB_].equals(nonDAG.objA_)) {
-					matches = false;
-					break;
-				}
-			}
-
-			if (matches) {
-				if (idModule_)
-					filtered.add(dag_.getEdgeByID(e.getID()));
-				else
-					filtered.add(e);
-			}
-		}
-		return filtered;
+	protected Object defaultKey() {
+		return -1;
 	}
 
 	protected Collection<Edge> getEdges(Node node, Object edgeKey,
@@ -143,6 +147,14 @@ public class RelatedEdgeModule extends DAGModule<Collection<Edge>> {
 			edgeCols.add(new EdgeCol(additive, edgeCol));
 		}
 		return edgeCols;
+	}
+
+	protected boolean matchingNonDAG(Pair<Node, Object> nonDAG, Node[] edgeNodes) {
+		return edgeNodes[(Integer) nonDAG.objB_].equals(nonDAG.objA_);
+	}
+
+	protected Object parseKeyArg(Object arg) {
+		return (int) arg - 1;
 	}
 
 	@Override

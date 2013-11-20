@@ -34,12 +34,16 @@ public class ThreadedSerialisationMechanism extends
 
 		@Override
 		public void run() {
+			if (idBased_)
+				idThreads_.put(Thread.currentThread().getId(), true);
 			try {
 				location_.getParentFile().mkdirs();
 				location_.createNewFile();
 				serialize(object_, location_, idBased_);
 			} catch (Exception e) {
 			}
+			if (idBased_)
+				idThreads_.remove(Thread.currentThread().getId());
 		}
 	}
 }

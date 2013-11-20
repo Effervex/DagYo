@@ -16,7 +16,7 @@ import org.apache.commons.io.FileUtils;
  * @author Sam Sarjant
  */
 public class FileBasedTrieCollection<T extends UniqueID, Serializable> extends
-		CachedIndexedCollection<T> {
+		HashIndexedCollection<T> {
 	private static final String FILE_EXTENSION = ".dag";
 	/** The root directory in which to store the graph. */
 	private File root_;
@@ -57,6 +57,7 @@ public class FileBasedTrieCollection<T extends UniqueID, Serializable> extends
 			} catch (InvalidActivityException e1) {
 				e1.printStackTrace();
 			}
+
 		}
 		return result;
 	}
@@ -132,7 +133,7 @@ public class FileBasedTrieCollection<T extends UniqueID, Serializable> extends
 	}
 
 	@Override
-	public boolean remove(Object o) {
+	public synchronized boolean remove(Object o) {
 		boolean result = super.remove(o);
 		result |= generateFilePath(root_, ((UniqueID) o).getID()).delete();
 		if (result)

@@ -22,6 +22,10 @@ public class DAGEdge extends DAGObject implements Edge {
 	/** The nodes of the edge. */
 	protected Node[] edgeNodes_;
 
+	public DAGEdge() {
+		super();
+	}
+
 	/**
 	 * An edge involving two or more nodes.
 	 * 
@@ -79,11 +83,6 @@ public class DAGEdge extends DAGObject implements Edge {
 		if (id_ != other.id_)
 			return false;
 		return true;
-	}
-
-	@Override
-	public long getID() {
-		return id_;
 	}
 
 	@Override

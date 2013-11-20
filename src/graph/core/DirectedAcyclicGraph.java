@@ -21,8 +21,11 @@ import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import javax.activity.InvalidActivityException;
+
 import util.HashIndexedCollection;
 import util.IndexedCollection;
+import util.SerialisationMechanism;
 import util.UtilityMethods;
 
 /**
@@ -31,7 +34,11 @@ import util.UtilityMethods;
  * @author Sam Sarjant
  */
 public class DirectedAcyclicGraph {
+	private static final String EDGE_FILE = "edges.dat";
+
 	private static final String EDGE_ID_FIELD = "edgeID";
+
+	private static final String NODE_FILE = "nodes.dat";
 
 	private static final String NODE_ID_FIELD = "nodeID";
 
@@ -39,15 +46,17 @@ public class DirectedAcyclicGraph {
 
 	private static final String NUM_NODES_FIELD = "numNodes";
 
-	public static final int DEFAULT_NUM_EDGES = 10000000;
+	public static final int DEFAULT_NUM_EDGES = 1000000;
 
-	public static final int DEFAULT_NUM_NODES = 1000000;
+	public static final int DEFAULT_NUM_NODES = 100000;
 
 	public static final File DEFAULT_ROOT = new File("dag");
 
 	public static final String GLOBALS_FILE = "dagDetails";
 
 	public static final File MODULE_FILE = new File("activeModules.config");
+
+	public static DirectedAcyclicGraph selfRef_;
 
 	private Map<String, DAGModule<?>> modules_;
 
@@ -75,25 +84,21 @@ public class DirectedAcyclicGraph {
 		this(rootDir, DEFAULT_NUM_NODES, DEFAULT_NUM_EDGES);
 	}
 
+	@SuppressWarnings("unchecked")
 	public DirectedAcyclicGraph(File rootDir, int initialNodeSize,
 			int initialEdgeSize) {
 		startTime_ = System.currentTimeMillis();
 		System.out.print("Initialising... ");
 
+		selfRef_ = this;
+
 		random_ = new Random();
-		// nodes_ = new CachedIndexedCollection<>(initialNodeSize);
-		nodes_ = new HashIndexedCollection<>(initialNodeSize);
-		// nodes_ = new FileBasedTrieCollection<>(rootDir, "nodes",
-		// initialNodeSize);
+		nodes_ = (IndexedCollection<DAGNode>) readDAGFile(initialNodeSize,
+				rootDir, NODE_FILE);
 		nodeLock_ = new ReentrantLock();
-		// edges_ = new CachedIndexedCollection<>(initialEdgeSize);
-		edges_ = new HashIndexedCollection<>(initialEdgeSize);
-		// edges_ = new FileBasedTrieCollection<>(rootDir, "edges",
-		// initialEdgeSize);
+		edges_ = (IndexedCollection<DAGEdge>) readDAGFile(initialEdgeSize,
+				rootDir, EDGE_FILE);
 		edgeLock_ = new ReentrantLock();
-		
-		// TODO Preload nodes and edges
-		
 
 		// Load the modules in
 		modules_ = new HashMap<>();
@@ -129,6 +134,30 @@ public class DirectedAcyclicGraph {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
+	private IndexedCollection<? extends DAGObject> readDAGFile(int initialSize,
+			File rootDir, String collectionFile) {
+		IndexedCollection<DAGObject> indexedCollection = null;
+		File serFile = new File(rootDir, collectionFile);
+		if (serFile.exists()) {
+			// Read it in
+			try {
+				System.out.println("Loading " + collectionFile + "...");
+				indexedCollection = (IndexedCollection<DAGObject>) SerialisationMechanism.FST
+						.getSerialiser().deserialize(serFile);
+			} catch (InvalidActivityException e) {
+				System.err.println("Exception while deserialising '"
+						+ serFile.getPath() + "'. Creating new collection.");
+			}
+		}
+
+		// Otherwise, create new collection
+		if (indexedCollection == null)
+			indexedCollection = new HashIndexedCollection<DAGObject>(
+					initialSize);
+		return indexedCollection;
+	}
+
 	private void readModules(File rootDir) {
 		try {
 			if (!MODULE_FILE.exists()) {
@@ -161,6 +190,19 @@ public class DirectedAcyclicGraph {
 			reader.close();
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+	}
+
+	private void saveDAGFile(IndexedCollection<? extends DAGObject> collection,
+			File rootDir, String collectionFile) {
+		File serFile = new File(rootDir, collectionFile);
+		try {
+			serFile.getParentFile().mkdirs();
+			serFile.createNewFile();
+			SerialisationMechanism.FST.getSerialiser().serialize(collection,
+					serFile, false);
+		} catch (IOException e) {
+			System.err.println("Error serialising '" + serFile + "'.");
 		}
 	}
 
@@ -542,6 +584,10 @@ public class DirectedAcyclicGraph {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
+		// Save node and edge collections
+		saveDAGFile(nodes_, rootDir_, NODE_FILE);
+		saveDAGFile(edges_, rootDir_, EDGE_FILE);
 
 		// Save modules
 		Set<DAGModule<?>> saved = new HashSet<>();

@@ -5,12 +5,13 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.activity.InvalidActivityException;
 
 public class DefaultSerialisationMechanism {
-	private static ConcurrentHashMap<Thread, Boolean> idBasedSerialisation_ = new ConcurrentHashMap<>();
+	protected static Map<Long, Boolean> idThreads_ = new ConcurrentHashMap<>();
 
 	/**
 	 * Deserializes a file from a given location into the parameter argument.
@@ -38,9 +39,7 @@ public class DefaultSerialisationMechanism {
 	}
 
 	public static boolean idSerialise() {
-		if (idBasedSerialisation_.contains(Thread.currentThread()))
-			return true;
-		return false;
+		return idThreads_.containsKey(Thread.currentThread().getId());
 	}
 
 	/**
@@ -55,7 +54,7 @@ public class DefaultSerialisationMechanism {
 	public void serialize(Object object, File location, boolean idBased)
 			throws InvalidActivityException {
 		if (idBased)
-			idBasedSerialisation_.put(Thread.currentThread(), true);
+			idThreads_.put(Thread.currentThread().getId(), true);
 		location.getParentFile().mkdirs();
 		try {
 			location.createNewFile();
@@ -67,6 +66,6 @@ public class DefaultSerialisationMechanism {
 			e.printStackTrace();
 		}
 		if (idBased)
-			idBasedSerialisation_.remove(Thread.currentThread());
+			idThreads_.remove(Thread.currentThread().getId());
 	}
 }

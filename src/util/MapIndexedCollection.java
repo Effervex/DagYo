@@ -27,7 +27,7 @@ public abstract class MapIndexedCollection<T extends UniqueID> implements
 	}
 
 	@Override
-	public boolean add(T e) {
+	public synchronized boolean add(T e) {
 		if (e != null)
 			return indexedMap_.put(e.getID(), e) == null;
 		return false;
@@ -71,7 +71,7 @@ public abstract class MapIndexedCollection<T extends UniqueID> implements
 	 * @return The item if it exists, or null.
 	 */
 	@Override
-	public T get(long id) {
+	public synchronized T get(long id) {
 		return indexedMap_.get(id);
 	}
 
@@ -86,7 +86,7 @@ public abstract class MapIndexedCollection<T extends UniqueID> implements
 	}
 
 	@Override
-	public boolean remove(Object o) {
+	public synchronized boolean remove(Object o) {
 		if (o != null && o instanceof UniqueID)
 			return indexedMap_.remove(((UniqueID) o).getID()) != null;
 		return false;

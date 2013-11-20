@@ -1,5 +1,7 @@
 package util;
 
+import graph.core.DAGObject;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -13,8 +15,13 @@ import de.ruedigermoeller.serialization.FSTObjectInput;
 import de.ruedigermoeller.serialization.FSTObjectOutput;
 
 public class FSTSerialisationMechanism extends DefaultSerialisationMechanism {
-	public static FSTConfiguration conf = FSTConfiguration
-			.createDefaultConfiguration();
+	public static FSTConfiguration conf;
+	static {
+		System.setProperty("fst.unsafe","false");
+		conf = FSTConfiguration.createDefaultConfiguration();
+		FSTSerialisationMechanism.conf.registerSerializer(DAGObject.class,
+				new FSTDAGObjectSerialiser(), true);
+	}
 
 	/**
 	 * Deserializes a file from a given location into the parameter argument.
@@ -51,8 +58,11 @@ public class FSTSerialisationMechanism extends DefaultSerialisationMechanism {
 	 * @throws Exception
 	 *             Should something go awry...
 	 */
-	public void serialize(Object object, File location)
+	@Override
+	public void serialize(Object object, File location, boolean idBased)
 			throws InvalidActivityException {
+		if (idBased)
+			idThreads_.put(Thread.currentThread().getId(), true);
 		location.getParentFile().mkdirs();
 		try {
 			location.createNewFile();
@@ -65,5 +75,7 @@ public class FSTSerialisationMechanism extends DefaultSerialisationMechanism {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		if (idBased)
+			idThreads_.remove(Thread.currentThread().getId());
 	}
 }

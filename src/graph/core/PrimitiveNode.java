@@ -9,35 +9,35 @@ public class PrimitiveNode implements Node {
 
 	private Object primitive_;
 
-	public PrimitiveNode(boolean value) {
+	private PrimitiveNode(boolean value) {
 		primitive_ = value;
 	}
 
-	public PrimitiveNode(byte value) {
+	private PrimitiveNode(byte value) {
 		primitive_ = value;
 	}
 
-	public PrimitiveNode(char value) {
+	private PrimitiveNode(char value) {
 		primitive_ = value;
 	}
 
-	public PrimitiveNode(double value) {
+	private PrimitiveNode(double value) {
 		primitive_ = value;
 	}
 
-	public PrimitiveNode(float value) {
+	private PrimitiveNode(float value) {
 		primitive_ = value;
 	}
 
-	public PrimitiveNode(int value) {
+	private PrimitiveNode(int value) {
 		primitive_ = value;
 	}
 
-	public PrimitiveNode(long value) {
+	private PrimitiveNode(long value) {
 		primitive_ = value;
 	}
 
-	public PrimitiveNode(short value) {
+	private PrimitiveNode(short value) {
 		primitive_ = value;
 	}
 

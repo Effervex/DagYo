@@ -1,6 +1,5 @@
 package graph.core;
 
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -11,6 +10,15 @@ import java.util.Map;
 
 import util.DefaultSerialisationMechanism;
 
+/**
+ * A generic DAG object. This object has an ID and properties.
+ * 
+ * ==== IMPORTANT ==== Ensure that any subclass defines a default constructor. I
+ * don't know how to enforce this, but it is required for module serialisation.
+ * 
+ * @author Sam Sarjant
+ */
+// @EqualnessIsBinary
 public abstract class DAGObject implements UniqueID, Serializable,
 		Identifiable, Comparable<DAGObject> {
 	private static final long serialVersionUID = -5088948795943227278L;
@@ -29,7 +37,7 @@ public abstract class DAGObject implements UniqueID, Serializable,
 		properties_ = new HashMap<>();
 		if (creator != null)
 			properties_.put(CREATOR, creator.getIdentifier());
-		properties_.put(CREATION_DATE, new Date().getTime() + "");
+		properties_.put(CREATION_DATE, System.currentTimeMillis() + "");
 	}
 
 	protected abstract void readFullObject(ObjectInput in) throws IOException,
@@ -98,42 +106,49 @@ public abstract class DAGObject implements UniqueID, Serializable,
 		return result;
 	}
 
-//	@Override
+	// @Override
+	@SuppressWarnings("unchecked")
 	public final void readExternal(ObjectInput in) throws IOException,
 			ClassNotFoundException {
 		// Read serialisation format
 		boolean minSerial = in.readBoolean();
 		id_ = in.readLong();
 		if (!minSerial) {
-			int numProps = in.readInt();
-			for (int i = 0; i < numProps; i++) {
-				properties_.put((String) in.readObject(),
-						(String) in.readObject());
-			}
+			properties_ = (Map<String, String>) in.readObject();
 			readFullObject(in);
 		}
 	}
 
 	@Override
 	public String toString() {
-		if (!properties_.containsKey(CREATOR))
-			return "Created on " + getCreationDate();
-		return "Created by " + getCreator() + " on " + getCreationDate();
+		return id_ + "";
 	}
 
-//	@Override
+	// @Override
 	public final void writeExternal(ObjectOutput out) throws IOException {
 		// Write externalizable format
 		boolean idSerialisation = DefaultSerialisationMechanism.idSerialise();
 		out.writeBoolean(idSerialisation);
 		out.writeLong(id_);
 		if (!idSerialisation) {
-			out.writeInt(properties_.size());
-			for (String key : properties_.keySet()) {
-				out.writeObject(key);
-				out.writeObject(properties_.get(key));
-			}
+			out.writeObject(properties_);
 			writeFullObject(out);
 		}
+	}
+
+	/**
+	 * Only use this method if you're absolutely sure of the object's ID, and
+	 * the object represents a skeleton reference.
+	 * 
+	 * @param id
+	 *            The ID to set.
+	 */
+	public void setID(long id) {
+		id_ = id;
+	}
+
+	@Override
+	public long getID() {
+		return id_;
 	}
 }

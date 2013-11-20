@@ -23,8 +23,8 @@ public class DAGCommandLineInterface extends Main {
 	public static final Pattern CONTEXT_ARGUMENT_PATTERN = Pattern
 			.compile("\\((" + DAGNode.NAME_OR_ID + ")\\)");
 	private static final int DEFAULT_PORT_NUMBER = 2425;
-	protected DirectedAcyclicGraph dag_;
 	private static CommandLine arguments_;
+	private DirectedAcyclicGraph dag_;
 
 	public DAGCommandLineInterface(int aPort, DirectedAcyclicGraph dag) {
 		super(aPort);
