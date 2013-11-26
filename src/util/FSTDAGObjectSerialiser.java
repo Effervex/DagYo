@@ -7,6 +7,7 @@ import graph.core.DirectedAcyclicGraph;
 
 import java.io.IOException;
 
+import util.serialisation.DefaultSerialisationMechanism;
 import de.ruedigermoeller.serialization.FSTBasicObjectSerializer;
 import de.ruedigermoeller.serialization.FSTClazzInfo;
 import de.ruedigermoeller.serialization.FSTClazzInfo.FSTFieldInfo;

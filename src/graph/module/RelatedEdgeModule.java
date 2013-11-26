@@ -18,8 +18,8 @@ import java.util.concurrent.ConcurrentMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 
-import util.MultiMap;
 import util.Pair;
+import util.collection.MultiMap;
 
 /**
  * The related edge module indexes sets of edges related to a node. The execute

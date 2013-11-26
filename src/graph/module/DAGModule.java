@@ -8,8 +8,8 @@ import graph.core.Edge;
 import java.io.File;
 import java.io.Serializable;
 
-import util.DefaultSerialisationMechanism;
-import util.SerialisationMechanism;
+import util.serialisation.DefaultSerialisationMechanism;
+import util.serialisation.SerialisationMechanism;
 
 /**
  * A DAG module defines the basic framework a DAG module must conform to.

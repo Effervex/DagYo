@@ -8,7 +8,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import util.DefaultSerialisationMechanism;
+import util.UniqueID;
+import util.serialisation.DefaultSerialisationMechanism;
 
 /**
  * A generic DAG object. This object has an ID and properties.

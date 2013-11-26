@@ -23,10 +23,12 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import javax.activity.InvalidActivityException;
 
-import util.HashIndexedCollection;
-import util.IndexedCollection;
-import util.SerialisationMechanism;
+import util.FSTDAGObjectSerialiser;
 import util.UtilityMethods;
+import util.collection.HashIndexedCollection;
+import util.collection.IndexedCollection;
+import util.serialisation.FSTSerialisationMechanism;
+import util.serialisation.SerialisationMechanism;
 
 /**
  * The class representing the access point of the directed acyclic graph.
@@ -87,6 +89,9 @@ public class DirectedAcyclicGraph {
 	@SuppressWarnings("unchecked")
 	public DirectedAcyclicGraph(File rootDir, int initialNodeSize,
 			int initialEdgeSize) {
+		((FSTSerialisationMechanism) SerialisationMechanism.FST.getSerialiser()).conf
+				.registerSerializer(DAGObject.class,
+						new FSTDAGObjectSerialiser(), true);
 		startTime_ = System.currentTimeMillis();
 		System.out.print("Initialising... ");
 

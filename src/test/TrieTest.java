@@ -10,8 +10,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import util.StringTrie;
-import util.Trie;
+import util.collection.StringTrie;
+import util.collection.Trie;
 
 public class TrieTest {
 

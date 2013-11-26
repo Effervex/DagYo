@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
-import util.StringTrie;
+import util.collection.StringTrie;
 
 /**
  * The node alias module encodes the aliases for a node (be they from node name
