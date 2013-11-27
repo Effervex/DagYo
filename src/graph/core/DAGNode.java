@@ -15,7 +15,7 @@ import util.UtilityMethods;
  */
 public class DAGNode extends DAGObject implements Node {
 	/** The counter for assigning ids to edges. */
-	public static long idCounter_ = 0;
+	public static long idCounter_ = 1;
 
 	private static final long serialVersionUID = 2072866863770254720L;
 

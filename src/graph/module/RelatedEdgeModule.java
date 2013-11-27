@@ -190,6 +190,8 @@ public class RelatedEdgeModule extends DAGModule<Collection<Edge>> {
 		}
 
 		edges = filterNonDAGs(edges, args);
+		if (edges == null)
+			return new ArrayList<>(0);
 		return edges;
 	}
 

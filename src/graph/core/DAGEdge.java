@@ -15,7 +15,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class DAGEdge extends DAGObject implements Edge {
 	/** The counter for assigning ids to edges. */
-	public static long idCounter_ = 0;
+	public static long idCounter_ = 1;
 
 	private static final long serialVersionUID = 8148137157637389069L;
 
