@@ -1,5 +1,6 @@
 package graph.module;
 
+import graph.core.DAGEdge;
 import graph.core.DAGNode;
 import graph.core.DAGObject;
 import graph.core.DirectedAcyclicGraph;
@@ -7,6 +8,7 @@ import graph.core.Edge;
 
 import java.io.File;
 import java.io.Serializable;
+import java.util.Collection;
 
 import util.serialisation.DefaultSerialisationMechanism;
 import util.serialisation.SerialisationMechanism;
@@ -57,14 +59,49 @@ public abstract class DAGModule<T> implements Serializable {
 	public abstract T execute(Object... args) throws IllegalArgumentException,
 			ModuleException;
 
+	/**
+	 * A method that is called once initialisation of a DAG is complete. Note
+	 * that this method may not be called, and no functionality is required.
+	 * 
+	 * @param nodes
+	 *            The collection of all existing nodes.
+	 * @param edges
+	 *            The collection of all existing edges.
+	 */
+	public void initialisationComplete(Collection<DAGNode> nodes,
+			Collection<DAGEdge> edges) {
+	}
+
+	/**
+	 * Called after 'edge' is removed.
+	 * 
+	 * @param edge
+	 *            The edge being removed.
+	 * @return Returns boolean (no default meaning).
+	 */
 	public boolean removeEdge(Edge edge) {
 		return false;
 	}
 
+	/**
+	 * Called after 'node' is removed.
+	 * 
+	 * @param node
+	 *            The node being removed.
+	 * @return Returns boolean (no default meaning).
+	 */
 	public boolean removeNode(DAGNode node) {
 		return false;
 	}
 
+	/**
+	 * Removes a property from a DAG Object.
+	 * 
+	 * @param dagObj
+	 *            The object removing the property.
+	 * @param key
+	 *            The key being removed.
+	 */
 	public void removeProperty(DAGObject dagObj, String key) {
 
 	}

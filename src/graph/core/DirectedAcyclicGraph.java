@@ -89,12 +89,11 @@ public class DirectedAcyclicGraph {
 	@SuppressWarnings("unchecked")
 	public DirectedAcyclicGraph(File rootDir, int initialNodeSize,
 			int initialEdgeSize) {
-		((FSTSerialisationMechanism) SerialisationMechanism.FST.getSerialiser()).conf
-				.registerSerializer(DAGObject.class,
-						new FSTDAGObjectSerialiser(), true);
 		startTime_ = System.currentTimeMillis();
 		System.out.print("Initialising... ");
 
+		FSTSerialisationMechanism.conf.registerSerializer(DAGObject.class,
+				new FSTDAGObjectSerialiser(), true);
 		selfRef_ = this;
 
 		random_ = new Random();
@@ -223,6 +222,11 @@ public class DirectedAcyclicGraph {
 	protected synchronized void addModule(DAGModule<?> module) {
 		module.setDAG(this);
 		modules_.put(module.getClass().getCanonicalName(), module);
+	}
+
+	protected void initialiseInternal() {
+		// Read in the global index file
+		readDAGDetails(rootDir_);
 	}
 
 	protected String preParseNode(String nodeStr, Node creator,
@@ -446,9 +450,10 @@ public class DirectedAcyclicGraph {
 		return null;
 	}
 
-	public void initialise(String[] args) {
-		// Read in the global index file
-		readDAGDetails(rootDir_);
+	public final void initialise() {
+		initialiseInternal();
+		for (DAGModule<?> module : modules_.values())
+			module.initialisationComplete(nodes_, edges_);
 	}
 
 	public Node[] parseNodes(String strNodes, Node creator,

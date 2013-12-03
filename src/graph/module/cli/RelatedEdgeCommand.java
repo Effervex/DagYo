@@ -2,6 +2,7 @@ package graph.module.cli;
 
 import graph.core.Edge;
 import graph.core.Node;
+import graph.core.cli.CollectionCommand;
 import graph.core.cli.DAGPortHandler;
 import graph.module.RelatedEdgeModule;
 
@@ -9,9 +10,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import util.UtilityMethods;
-import core.Command;
 
-public class RelatedEdgeCommand extends Command {
+public class RelatedEdgeCommand extends CollectionCommand {
 	@Override
 	public String helpText() {
 		return "{0} node [(nodePosition)] {1,} : "
@@ -27,6 +27,7 @@ public class RelatedEdgeCommand extends Command {
 
 	@Override
 	protected void executeImpl() {
+		super.executeImpl();
 		DAGPortHandler dagHandler = (DAGPortHandler) handler;
 		RelatedEdgeModule relatedModule = (RelatedEdgeModule) dagHandler
 				.getDAG().getModule(RelatedEdgeModule.class);
@@ -51,6 +52,8 @@ public class RelatedEdgeCommand extends Command {
 		}
 
 		Collection<Edge> edges = relatedModule.execute(args);
+		edges = dagHandler.sort(edges, rangeStart_, rangeEnd_);
+
 		print(edges.size() + "|");
 		for (Edge edge : edges) {
 			print(dagHandler.textIDObject(edge) + "|");
@@ -73,7 +76,7 @@ public class RelatedEdgeCommand extends Command {
 
 			if (i < split.size() && split.get(i).matches("\\(-?\\d+\\)")) {
 				String indexStr = split.get(i++);
-				
+
 				int argPos = Integer.parseInt(UtilityMethods.shrinkString(
 						indexStr, 1));
 				args.add(argPos);

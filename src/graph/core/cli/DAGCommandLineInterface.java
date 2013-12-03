@@ -24,7 +24,7 @@ public class DAGCommandLineInterface extends Main {
 			.compile("\\((" + DAGNode.NAME_OR_ID + ")\\)");
 	private static final int DEFAULT_PORT_NUMBER = 2425;
 	private static CommandLine arguments_;
-	private DirectedAcyclicGraph dag_;
+	protected DirectedAcyclicGraph dag_;
 
 	public DAGCommandLineInterface(int aPort, DirectedAcyclicGraph dag) {
 		super(aPort);
@@ -63,7 +63,7 @@ public class DAGCommandLineInterface extends Main {
 				getNumNodes(args), getNumEdges(args));
 		new DAGCommandLineInterface(getPort(args), dag).start();
 
-		dag.initialise(args);
+		dag.initialise();
 	}
 
 	public static int getNumEdges(String[] args) {

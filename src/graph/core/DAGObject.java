@@ -91,7 +91,7 @@ public abstract class DAGObject implements UniqueID, Serializable,
 	}
 
 	public Map<String, String> getProperties() {
-		return properties_;
+		return new HashMap<>(properties_);
 	}
 
 	public String getProperty(String key) {

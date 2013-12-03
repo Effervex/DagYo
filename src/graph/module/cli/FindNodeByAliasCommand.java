@@ -1,14 +1,17 @@
 package graph.module.cli;
 
 import graph.core.DAGNode;
+import graph.core.cli.CollectionCommand;
 import graph.core.cli.DAGPortHandler;
+import graph.module.DAGModule;
+import graph.module.ModuleException;
 import graph.module.NodeAliasModule;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.TreeSet;
 
 import util.UtilityMethods;
-import core.Command;
 
 /**
  * Finds a node by an alias string. This alias could be the node name or an
@@ -16,7 +19,7 @@ import core.Command;
  * 
  * @author Sam Sarjant
  */
-public class FindNodeByAliasCommand extends Command {
+public class FindNodeByAliasCommand extends CollectionCommand {
 	@Override
 	public String helpText() {
 		return "{0} alias [caseSensitive] [exactString] : "
@@ -34,16 +37,19 @@ public class FindNodeByAliasCommand extends Command {
 
 	@Override
 	protected void executeImpl() {
+		super.executeImpl();
 		DAGPortHandler dagHandler = (DAGPortHandler) handler;
-		NodeAliasModule aliasModule = (NodeAliasModule) dagHandler.getDAG()
-				.getModule(NodeAliasModule.class);
-		if (aliasModule == null) {
-			print("Node Alias module is not in use for this DAG.\n");
-			return;
-		}
 
 		if (data.isEmpty()) {
 			printErrorNoData();
+			return;
+		}
+
+		Collection<DAGModule<Collection<DAGNode>>> aliasModules = null;
+		try {
+			aliasModules = getAllAliasModules(dagHandler);
+		} catch (ModuleException me) {
+			print(me.getMessage() + "\n");
 			return;
 		}
 
@@ -57,12 +63,29 @@ public class FindNodeByAliasCommand extends Command {
 		boolean exactString = true;
 		if (split.size() >= 3 && split.get(2).equals("F"))
 			exactString = false;
-		Collection<DAGNode> nodes = aliasModule.findNodeByAlias(alias,
-				caseSensitive, exactString);
+
+		Collection<DAGNode> nodes = new TreeSet<>();
+		for (DAGModule<Collection<DAGNode>> aliasModule : aliasModules)
+			nodes.addAll(aliasModule.execute(alias, caseSensitive, exactString));
+		nodes = dagHandler.sort(nodes, rangeStart_, rangeEnd_);
 
 		print(nodes.size() + "|");
 		for (DAGNode n : nodes)
 			print(dagHandler.textIDObject(n) + "|");
 		print("\n");
+	}
+
+	protected Collection<DAGModule<Collection<DAGNode>>> getAllAliasModules(
+			DAGPortHandler dagHandler) {
+		Collection<DAGModule<Collection<DAGNode>>> aliasModules = new ArrayList<>();
+
+		NodeAliasModule aliasModule = (NodeAliasModule) dagHandler.getDAG()
+				.getModule(NodeAliasModule.class);
+		if (aliasModule == null)
+			throw new ModuleException(
+					"Node Alias module is not in use for this DAG.");
+		aliasModules.add(aliasModule);
+
+		return aliasModules;
 	}
 }
