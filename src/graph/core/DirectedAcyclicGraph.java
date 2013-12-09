@@ -27,6 +27,7 @@ import util.FSTDAGObjectSerialiser;
 import util.UtilityMethods;
 import util.collection.HashIndexedCollection;
 import util.collection.IndexedCollection;
+import util.serialisation.DefaultSerialisationMechanism;
 import util.serialisation.FSTSerialisationMechanism;
 import util.serialisation.SerialisationMechanism;
 
@@ -60,7 +61,7 @@ public class DirectedAcyclicGraph {
 
 	public static DirectedAcyclicGraph selfRef_;
 
-	private Map<String, DAGModule<?>> modules_;
+	private ArrayList<DAGModule<?>> modules_;
 
 	private File rootDir_;
 
@@ -77,6 +78,8 @@ public class DirectedAcyclicGraph {
 	public boolean noChecks_ = false;
 
 	public final long startTime_;
+
+	private Map<String, Integer> moduleMap_;
 
 	public DirectedAcyclicGraph() {
 		this(DEFAULT_ROOT, DEFAULT_NUM_NODES, DEFAULT_NUM_EDGES);
@@ -105,9 +108,12 @@ public class DirectedAcyclicGraph {
 		edgeLock_ = new ReentrantLock();
 
 		// Load the modules in
-		modules_ = new HashMap<>();
+		modules_ = new ArrayList<>();
+		moduleMap_ = new HashMap<>();
 		rootDir_ = rootDir;
 		readModules(rootDir);
+
+		// TODO logStream_ = readInitLogFile();
 
 		System.out.println("Done!");
 	}
@@ -191,6 +197,9 @@ public class DirectedAcyclicGraph {
 						Class.forName(module));
 				addModule(dagModule);
 			}
+			for (DAGModule<?> module : modules_)
+				module.setDAG(this);
+
 			reader.close();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -203,8 +212,10 @@ public class DirectedAcyclicGraph {
 		try {
 			serFile.getParentFile().mkdirs();
 			serFile.createNewFile();
+			byte serialisationType = (collectionFile.equals(EDGE_FILE)) ? FSTDAGObjectSerialiser.NODES
+					: DefaultSerialisationMechanism.NORMAL;
 			SerialisationMechanism.FST.getSerialiser().serialize(collection,
-					serFile, false);
+					serFile, serialisationType);
 		} catch (IOException e) {
 			System.err.println("Error serialising '" + serFile + "'.");
 		}
@@ -220,8 +231,9 @@ public class DirectedAcyclicGraph {
 	}
 
 	protected synchronized void addModule(DAGModule<?> module) {
-		module.setDAG(this);
-		modules_.put(module.getClass().getCanonicalName(), module);
+		modules_.add(module);
+		moduleMap_.put(module.getClass().getCanonicalName(),
+				modules_.indexOf(module));
 	}
 
 	protected void initialiseInternal() {
@@ -242,7 +254,7 @@ public class DirectedAcyclicGraph {
 		else if (dagObj instanceof DAGEdge)
 			edges_.update((DAGEdge) dagObj);
 
-		for (DAGModule<?> module : modules_.values())
+		for (DAGModule<?> module : modules_)
 			module.addProperty(dagObj, key, value);
 	}
 
@@ -251,7 +263,7 @@ public class DirectedAcyclicGraph {
 		edges_.clear();
 
 		// Trigger modules
-		for (DAGModule<?> module : modules_.values())
+		for (DAGModule<?> module : modules_)
 			module.clear();
 	}
 
@@ -316,7 +328,7 @@ public class DirectedAcyclicGraph {
 				boolean result = edges_.add((DAGEdge) edge);
 				if (result) {
 					// Trigger modules
-					for (DAGModule<?> module : modules_.values())
+					for (DAGModule<?> module : modules_)
 						module.addEdge(edge);
 				}
 			}
@@ -370,7 +382,7 @@ public class DirectedAcyclicGraph {
 				boolean result = nodes_.add(node);
 				if (result) {
 					// Trigger modules
-					for (DAGModule<?> module : modules_.values())
+					for (DAGModule<?> module : modules_)
 						module.addNode(node);
 				} else
 					return null;
@@ -392,20 +404,24 @@ public class DirectedAcyclicGraph {
 		return edges_.get(id);
 	}
 
+	public Collection<DAGEdge> getEdges() {
+		return edges_;
+	}
+
 	public DAGModule<?> getModule(Class<? extends DAGModule<?>> moduleClass) {
-		DAGModule<?> module = modules_.get(moduleClass.getCanonicalName());
-		if (module == null) {
-			for (DAGModule<?> mod : modules_.values()) {
+		if (!moduleMap_.containsKey(moduleClass.getCanonicalName())) {
+			for (DAGModule<?> mod : modules_) {
 				if (moduleClass.isAssignableFrom(mod.getClass())) {
-					modules_.put(moduleClass.getCanonicalName(), mod);
+					moduleMap_.put(moduleClass.getCanonicalName(),
+							modules_.indexOf(mod));
 					return mod;
 				}
 			}
 		}
-		return module;
+		return modules_.get(moduleMap_.get(moduleClass.getCanonicalName()));
 	}
 
-	public Map<String, DAGModule<?>> getModules() {
+	public ArrayList<DAGModule<?>> getModules() {
 		return modules_;
 	}
 
@@ -418,6 +434,10 @@ public class DirectedAcyclicGraph {
 	 */
 	public DAGNode getNodeByID(long id) {
 		return nodes_.get(id);
+	}
+
+	public Collection<DAGNode> getNodes() {
+		return nodes_;
 	}
 
 	public int getNumEdges() {
@@ -452,8 +472,25 @@ public class DirectedAcyclicGraph {
 
 	public final void initialise() {
 		initialiseInternal();
-		for (DAGModule<?> module : modules_.values())
-			module.initialisationComplete(nodes_, edges_);
+		boolean saveState = false;
+		for (DAGModule<?> module : modules_)
+			saveState |= module.initialisationComplete(nodes_, edges_);
+		if (saveState)
+			saveState();
+	}
+
+	/**
+	 * Merges the merging node with the base node. The removes the merging node
+	 * and redirects all edges to the base node. If edges cannot be merged, the
+	 * process reverts.
+	 * 
+	 * @param baseNode
+	 *            The node that remains.
+	 * @param mergingNode
+	 *            The node to be merged with the base node.
+	 */
+	public void mergeNodes(DAGNode baseNode, DAGNode mergingNode) {
+		// TODO Complete this method.
 	}
 
 	public Node[] parseNodes(String strNodes, Node creator,
@@ -495,7 +532,7 @@ public class DirectedAcyclicGraph {
 
 			if (result) {
 				// Trigger modules
-				for (DAGModule<?> module : modules_.values())
+				for (DAGModule<?> module : modules_)
 					module.removeEdge(edge);
 			}
 			return result;
@@ -535,11 +572,10 @@ public class DirectedAcyclicGraph {
 
 			if (result) {
 				// Remove edges associated with node.
-				if (modules_.containsKey(RelatedEdgeModule.class
+				if (moduleMap_.containsKey(RelatedEdgeModule.class
 						.getCanonicalName())) {
-					Collection<DAGEdge> relatedEdges = (Collection<DAGEdge>) modules_
-							.get(RelatedEdgeModule.class.getCanonicalName())
-							.execute(node);
+					Collection<DAGEdge> relatedEdges = (Collection<DAGEdge>) getModule(
+							RelatedEdgeModule.class).execute(node);
 					for (DAGEdge edge : relatedEdges)
 						removeEdge(edge);
 				} else {
@@ -554,7 +590,7 @@ public class DirectedAcyclicGraph {
 				}
 
 				// Trigger modules
-				for (DAGModule<?> module : modules_.values())
+				for (DAGModule<?> module : modules_)
 					module.removeNode(node);
 			}
 			return result;
@@ -578,7 +614,7 @@ public class DirectedAcyclicGraph {
 	public synchronized void removeProperty(DAGObject dagObj, String key) {
 		dagObj.remove(key);
 
-		for (DAGModule<?> module : modules_.values())
+		for (DAGModule<?> module : modules_)
 			module.removeProperty(dagObj, key);
 	}
 
@@ -601,7 +637,7 @@ public class DirectedAcyclicGraph {
 
 		// Save modules
 		Set<DAGModule<?>> saved = new HashSet<>();
-		for (DAGModule<?> module : modules_.values()) {
+		for (DAGModule<?> module : modules_) {
 			if (!saved.contains(module))
 				module.saveModule(rootDir_);
 			saved.add(module);

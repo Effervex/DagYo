@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import util.UniqueID;
-import util.serialisation.DefaultSerialisationMechanism;
 
 /**
  * A generic DAG object. This object has an ID and properties.
@@ -107,34 +106,9 @@ public abstract class DAGObject implements UniqueID, Serializable,
 		return result;
 	}
 
-	// @Override
-	@SuppressWarnings("unchecked")
-	public final void readExternal(ObjectInput in) throws IOException,
-			ClassNotFoundException {
-		// Read serialisation format
-		boolean minSerial = in.readBoolean();
-		id_ = in.readLong();
-		if (!minSerial) {
-			properties_ = (Map<String, String>) in.readObject();
-			readFullObject(in);
-		}
-	}
-
 	@Override
 	public String toString() {
 		return id_ + "";
-	}
-
-	// @Override
-	public final void writeExternal(ObjectOutput out) throws IOException {
-		// Write externalizable format
-		boolean idSerialisation = DefaultSerialisationMechanism.idSerialise();
-		out.writeBoolean(idSerialisation);
-		out.writeLong(id_);
-		if (!idSerialisation) {
-			out.writeObject(properties_);
-			writeFullObject(out);
-		}
 	}
 
 	/**

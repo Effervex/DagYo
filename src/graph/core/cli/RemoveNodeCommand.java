@@ -32,7 +32,8 @@ public class RemoveNodeCommand extends Command {
 			else
 				print("-1|Could not remove node.\n");
 		} catch (Exception e) {
-			print("-1|Node '" + data + "' could not be found.\n");
+			e.printStackTrace();
+			print("-1|Problem removing node.\n");
 		}
 	}
 

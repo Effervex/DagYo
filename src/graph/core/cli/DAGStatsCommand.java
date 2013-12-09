@@ -2,7 +2,7 @@ package graph.core.cli;
 
 import graph.module.DAGModule;
 
-import java.util.Map;
+import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 import core.Command;
@@ -32,9 +32,8 @@ public class DAGStatsCommand extends Command {
 		print("Num nodes: " + dagHandler.getDAG().getNumNodes() + "\n");
 		print("Num edges: " + dagHandler.getDAG().getNumEdges() + "\n");
 		print("Active modules:\n");
-		Map<String, DAGModule<?>> modules = dagHandler.getDAG().getModules();
-		for (String modName : modules.keySet()) {
-			print("\t" + modName + ": " + modules.get(modName) + "\n");
-		}
+		Collection<DAGModule<?>> modules = dagHandler.getDAG().getModules();
+		for (DAGModule<?> modName : modules)
+			print("\t" + modName + "\n");
 	}
 }

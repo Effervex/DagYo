@@ -67,9 +67,11 @@ public abstract class DAGModule<T> implements Serializable {
 	 *            The collection of all existing nodes.
 	 * @param edges
 	 *            The collection of all existing edges.
+	 * @return If something changed.
 	 */
-	public void initialisationComplete(Collection<DAGNode> nodes,
+	public boolean initialisationComplete(Collection<DAGNode> nodes,
 			Collection<DAGEdge> edges) {
+		return false;
 	}
 
 	/**
@@ -113,7 +115,8 @@ public abstract class DAGModule<T> implements Serializable {
 		try {
 			modFile.createNewFile();
 			// If a module should only save IDs for the nodes/edges.
-			serialiser.serialize(this, modFile, true);
+			serialiser.serialize(this, modFile,
+					DefaultSerialisationMechanism.ID);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;

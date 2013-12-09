@@ -15,13 +15,21 @@ import de.ruedigermoeller.serialization.FSTObjectInput;
 import de.ruedigermoeller.serialization.FSTObjectOutput;
 
 public class FSTDAGObjectSerialiser extends FSTBasicObjectSerializer {
+	public static final byte NODES = 2;
+
 	@Override
 	public void writeObject(FSTObjectOutput out, Object toWrite,
 			FSTClazzInfo clzInfo, FSTFieldInfo referencedBy, int streamPosition)
 			throws IOException {
 		DAGObject dagObj = (DAGObject) toWrite;
-		boolean idOnly = DefaultSerialisationMechanism.idSerialise()
-				&& dagObj.getID() != -1;
+		byte serialisationState = DefaultSerialisationMechanism.idSerialise();
+		boolean idOnly = false;
+		if (serialisationState == DefaultSerialisationMechanism.ID
+				|| (serialisationState == NODES && dagObj instanceof DAGNode))
+			idOnly = true;
+		if (dagObj.getID() == -1)
+			idOnly = false;
+
 		out.writeBoolean(idOnly);
 		if (idOnly)
 			out.writeFLong(dagObj.getID());
@@ -46,7 +54,7 @@ public class FSTDAGObjectSerialiser extends FSTBasicObjectSerializer {
 		boolean idOnly = in.readBoolean();
 		if (idOnly) {
 			long id = in.readFLong();
-			
+
 			if (DAGNode.class.isAssignableFrom(objectClass))
 				obj = DirectedAcyclicGraph.selfRef_.getNodeByID(id);
 			else if (DAGEdge.class.isAssignableFrom(objectClass))
