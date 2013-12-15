@@ -50,6 +50,8 @@ public class DAGCommandLineInterface extends Main {
 		CommandParser.addCommand("stats", DAGStatsCommand.class);
 		CommandParser.addCommand("sync", SyncCommand.class);
 		CommandParser.addCommand("count", CountCommand.class);
+		CommandParser.addCommand("nextNode", NextNodeCommand.class);
+		CommandParser.addCommand("nextEdge", NextEdgeCommand.class);
 	}
 
 	@Override

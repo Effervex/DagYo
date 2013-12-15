@@ -417,6 +417,7 @@ public class DirectedAcyclicGraph {
 					return mod;
 				}
 			}
+			return null;
 		}
 		return modules_.get(moduleMap_.get(moduleClass.getCanonicalName()));
 	}
