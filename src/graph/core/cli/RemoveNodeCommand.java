@@ -1,3 +1,6 @@
+/*******************************************************************************
+ * Copyright (C) 2013 University of Waikato, Hamilton, New Zealand
+ ******************************************************************************/
 package graph.core.cli;
 
 import graph.core.DAGNode;
@@ -26,7 +29,7 @@ public class RemoveNodeCommand extends Command {
 
 		try {
 			DAGNode node = (DAGNode) dagHandler.getDAG().findOrCreateNode(data,
-					null, false, true, false);
+					null, false, false, true, false);
 			if (node != null && dagHandler.getDAG().removeNode(node.getID()))
 				print("1|Node successfully removed.\n");
 			else

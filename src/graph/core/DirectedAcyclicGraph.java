@@ -1,3 +1,6 @@
+/*******************************************************************************
+ * Copyright (C) 2013 University of Waikato, Hamilton, New Zealand
+ ******************************************************************************/
 package graph.core;
 
 import graph.module.DAGModule;
@@ -18,11 +21,14 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.activity.InvalidActivityException;
 
+import util.BooleanFlags;
 import util.FSTDAGObjectSerialiser;
 import util.UtilityMethods;
 import util.collection.HashIndexedCollection;
@@ -55,11 +61,19 @@ public class DirectedAcyclicGraph {
 
 	public static final File DEFAULT_ROOT = new File("dag");
 
+	public static final BooleanFlags edgeFlags_;
+
+	public static final String EPHEMERAL_MARK = "ephem";
+
 	public static final String GLOBALS_FILE = "dagDetails";
 
 	public static final File MODULE_FILE = new File("activeModules.config");
 
+	public static final BooleanFlags nodeFlags_;
+
 	public static DirectedAcyclicGraph selfRef_;
+
+	private Map<String, Integer> moduleMap_;
 
 	private ArrayList<DAGModule<?>> modules_;
 
@@ -78,8 +92,6 @@ public class DirectedAcyclicGraph {
 	public boolean noChecks_ = false;
 
 	public final long startTime_;
-
-	private Map<String, Integer> moduleMap_;
 
 	public DirectedAcyclicGraph() {
 		this(DEFAULT_ROOT, DEFAULT_NUM_NODES, DEFAULT_NUM_EDGES);
@@ -302,15 +314,17 @@ public class DirectedAcyclicGraph {
 	 * 
 	 * @param creator
 	 *            The creator of the edge.
-	 * @param createNodes
-	 *            If new nodes should be created.
 	 * @param edgeNodes
 	 *            The nodes of the edge.
+	 * @param flags
+	 *            The boolean flags to use during edge creation: createNew
+	 *            (false), forceConstraints (false), ephemeral (false).
 	 * @return True if the edge was not already in the graph.
 	 * @throws DAGException
 	 */
-	public synchronized Edge findOrCreateEdge(Node creator,
-			boolean createNodes, Node... edgeNodes) {
+	public synchronized Edge findOrCreateEdge(Node creator, Node[] edgeNodes,
+			boolean... flags) {
+		BooleanFlags bFlags = edgeFlags_.loadFlags(flags);
 		edgeLock_.lock();
 		try {
 			Edge edge = findEdge(edgeNodes);
@@ -320,16 +334,20 @@ public class DirectedAcyclicGraph {
 					for (Node n : edgeNodes)
 						if (n instanceof DAGNode
 								&& findOrCreateNode(n.getIdentifier(), null,
-										createNodes, false, false) == null)
+										bFlags.getFlag("createNew")) == null)
 							return DAGErrorEdge.NON_EXISTENT_NODE;
 				}
 
 				edge = new DAGEdge(creator, true, edgeNodes);
 				boolean result = edges_.add((DAGEdge) edge);
 				if (result) {
-					// Trigger modules
-					for (DAGModule<?> module : modules_)
-						module.addEdge(edge);
+					if (bFlags.getFlag("ephemeral"))
+						addProperty((DAGEdge) edge, EPHEMERAL_MARK, "true");
+					else {
+						// Trigger modules
+						for (DAGModule<?> module : modules_)
+							module.addEdge(edge);
+					}
 				}
 			}
 			return edge;
@@ -348,17 +366,18 @@ public class DirectedAcyclicGraph {
 	 *            The node string to search with.
 	 * @param creator
 	 *            If creating new nodes, a creator must be given.
-	 * @param createNew
-	 *            If a new node can be created.
-	 * @param dagNodeOnly
-	 *            If only DAG nodes can be found/created.
-	 * @param allowVariables
-	 *            If variables nodes can be created.
+	 * @param flags
+	 *            The boolean flags to use during node creation: createNew
+	 *            (false), dagNodeOnly (false), allowVariables (false),
+	 *            ephemeral (false).
 	 * @return Either a found node, a created node, or null if impossible to
 	 *         parse.
 	 */
 	public synchronized Node findOrCreateNode(String nodeStr, Node creator,
-			boolean createNew, boolean dagNodeOnly, boolean allowVariables) {
+			boolean... flags) {
+		BooleanFlags bFlags = nodeFlags_.loadFlags(flags);
+		boolean createNew = bFlags.getFlag("createNew");
+		boolean dagNodeOnly = bFlags.getFlag("dagNodeOnly");
 		nodeStr = preParseNode(nodeStr, creator, createNew, dagNodeOnly);
 
 		nodeLock_.lock();
@@ -366,7 +385,10 @@ public class DirectedAcyclicGraph {
 			if (nodeStr == null) {
 				return null;
 			} else if (createNew && nodeStr.isEmpty()) {
-				return new DAGNode(creator);
+				DAGNode node = new DAGNode(creator);
+				if (bFlags.getFlag("ephemeral"))
+					addProperty(node, EPHEMERAL_MARK, "true");
+				return node;
 			} else if (!dagNodeOnly && nodeStr.startsWith("\"")) {
 				return new StringNode(nodeStr);
 			} else if (nodeStr.matches("\\d+")) {
@@ -381,6 +403,8 @@ public class DirectedAcyclicGraph {
 				node = new DAGNode(nodeStr, creator);
 				boolean result = nodes_.add(node);
 				if (result) {
+					if (bFlags.getFlag("ephemeral"))
+						addProperty(node, EPHEMERAL_MARK, "true");
 					// Trigger modules
 					for (DAGModule<?> module : modules_)
 						module.addNode(node);
@@ -475,9 +499,47 @@ public class DirectedAcyclicGraph {
 		initialiseInternal();
 		boolean saveState = false;
 		for (DAGModule<?> module : modules_)
-			saveState |= module.initialisationComplete(nodes_, edges_);
+			saveState |= module.initialisationComplete(nodes_, edges_, false);
 		if (saveState)
 			saveState();
+	}
+
+	public synchronized void groundEphemeral() {
+		// Compile module properties to remove
+		Collection<String> props = new ArrayList<>();
+		for (DAGModule<?> module : modules_)
+			props.addAll(module.getPertinentProperties());
+		props.add(EPHEMERAL_MARK);
+
+		// Run through the nodes, setting them as non-ephemeral
+		System.out.print("Grounding ephemeral nodes and edges... ");
+		for (DAGNode n : nodes_) {
+			for (String prop : props)
+				n.remove(prop);
+		}
+
+		// Run through the edges, reasserting them as non-ephemeral
+		SortedSet<DAGEdge> reassertables = new TreeSet<DAGEdge>();
+		for (DAGEdge e : edges_) {
+			if (e.getProperty(EPHEMERAL_MARK) != null) {
+				reassertables.add(e);
+			}
+		}
+		for (DAGEdge e : reassertables) {
+			// Reassert edge
+			if (!removeEdge(e))
+				System.err.println("Error removing ephemeral edge: " + e);
+			String creatorStr = e.getCreator();
+			Node creator = (creatorStr == null) ? null : findOrCreateNode(
+					creatorStr, null);
+			findOrCreateEdge(creator, e.getNodes(), false, false);
+		}
+		System.out.println("Done!");
+
+		// Rebuild the modules
+		for (DAGModule<?> module : modules_)
+			module.initialisationComplete(nodes_, edges_, true);
+		saveState();
 	}
 
 	/**
@@ -506,7 +568,7 @@ public class DirectedAcyclicGraph {
 			if (!allowVariables && arg.startsWith("?"))
 				return null;
 			nodes[i] = findOrCreateNode(arg, creator, createNodes, false,
-					allowVariables);
+					false, allowVariables);
 
 			if (nodes[i] == null)
 				return null;
@@ -531,7 +593,7 @@ public class DirectedAcyclicGraph {
 		try {
 			boolean result = edges_.remove(edge);
 
-			if (result) {
+			if (result && ((DAGEdge) edge).getProperty(EPHEMERAL_MARK) == null) {
 				// Trigger modules
 				for (DAGModule<?> module : modules_)
 					module.removeEdge(edge);
@@ -651,5 +713,18 @@ public class DirectedAcyclicGraph {
 		System.out.println("Saving state and shutting down.");
 		saveState();
 		System.exit(0);
+	}
+
+	static {
+		// Node flags
+		nodeFlags_ = new BooleanFlags();
+		nodeFlags_.addFlag("createNew", false);
+		nodeFlags_.addFlag("ephemeral", false);
+		nodeFlags_.addFlag("dagNodeOnly", false);
+
+		// Edge flags
+		edgeFlags_ = new BooleanFlags();
+		edgeFlags_.addFlag("createNew", false);
+		edgeFlags_.addFlag("ephemeral", false);
 	}
 }

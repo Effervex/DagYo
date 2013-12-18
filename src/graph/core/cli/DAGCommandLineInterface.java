@@ -1,3 +1,6 @@
+/*******************************************************************************
+ * Copyright (C) 2013 University of Waikato, Hamilton, New Zealand
+ ******************************************************************************/
 package graph.core.cli;
 
 import graph.core.DAGNode;
@@ -49,9 +52,11 @@ public class DAGCommandLineInterface extends Main {
 		CommandParser.addCommand("shutdown", ShutdownCommand.class);
 		CommandParser.addCommand("stats", DAGStatsCommand.class);
 		CommandParser.addCommand("sync", SyncCommand.class);
+		CommandParser.addCommand("groundEphemeral", GroundEphemeralCommand.class);
 		CommandParser.addCommand("count", CountCommand.class);
 		CommandParser.addCommand("nextNode", NextNodeCommand.class);
 		CommandParser.addCommand("nextEdge", NextEdgeCommand.class);
+		CommandParser.addCommand("varHelp", DAGVarHelpCommand.class);
 	}
 
 	@Override

@@ -1,3 +1,6 @@
+/*******************************************************************************
+ * Copyright (C) 2013 University of Waikato, Hamilton, New Zealand
+ ******************************************************************************/
 package graph.module;
 
 import graph.core.DAGEdge;
@@ -8,6 +11,7 @@ import graph.core.Edge;
 
 import java.io.File;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 
 import util.serialisation.DefaultSerialisationMechanism;
@@ -67,10 +71,12 @@ public abstract class DAGModule<T> implements Serializable {
 	 *            The collection of all existing nodes.
 	 * @param edges
 	 *            The collection of all existing edges.
+	 * @param forceRebuild
+	 *            TODO
 	 * @return If something changed.
 	 */
 	public boolean initialisationComplete(Collection<DAGNode> nodes,
-			Collection<DAGEdge> edges) {
+			Collection<DAGEdge> edges, boolean forceRebuild) {
 		return false;
 	}
 
@@ -154,5 +160,9 @@ public abstract class DAGModule<T> implements Serializable {
 
 		// TODO In this case, need to rescan dirs.
 		return (DAGModule<?>) moduleClass.newInstance();
+	}
+
+	public Collection<String> getPertinentProperties() {
+		return new ArrayList<String>(0);
 	}
 }

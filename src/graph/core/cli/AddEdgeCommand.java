@@ -1,3 +1,6 @@
+/*******************************************************************************
+ * Copyright (C) 2013 University of Waikato, Hamilton, New Zealand
+ ******************************************************************************/
 package graph.core.cli;
 
 import graph.core.DAGEdge;
@@ -35,8 +38,7 @@ public class AddEdgeCommand extends Command {
 		if (split.size() == 2) {
 			try {
 				creator = dagHandler.getDAG().findOrCreateNode(
-						UtilityMethods.shrinkString(split.get(1), 1), creator,
-						false, false, false);
+						UtilityMethods.shrinkString(split.get(1), 1), creator);
 			} catch (Exception e) {
 				print("-1|Invalid creator node.\n");
 				return;
@@ -53,8 +55,10 @@ public class AddEdgeCommand extends Command {
 				print("-1|Problem parsing nodes.\n");
 				return;
 			}
-			Edge edge = dagHandler.getDAG().findOrCreateEdge(creator, false,
-					nodes);
+			boolean[] flags = dagHandler
+					.asBooleanArray(DAGPortHandler.EDGE_FLAGS);
+			Edge edge = dagHandler.getDAG().findOrCreateEdge(creator, nodes,
+					flags);
 
 			if (edge instanceof ErrorEdge) {
 				print("-1|" + ((ErrorEdge) edge).getError() + "\n");

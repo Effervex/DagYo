@@ -1,3 +1,6 @@
+/*******************************************************************************
+ * Copyright (C) 2013 University of Waikato, Hamilton, New Zealand
+ ******************************************************************************/
 package graph.module;
 
 import graph.core.DAGNode;
@@ -22,6 +25,16 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> {
 	/** The Long actually represents a DAGNode ID. */
 	private StringTrie<DAGNode> aliasTrie_ = new StringTrie<>();
 
+	private String processAlias(String name) {
+		name = name.replaceAll("\\s{2,}", " ");
+		return name;
+	}
+
+	public boolean addAlias(DAGNode node, String alias) {
+		aliasTrie_.put(processAlias(alias), node);
+		return true;
+	}
+
 	@Override
 	public boolean addEdge(Edge edge) {
 		if (edge instanceof Alias) {
@@ -34,18 +47,16 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> {
 		return false;
 	}
 
-	private String processAlias(String name) {
-		name = name.replaceAll("\\s{2,}", " ");
-		return name;
+	@Override
+	public boolean addNode(DAGNode node) {
+		if (!node.isAnonymous())
+			addAlias(node, node.getName());
+		return true;
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result
-				+ ((aliasTrie_ == null) ? 0 : aliasTrie_.hashCode());
-		return result;
+	public void clear() {
+		aliasTrie_.clear();
 	}
 
 	@Override
@@ -62,43 +73,6 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> {
 				return false;
 		} else if (!aliasTrie_.equals(other.aliasTrie_))
 			return false;
-		return true;
-	}
-
-	@Override
-	public boolean addNode(DAGNode node) {
-		if (!node.isAnonymous())
-			addAlias(node, node.getName());
-		return true;
-	}
-
-	public boolean addAlias(DAGNode node, String alias) {
-		aliasTrie_.put(processAlias(alias), node);
-		return true;
-	}
-
-	@Override
-	public void clear() {
-		aliasTrie_.clear();
-	}
-
-	@Override
-	public boolean removeEdge(Edge edge) {
-		if (edge instanceof Alias) {
-			Alias aliasEdge = (Alias) edge;
-			boolean changed = false;
-			for (StringNode alias : aliasEdge.getAliases())
-				changed |= aliasTrie_.remove(processAlias(alias.getName()),
-						aliasEdge.getNode());
-			return changed;
-		}
-		return false;
-	}
-
-	@Override
-	public boolean removeNode(DAGNode node) {
-		if (!node.isAnonymous())
-			return aliasTrie_.remove(processAlias(node.getName()), node);
 		return true;
 	}
 
@@ -171,6 +145,35 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> {
 				namedNodes.add(aliasNode);
 		}
 		return namedNodes;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ ((aliasTrie_ == null) ? 0 : aliasTrie_.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean removeEdge(Edge edge) {
+		if (edge instanceof Alias) {
+			Alias aliasEdge = (Alias) edge;
+			boolean changed = false;
+			for (StringNode alias : aliasEdge.getAliases())
+				changed |= aliasTrie_.remove(processAlias(alias.getName()),
+						aliasEdge.getNode());
+			return changed;
+		}
+		return false;
+	}
+
+	@Override
+	public boolean removeNode(DAGNode node) {
+		if (!node.isAnonymous())
+			return aliasTrie_.remove(processAlias(node.getName()), node);
+		return true;
 	}
 
 	@Override

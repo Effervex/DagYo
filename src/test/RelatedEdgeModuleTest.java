@@ -1,3 +1,6 @@
+/*******************************************************************************
+ * Copyright (C) 2013 University of Waikato, Hamilton, New Zealand
+ ******************************************************************************/
 package test;
 
 import static org.junit.Assert.assertEquals;
@@ -38,21 +41,19 @@ public class RelatedEdgeModuleTest {
 	public void testExecute() {
 		Node creator = new StringNode("TestCreator");
 		DAGNode testNode = (DAGNode) dag_.findOrCreateNode("test", creator,
-				true, true, true);
-		DAGNode isa = (DAGNode) dag_.findOrCreateNode("isa", creator, true,
-				true, true);
+				true);
+		DAGNode isa = (DAGNode) dag_.findOrCreateNode("isa", creator, true);
 		DAGNode mammal = (DAGNode) dag_.findOrCreateNode("Mammal", creator,
-				true, true, true);
-		DAGEdge testEdge = (DAGEdge) dag_.findOrCreateEdge(creator, false, isa,
-				testNode, mammal);
+				true);
+		DAGEdge testEdge = (DAGEdge) dag_.findOrCreateEdge(creator, new Node[] {
+				isa, testNode, mammal }, false);
 		Collection<Edge> result = sut_.execute(testNode);
 		assertEquals(result.size(), 1);
 		assertTrue(result.contains(testEdge));
 
-		DAGNode cowNode = (DAGNode) dag_.findOrCreateNode("Cow", creator, true,
-				true, true);
-		DAGEdge otherEdge = (DAGEdge) dag_.findOrCreateEdge(creator, false,
-				isa, cowNode, mammal);
+		DAGNode cowNode = (DAGNode) dag_.findOrCreateNode("Cow", creator, true);
+		DAGEdge otherEdge = (DAGEdge) dag_.findOrCreateEdge(creator,
+				new Node[] { isa, cowNode, mammal }, false);
 		result = sut_.execute(testNode);
 		assertEquals(result.size(), 1);
 		assertTrue(result.contains(testEdge));
@@ -77,15 +78,14 @@ public class RelatedEdgeModuleTest {
 
 		// Non DAG Nodes
 		DAGNode argIsa = (DAGNode) dag_.findOrCreateNode("argIsa", creator,
-				true, true, true);
-		DAGNode thing = (DAGNode) dag_.findOrCreateNode("Thing", creator, true,
-				true, true);
+				true);
+		DAGNode thing = (DAGNode) dag_.findOrCreateNode("Thing", creator, true);
 		DAGNode collection = (DAGNode) dag_.findOrCreateNode("Collection",
-				creator, true, true, true);
-		DAGEdge isaEdge1 = (DAGEdge) dag_.findOrCreateEdge(creator, false,
-				argIsa, isa, PrimitiveNode.parseNode("1"), thing);
-		DAGEdge isaEdge2 = (DAGEdge) dag_.findOrCreateEdge(creator, false,
-				argIsa, isa, PrimitiveNode.parseNode("2"), collection);
+				creator, true);
+		DAGEdge isaEdge1 = (DAGEdge) dag_.findOrCreateEdge(creator, new Node[] {
+				argIsa, isa, PrimitiveNode.parseNode("1"), thing }, false);
+		DAGEdge isaEdge2 = (DAGEdge) dag_.findOrCreateEdge(creator, new Node[] {
+				argIsa, isa, PrimitiveNode.parseNode("2"), collection }, false);
 
 		result = sut_.execute(isa);
 		assertEquals(result.size(), 4);
@@ -103,21 +103,20 @@ public class RelatedEdgeModuleTest {
 	public void testExecuteArgNum() {
 		Node creator = new StringNode("TestCreator");
 		DAGNode testNode = (DAGNode) dag_.findOrCreateNode("test", creator,
-				true, true, true);
-		DAGNode isa = (DAGNode) dag_.findOrCreateNode("isa", creator, true,
-				true, true);
+				true);
+		DAGNode isa = (DAGNode) dag_.findOrCreateNode("isa", creator, true);
 		DAGNode mammal = (DAGNode) dag_.findOrCreateNode("mammal", creator,
-				true, true, true);
-		DAGEdge testEdge = (DAGEdge) dag_.findOrCreateEdge(creator, false, isa,
-				testNode, mammal);
+				true);
+		DAGEdge testEdge = (DAGEdge) dag_.findOrCreateEdge(creator, new Node[] {
+				isa, testNode, mammal }, false);
 		Collection<Edge> result = sut_.execute(testNode, 2);
 		assertEquals(result.size(), 1);
 		assertTrue(result.contains(testEdge));
 		result = sut_.execute(testNode, 1);
 		assertEquals(result.size(), 0);
 
-		DAGEdge otherEdge = (DAGEdge) dag_.findOrCreateEdge(creator, false,
-				isa, mammal, testNode);
+		DAGEdge otherEdge = (DAGEdge) dag_.findOrCreateEdge(creator,
+				new Node[] { isa, mammal, testNode }, false);
 		result = sut_.execute(testNode, 2);
 		assertEquals(result.size(), 1);
 		assertTrue(result.contains(testEdge));
@@ -125,8 +124,8 @@ public class RelatedEdgeModuleTest {
 		assertEquals(result.size(), 1);
 		assertTrue(result.contains(otherEdge));
 
-		dag_.findOrCreateEdge(creator, false, isa, testNode, new StringNode(
-				"Test2"));
+		dag_.findOrCreateEdge(creator, new Node[] { isa, testNode,
+				new StringNode("Test2") }, false);
 		result = sut_.execute(testNode, 2, mammal);
 		assertEquals(result.size(), 1);
 		assertTrue(result.contains(testEdge));
@@ -135,15 +134,15 @@ public class RelatedEdgeModuleTest {
 
 		// Non DAG Nodes
 		DAGNode argIsa = (DAGNode) dag_.findOrCreateNode("argIsa", creator,
-				true, true, true);
-		DAGNode thing = (DAGNode) dag_.findOrCreateNode("Thing", creator, true,
-				true, true);
+				true);
+		DAGNode thing = (DAGNode) dag_.findOrCreateNode("Thing", creator, true);
 		DAGNode collection = (DAGNode) dag_.findOrCreateNode("Collection",
-				creator, true, true, true);
-		DAGEdge isaEdge1 = (DAGEdge) dag_.findOrCreateEdge(creator, false,
-				argIsa, isa, PrimitiveNode.parseNode("1"), thing);
-		dag_.findOrCreateEdge(creator, false, argIsa, isa,
-				PrimitiveNode.parseNode("2"), collection);
+				creator, true);
+		DAGEdge isaEdge1 = (DAGEdge) dag_.findOrCreateEdge(creator, new Node[] {
+				argIsa, isa, PrimitiveNode.parseNode("1"), thing }, false);
+		dag_.findOrCreateEdge(creator,
+				new Node[] { argIsa, isa, PrimitiveNode.parseNode("2"),
+						collection }, false);
 
 		result = sut_.execute(isa, 2, thing, 4);
 		assertEquals(result.size(), 1);
@@ -154,9 +153,10 @@ public class RelatedEdgeModuleTest {
 		assertTrue(result.contains(isaEdge1));
 
 		DAGNode prettyString = (DAGNode) dag_.findOrCreateNode("prettyString",
-				creator, true, true, true);
-		DAGEdge stringEdge = (DAGEdge) dag_.findOrCreateEdge(creator, false,
-				prettyString, mammal, new StringNode("Mammal"));
+				creator, true);
+		DAGEdge stringEdge = (DAGEdge) dag_.findOrCreateEdge(creator,
+				new Node[] { prettyString, mammal, new StringNode("Mammal") },
+				false);
 
 		result = sut_.execute(mammal, new StringNode("Mammal"), 3);
 		assertEquals(result.size(), 1);

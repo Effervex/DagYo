@@ -1,3 +1,6 @@
+/*******************************************************************************
+ * Copyright (C) 2013 University of Waikato, Hamilton, New Zealand
+ ******************************************************************************/
 package graph.core.cli;
 
 import graph.core.DAGNode;
@@ -26,12 +29,16 @@ public class DAGPortHandler extends PortHandler {
 	public static final String DYNAMICALLY_ADD_NODES = "/env/edgesAddNodes";
 	public static final String PRETTY_RESULTS = "/env/pretty";
 	public static final String SORT_ORDER = "/env/sort";
+	public static final String EDGE_FLAGS = "/env/edgeFlags";
+	public static final String NODE_FLAGS = "/env/nodeFlags";
 	protected DirectedAcyclicGraph dag_;
 
 	public DAGPortHandler(Socket aSocket, CommandQueue aQueue,
 			DirectedAcyclicGraph dag) {
 		super(aSocket, aQueue);
 		set(SORT_ORDER, "default");
+		set(EDGE_FLAGS, "");
+		set(NODE_FLAGS, "");
 		dag_ = dag;
 	}
 
@@ -46,23 +53,6 @@ public class DAGPortHandler extends PortHandler {
 			return obj.toString();
 		else
 			return obj.getIdentifier();
-	}
-
-	public static Node createNode(String name, Node creator) {
-		if (name == null)
-			return new DAGNode(creator);
-
-		// Parse string
-		if (name.startsWith("\"\"") && name.endsWith("\"\""))
-			return new StringNode(UtilityMethods.shrinkString(name, 2));
-
-		// Parse primitive
-		PrimitiveNode prim = PrimitiveNode.parseNode(name);
-		if (prim != null)
-			return prim;
-
-		// Default to DAG
-		return new DAGNode(name, creator);
 	}
 
 	/**
@@ -124,5 +114,16 @@ public class DAGPortHandler extends PortHandler {
 
 	public Object convertToComparable(Object o) {
 		return o;
+	}
+
+	public boolean[] asBooleanArray(String variableKey) {
+		String value = get(variableKey);
+		if (value == null)
+			value = "";
+		value = value.toLowerCase();
+		boolean[] array = new boolean[value.length()];
+		for (int i = 0; i < array.length; i++)
+			array[i] = value.charAt(i) == 't';
+		return array;
 	}
 }

@@ -1,3 +1,6 @@
+/*******************************************************************************
+ * Copyright (C) 2013 University of Waikato, Hamilton, New Zealand
+ ******************************************************************************/
 package graph.module.cli;
 
 import graph.core.Edge;
@@ -67,7 +70,7 @@ public class RelatedEdgeCommand extends CollectionCommand {
 		ArrayList<String> split = UtilityMethods.split(data, ' ');
 		while (i < split.size()) {
 			Node node = dagHandler.getDAG().findOrCreateNode(split.get(i++),
-					null, false, false, false);
+					null);
 			if (node == null) {
 				print("-1|No node found.\n");
 				return null;

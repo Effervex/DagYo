@@ -1,3 +1,6 @@
+/*******************************************************************************
+ * Copyright (C) 2013 University of Waikato, Hamilton, New Zealand
+ ******************************************************************************/
 package test;
 
 import static org.junit.Assert.assertEquals;
@@ -54,19 +57,19 @@ public class DirectedAcyclicGraphTest {
 	@Test
 	public void testAddNode() {
 		Node node = sut_.findOrCreateNode("Test",
-				new StringNode("TestCreator"), true, false, true);
+				new StringNode("TestCreator"), true);
 		assertNotNull(node);
 		assertEquals(node, sut_.getNodeByID(((DAGNode) node).getID()));
 		assertTrue(node instanceof DAGNode);
 		assertSame(node, sut_.findDAGNode("Test"));
-		assertSame(node, sut_.findOrCreateNode("Test", null, true, false, true));
-		assertSame(node, sut_.findOrCreateNode("Test", null, true, true, true));
+		assertSame(node, sut_.findOrCreateNode("Test", null, true));
+		assertSame(node, sut_.findOrCreateNode("Test", null, true));
 		Node otherNode = sut_.findOrCreateNode("\"Test\"", new StringNode(
-				"TestCreator"), true, false, true);
+				"TestCreator"), true);
 		assertNotSame(node, otherNode);
 		assertTrue(otherNode instanceof StringNode);
 		otherNode = sut_.findOrCreateNode("'true",
-				new StringNode("TestCreator"), true, false, true);
+				new StringNode("TestCreator"), true);
 		assertNotSame(node, otherNode);
 		assertTrue(otherNode instanceof PrimitiveNode);
 		assertTrue(((PrimitiveNode) otherNode).getPrimitive() == Boolean.TRUE);
@@ -81,22 +84,23 @@ public class DirectedAcyclicGraphTest {
 	@Test
 	public void testAddEdge() {
 		Node isa = sut_.findOrCreateNode("isa", new StringNode("TestCreator"),
-				true, true, true);
+				true);
 		Node cow = sut_.findOrCreateNode("Cow", new StringNode("TestCreator"),
-				true, true, true);
+				true);
 		Node mammal = sut_.findOrCreateNode("Mammal", new StringNode(
-				"TestCreator"), true, true, true);
-		Edge edge = sut_.findOrCreateEdge(new StringNode("TestCreator"), false,
-				isa, cow, mammal);
+				"TestCreator"), true);
+		Edge edge = sut_.findOrCreateEdge(new StringNode("TestCreator"),
+				new Node[] { isa, cow, mammal }, false);
 		assertNotNull(edge);
 		assertSame(edge, sut_.getEdgeByID(((DAGEdge) edge).getID()));
 		assertSame(edge, sut_.findEdge(isa, cow, mammal));
 		assertSame(edge, sut_.findOrCreateEdge(new StringNode("TestCreator"),
-				false, isa, cow, mammal));
-		assertSame(edge, sut_.findOrCreateEdge(null, false, isa, cow, mammal));
+				new Node[] { isa, cow, mammal }, false));
+		assertSame(edge, sut_.findOrCreateEdge(null, new Node[] { isa, cow,
+				mammal }, false));
 		DAGNode bovine = new DAGNode("Bovine");
 		Edge otherEdge = sut_.findOrCreateEdge(new StringNode("TestCreator"),
-				false, isa, cow, bovine);
+				new Node[] { isa, cow, bovine }, false);
 		assertNotSame(edge, otherEdge);
 	}
 
@@ -108,30 +112,32 @@ public class DirectedAcyclicGraphTest {
 		assertNull(sut_.getNodeByID(test.getID()));
 
 		test = (DAGNode) sut_.findOrCreateNode("test", new StringNode(
-				"TestCreator"), true, true, true);
+				"TestCreator"), true);
 		assertNotNull(sut_.getNodeByID(test.getID()));
 		assertTrue(sut_.removeNode(test));
 		assertNull(sut_.getNodeByID(test.getID()));
 		assertFalse(sut_.removeNode(test));
 
 		test = (DAGNode) sut_.findOrCreateNode("test", new StringNode(
-				"TestCreator"), true, true, true);
+				"TestCreator"), true);
 		assertTrue(sut_.removeNode(test.getID()));
 		assertFalse(sut_.removeNode(test.getID()));
 
 		// Removing relevant edges
 		test = (DAGNode) sut_.findOrCreateNode("test", new StringNode(
-				"TestCreator"), true, true, true);
-		Node isa = sut_.findOrCreateNode("isa", new StringNode(
-				"TestCreator"), true, true, true);
-		Node dud = sut_.findOrCreateNode("dud", new StringNode(
-				"TestCreator"), true, true, true);
-		Node foo = sut_.findOrCreateNode("foo", new StringNode(
-				"TestCreator"), true, true, true);
-		Node bar = sut_.findOrCreateNode("bar", new StringNode(
-				"TestCreator"), true, true, true);
-		sut_.findOrCreateEdge(new StringNode("TestCreator"), false, isa, test, dud);
-		sut_.findOrCreateEdge(new StringNode("TestCreator"), false, foo, bar);
+				"TestCreator"), true);
+		Node isa = sut_.findOrCreateNode("isa", new StringNode("TestCreator"),
+				true);
+		Node dud = sut_.findOrCreateNode("dud", new StringNode("TestCreator"),
+				true);
+		Node foo = sut_.findOrCreateNode("foo", new StringNode("TestCreator"),
+				true);
+		Node bar = sut_.findOrCreateNode("bar", new StringNode("TestCreator"),
+				true);
+		sut_.findOrCreateEdge(new StringNode("TestCreator"), new Node[] { isa,
+				test, dud }, false);
+		sut_.findOrCreateEdge(new StringNode("TestCreator"), new Node[] { foo,
+				bar }, false);
 		assertEquals(sut_.getNumEdges(), 2);
 		assertTrue(sut_.removeNode(test));
 		assertEquals(sut_.getNumEdges(), 1);
@@ -139,15 +145,15 @@ public class DirectedAcyclicGraphTest {
 
 	@Test
 	public void testRemoveEdge() {
-		Node foo = sut_.findOrCreateNode("foo", new StringNode(
-				"TestCreator"), true, true, true);
-		Node bar = sut_.findOrCreateNode("bar", new StringNode(
-				"TestCreator"), true, true, true);
+		Node foo = sut_.findOrCreateNode("foo", new StringNode("TestCreator"),
+				true);
+		Node bar = sut_.findOrCreateNode("bar", new StringNode("TestCreator"),
+				true);
 		DAGEdge edge = new DAGEdge(foo, bar);
 		assertFalse(sut_.removeEdge(edge));
 		assertFalse(sut_.removeEdge(edge.getID()));
 		edge = (DAGEdge) sut_.findOrCreateEdge(new StringNode("TestCreator"),
-				false, foo, bar);
+				new Node[] { foo, bar }, false);
 		assertNotNull(sut_.getEdgeByID(edge.getID()));
 		assertEquals(sut_.getNumNodes(), 2);
 		assertTrue(sut_.removeEdge(edge));

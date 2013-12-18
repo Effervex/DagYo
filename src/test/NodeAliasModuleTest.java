@@ -1,3 +1,6 @@
+/*******************************************************************************
+ * Copyright (C) 2013 University of Waikato, Hamilton, New Zealand
+ ******************************************************************************/
 package test;
 
 import static org.junit.Assert.assertEquals;
@@ -44,7 +47,7 @@ public class NodeAliasModuleTest {
 	 */
 	@Test
 	public void testFindNodeByName() {
-		dag_.findOrCreateNode("Test", new StringNode("TestCreator"), true, true, true);
+		dag_.findOrCreateNode("Test", new StringNode("TestCreator"), true);
 		Collection<DAGNode> result = sut_.findNodeByName("Test", true);
 		assertEquals(result.size(), 1);
 		result = sut_.findNodeByName("test", true);
@@ -52,13 +55,13 @@ public class NodeAliasModuleTest {
 		result = sut_.findNodeByName("test", false);
 		assertEquals(result.size(), 1);
 
-		dag_.findOrCreateNode("Test", new StringNode("TestCreator"), true, true, true);
+		dag_.findOrCreateNode("Test", new StringNode("TestCreator"), true);
 		result = sut_.findNodeByName("Test", true);
 		assertEquals(result.size(), 1);
-		dag_.findOrCreateNode("Pants", new StringNode("TestCreator"), true, true, true);
+		dag_.findOrCreateNode("Pants", new StringNode("TestCreator"), true);
 		result = sut_.findNodeByName("Pants", true);
 		assertEquals(result.size(), 1);
-		dag_.findOrCreateNode("Pants", new StringNode("TestCreator"), true, true, true);
+		dag_.findOrCreateNode("Pants", new StringNode("TestCreator"), true);
 		result = sut_.findNodeByName("Pants", true);
 		assertEquals(result.size(), 1);
 	}
@@ -84,7 +87,7 @@ public class NodeAliasModuleTest {
 	 */
 	@Test
 	public void testFindNodeByAlias() {
-		dag_.findOrCreateNode("Test", new StringNode("TestCreator"), true, true, true);
+		dag_.findOrCreateNode("Test", new StringNode("TestCreator"), true);
 		Collection<DAGNode> result = sut_.findNodeByAlias("Test", true, true);
 		assertEquals(result.size(), 1);
 		result = sut_.findNodeByAlias("Tes", true, false);
@@ -95,9 +98,9 @@ public class NodeAliasModuleTest {
 		assertEquals(result.size(), 1);
 		result = sut_.findNodeByAlias("te", false, false);
 		assertEquals(result.size(), 0);
-		
-		dag_.findOrCreateNode("FruitFn", null, true, true, true);
-		dag_.findOrCreateNode("Fruit", null, true, true, true);
+
+		dag_.findOrCreateNode("FruitFn", null, true);
+		dag_.findOrCreateNode("Fruit", null, true);
 		result = sut_.findNodeByAlias("Fruit", true, false);
 		assertEquals(result.size(), 2);
 		result = sut_.findNodeByAlias("Fruit", true, true);

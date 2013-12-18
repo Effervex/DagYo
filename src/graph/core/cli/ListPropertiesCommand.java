@@ -1,3 +1,6 @@
+/*******************************************************************************
+ * Copyright (C) 2013 University of Waikato, Hamilton, New Zealand
+ ******************************************************************************/
 package graph.core.cli;
 
 import graph.core.DAGEdge;
@@ -36,7 +39,7 @@ public class ListPropertiesCommand extends Command {
 			if (split.get(0).equals("N")) {
 				// Node
 				dagObj = (DAGNode) dagHandler.getDAG().findOrCreateNode(
-						split.get(1), null, false, true, false);
+						split.get(1), null, false, false, true, false);
 			} else if (split.get(0).equals("E")) {
 				// Edge
 				try {

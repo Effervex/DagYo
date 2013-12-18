@@ -1,9 +1,13 @@
+/*******************************************************************************
+ * Copyright (C) 2013 University of Waikato, Hamilton, New Zealand
+ ******************************************************************************/
 package graph.core.cli;
 
 import graph.core.DAGNode;
 import graph.core.Node;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import util.UtilityMethods;
 import core.Command;
@@ -31,21 +35,23 @@ public class AddNodeCommand extends Command {
 		if (split.size() == 2) {
 			try {
 				creator = dagHandler.getDAG().findOrCreateNode(
-						UtilityMethods.shrinkString(split.get(1), 1), creator,
-						false, false, false);
+						UtilityMethods.shrinkString(split.get(1), 1), creator);
 			} catch (Exception e) {
 				print("-2|Invalid creator node.\n");
 				return;
 			}
 		}
 
+		boolean[] flags = Arrays.copyOf(
+				dagHandler.asBooleanArray(DAGPortHandler.NODE_FLAGS), 3);
+
 		DAGNode node = null;
 		if (split.get(0).equals("\"\""))
 			node = (DAGNode) dagHandler.getDAG().findOrCreateNode("", creator,
-					true, true, true);
+					true, flags[1], true);
 		else {
 			node = (DAGNode) dagHandler.getDAG().findOrCreateNode(split.get(0),
-					creator, true, true, true);
+					creator, true, flags[1], true);
 			if (node == null) {
 				print("-1|Invalid node name.\n");
 				return;

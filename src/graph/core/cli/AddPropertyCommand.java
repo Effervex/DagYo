@@ -1,3 +1,6 @@
+/*******************************************************************************
+ * Copyright (C) 2013 University of Waikato, Hamilton, New Zealand
+ ******************************************************************************/
 package graph.core.cli;
 
 import graph.core.DAGEdge;
@@ -44,7 +47,7 @@ public class AddPropertyCommand extends Command {
 			if (m.group(1).equals("N")) {
 				// Node
 				dagObj = (DAGNode) dag.findOrCreateNode(m.group(2), null,
-						false, true, false);
+						false, false, true, false);
 			} else if (m.group(1).equals("E")) {
 				// Edge
 				try {
