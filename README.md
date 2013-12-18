@@ -15,4 +15,6 @@ To connect to DagYo, run 'telnet localhost 2425' (or whatever port number is use
 WHO & WHERE:
 The DAG was initially developed by Dr Sam Sarjant at the University of Waikato, New Zealand. It was built upon Dr Craig Taube-Schock's CLI wrapper for WikipediaMiner (GenericCLI.jar). The idea came about as a solution for both OpenCyc's shortcomings, and a framework for future work with Wikipedia and other projects.
 
+All source code is copyright The University of Waikato, New Zealand (2013).
+
 Contact: Sam Sarjant sarjant@waikato.ac.nz
