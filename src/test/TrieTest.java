@@ -12,6 +12,7 @@ package test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
@@ -38,28 +39,28 @@ public class TrieTest {
 		Trie<Integer, String> trie = new Trie<>();
 		Integer[] key = toArray("001");
 		assertTrue(trie.put(key, 0, "A"));
-		Set<String> values = trie.getValue(key, 0);
+		Set<String> values = trie.getValue(key, 0, null, false);
 		assertTrue(values.size() == 1);
 		assertTrue(values.contains("A"));
 		assertEquals(trie.calcDepth(), 0);
 
 		key = toArray("101");
 		assertTrue(trie.put(key, 0, "B"));
-		values = trie.getValue(key, 0);
+		values = trie.getValue(key, 0, null, false);
 		assertTrue(values.size() == 1);
 		assertTrue(values.contains("B"));
 		assertEquals(trie.calcDepth(), 1);
 
 		key = toArray("010");
 		assertTrue(trie.put(key, 0, "C"));
-		values = trie.getValue(key, 0);
+		values = trie.getValue(key, 0, null, false);
 		assertTrue(values.size() == 1);
 		assertTrue(values.contains("C"));
 		assertEquals(trie.calcDepth(), 2);
 
 		key = toArray("010");
 		assertTrue(trie.put(key, 0, "D"));
-		values = trie.getValue(key, 0);
+		values = trie.getValue(key, 0, null, false);
 		assertTrue(values.size() == 2);
 		assertTrue(values.contains("C"));
 		assertTrue(values.contains("D"));
@@ -67,15 +68,25 @@ public class TrieTest {
 
 		key = toArray("000");
 		assertTrue(trie.put(key, 0, "E"));
-		values = trie.getValue(key, 0);
+		values = trie.getValue(key, 0, null, false);
 		assertTrue(values.size() == 1);
 		assertTrue(values.contains("E"));
 		assertEquals(trie.calcDepth(), 3);
 
 		key = toArray("0");
 		assertTrue(trie.put(key, 0, "F"));
-		values = trie.getValue(key, 0);
+		values = trie.getValue(key, 0, null, false);
 		assertTrue(values.size() == 1);
+		assertTrue(values.contains("F"));
+		assertEquals(trie.calcDepth(), 3);
+
+		// Recursive
+		values = trie.getValue(key, 0, null, true);
+		assertTrue(values.size() == 5);
+		assertTrue(values.contains("A"));
+		assertTrue(values.contains("C"));
+		assertTrue(values.contains("D"));
+		assertTrue(values.contains("E"));
 		assertTrue(values.contains("F"));
 		assertEquals(trie.calcDepth(), 3);
 
@@ -93,13 +104,13 @@ public class TrieTest {
 		assertEquals(strTrie.calcDepth(), 0);
 
 		values = strTrie.getValue("CAT", true, true);
-		assertTrue(values.isEmpty());
+		assertNull(values);
 
-		values = strTrie.getValue("cat", true, false);
+		values = strTrie.getValue("cat", false, true);
 		assertTrue(values.size() == 1);
 		assertTrue(values.contains("Cat"));
 
-		values = strTrie.getValue("CAT", false, true);
+		values = strTrie.getValue("CAT", true, false);
 		assertTrue(values.size() == 1);
 		assertTrue(values.contains("Cat"));
 
@@ -122,10 +133,10 @@ public class TrieTest {
 		assertTrue(values.contains("ball"));
 		assertEquals(strTrie.calcDepth(), 4);
 
-		values = strTrie.getValue("catc", true, true);
-		assertTrue(values.isEmpty());
+		values = strTrie.getValue("catc", false, true);
+		assertNull(values);
 
-		values = strTrie.getValue("catc", true, false);
+		values = strTrie.getValue("catc", true, true);
 		assertTrue(values.size() == 1);
 		assertTrue(values.contains("ball"));
 
@@ -135,7 +146,7 @@ public class TrieTest {
 		assertTrue(values.contains("typo"));
 		assertEquals(strTrie.calcDepth(), 5);
 
-		values = strTrie.getValue("cat", true, false);
+		values = strTrie.getValue("cat", true, true);
 		assertTrue(values.size() == 4);
 		assertTrue(values.contains("Cat"));
 		assertTrue(values.contains("FELINE"));
@@ -147,13 +158,13 @@ public class TrieTest {
 	public void testSpecial() {
 		StringTrie<String> strTrie = new StringTrie<>();
 		assertTrue(strTrie.put("FruitFn", "FruitFn"));
-		Set<String> values = strTrie.getValue("FruitFn", true, true);
+		Set<String> values = strTrie.getValue("FruitFn", false, true);
 		assertEquals(values.size(), 1);
 		assertTrue(values.contains("FruitFn"));
 		assertEquals(strTrie.calcDepth(), 0);
 
 		assertTrue(strTrie.put("Fruit", "Fruit"));
-		values = strTrie.getValue("Fruit", true, true);
+		values = strTrie.getValue("Fruit", false, true);
 		assertEquals(values.size(), 1);
 		assertTrue(values.contains("Fruit"));
 		assertEquals(strTrie.calcDepth(), 6);

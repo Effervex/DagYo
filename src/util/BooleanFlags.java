@@ -77,7 +77,7 @@ public class BooleanFlags {
 		flags.addAll(flagPos_.keySet());
 		for (String flag : flags) {
 			if (buffer.length() > 0)
-				buffer.append(" ,");
+				buffer.append(", ");
 			buffer.append(flag + " (" + vals_[flagPos_.get(flag)] + ")");
 		}
 		return buffer.toString();

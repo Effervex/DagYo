@@ -514,17 +514,14 @@ public class DirectedAcyclicGraph {
 	public synchronized void groundEphemeral() {
 		// Compile module properties to remove
 		Collection<String> props = new ArrayList<>();
-		for (DAGModule<?> module : modules_)
+		for (DAGModule<?> module : modules_) {
 			props.addAll(module.getPertinentProperties());
+			module.disableCached();
+		}
 		props.add(EPHEMERAL_MARK);
 
 		// Run through the nodes, setting them as non-ephemeral
 		System.out.print("Grounding ephemeral nodes and edges... ");
-		for (DAGNode n : nodes_) {
-			for (String prop : props)
-				n.remove(prop);
-		}
-
 		// Run through the edges, reasserting them as non-ephemeral
 		SortedSet<DAGEdge> reassertables = new TreeSet<DAGEdge>();
 		for (DAGEdge e : edges_) {
@@ -539,14 +536,20 @@ public class DirectedAcyclicGraph {
 			String creatorStr = e.getCreator();
 			Node creator = (creatorStr == null) ? null : findOrCreateNode(
 					creatorStr, null);
-			findOrCreateEdge(creator, e.getNodes(), false, false);
+			Edge e2 = findOrCreateEdge(creator, e.getNodes(), false, false);
+			if (e2 instanceof ErrorEdge)
+				System.err.println("Error creating once-ephemeral edge: " + e2);
+		}
+
+		for (DAGNode n : nodes_) {
+			for (String prop : props)
+				n.remove(prop);
 		}
 		System.out.println("Done!");
 
 		// Rebuild the modules
 		for (DAGModule<?> module : modules_)
 			module.initialisationComplete(nodes_, edges_, true);
-		saveState();
 	}
 
 	/**

@@ -10,12 +10,8 @@
  ******************************************************************************/
 package graph.core.cli;
 
-import graph.core.DAGNode;
 import graph.core.DirectedAcyclicGraph;
 import graph.core.Identifiable;
-import graph.core.Node;
-import graph.core.PrimitiveNode;
-import graph.core.StringNode;
 import graph.core.cli.comparator.DefaultComparator;
 import graph.core.cli.comparator.IDComparator;
 import graph.core.cli.comparator.StringCaseInsComparator;
@@ -23,12 +19,13 @@ import graph.core.cli.comparator.StringComparator;
 
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import util.UtilityMethods;
+import util.AliasedObject;
 import core.CommandQueue;
 import core.PortHandler;
 
@@ -119,7 +116,11 @@ public class DAGPortHandler extends PortHandler {
 		return comparator;
 	}
 
+	@SuppressWarnings("rawtypes")
 	public Object convertToComparable(Object o) {
+		if (o instanceof AliasedObject) {
+			return ((AliasedObject) o).getAliasString();
+		}
 		return o;
 	}
 

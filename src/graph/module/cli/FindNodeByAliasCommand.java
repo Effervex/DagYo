@@ -13,7 +13,6 @@ package graph.module.cli;
 import graph.core.DAGNode;
 import graph.core.cli.CollectionCommand;
 import graph.core.cli.DAGPortHandler;
-import graph.module.DAGModule;
 import graph.module.ModuleException;
 import graph.module.NodeAliasModule;
 
@@ -21,6 +20,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.TreeSet;
 
+import org.apache.commons.lang3.ArrayUtils;
+
+import util.AliasedObject;
 import util.UtilityMethods;
 
 /**
@@ -55,7 +57,7 @@ public class FindNodeByAliasCommand extends CollectionCommand {
 			return;
 		}
 
-		Collection<DAGModule<Collection<DAGNode>>> aliasModules = null;
+		Collection<AliasModule> aliasModules = null;
 		try {
 			aliasModules = getAllAliasModules(dagHandler);
 		} catch (ModuleException me) {
@@ -73,21 +75,40 @@ public class FindNodeByAliasCommand extends CollectionCommand {
 		boolean exactString = true;
 		if (split.size() >= 3 && split.get(2).equals("F"))
 			exactString = false;
+		boolean aliasText = false;
+		if (split.size() >= 4 && split.get(3).equals("T"))
+			aliasText = true;
 
-		Collection<DAGNode> nodes = new TreeSet<>();
-		for (DAGModule<Collection<DAGNode>> aliasModule : aliasModules)
-			nodes.addAll(aliasModule.execute(alias, caseSensitive, exactString));
-		nodes = dagHandler.sort(nodes, rangeStart_, rangeEnd_);
+		if (!aliasText) {
+			Collection<DAGNode> nodes = new TreeSet<>();
+			for (AliasModule aliasModule : aliasModules) {
+				nodes.addAll(aliasModule.findNodes(alias, caseSensitive,
+						exactString));
+			}
+			nodes = dagHandler.sort(nodes, rangeStart_, rangeEnd_);
 
-		print(nodes.size() + "|");
-		for (DAGNode n : nodes)
-			print(dagHandler.textIDObject(n) + "|");
+			print(nodes.size() + "|");
+			for (DAGNode n : nodes)
+				print(dagHandler.textIDObject(n) + "|");
+		} else {
+			Collection<AliasedObject<Character, DAGNode>> nodes = new TreeSet<>();
+			for (AliasModule aliasModule : aliasModules) {
+				nodes.addAll(aliasModule.findAliasedNodes(alias, caseSensitive,
+						exactString));
+			}
+			nodes = dagHandler.sort(nodes, rangeStart_, rangeEnd_);
+
+			print(nodes.size() + "|");
+			for (AliasedObject<Character, DAGNode> n : nodes)
+				print(dagHandler.textIDObject(n.object_) + ",\""
+						+ new String(ArrayUtils.toPrimitive(n.alias_)) + "\"|");
+		}
 		print("\n");
 	}
 
-	protected Collection<DAGModule<Collection<DAGNode>>> getAllAliasModules(
+	protected Collection<AliasModule> getAllAliasModules(
 			DAGPortHandler dagHandler) {
-		Collection<DAGModule<Collection<DAGNode>>> aliasModules = new ArrayList<>();
+		Collection<AliasModule> aliasModules = new ArrayList<>();
 
 		NodeAliasModule aliasModule = (NodeAliasModule) dagHandler.getDAG()
 				.getModule(NodeAliasModule.class);

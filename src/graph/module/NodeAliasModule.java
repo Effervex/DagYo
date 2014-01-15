@@ -11,14 +11,19 @@
 package graph.module;
 
 import graph.core.DAGNode;
+import graph.core.DirectedAcyclicGraph;
 import graph.core.Edge;
 import graph.core.StringNode;
 import graph.edge.properties.Alias;
+import graph.module.cli.AliasModule;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang3.ArrayUtils;
+
+import util.AliasedObject;
 import util.collection.StringTrie;
 
 /**
@@ -27,7 +32,8 @@ import util.collection.StringTrie;
  * 
  * @author Sam Sarjant
  */
-public class NodeAliasModule extends DAGModule<Collection<DAGNode>> {
+public class NodeAliasModule extends DAGModule<Collection<DAGNode>> implements
+		AliasModule {
 	private static final long serialVersionUID = 7451861373081932549L;
 	/** The Long actually represents a DAGNode ID. */
 	private StringTrie<DAGNode> aliasTrie_ = new StringTrie<>();
@@ -106,7 +112,7 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> {
 		if (onlyNodeNames)
 			return findNodeByName(alias, caseSensitive);
 		else
-			return findNodeByAlias(alias, caseSensitive, exactString);
+			return findNodeByAlias(alias, caseSensitive, exactString, true);
 	}
 
 	/**
@@ -118,14 +124,25 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> {
 	 *            If the alias is case sensitive
 	 * @param exactString
 	 *            If the alias is exact or represents an prefix substring.
+	 * @param excludeEphemeral
+	 *            If ephemeral nodes are excluded from the results.
 	 * @return All nodes indexed by the given alias.
 	 */
 	public Collection<DAGNode> findNodeByAlias(String alias,
-			boolean caseSensitive, boolean exactString) {
+			boolean caseSensitive, boolean exactString, boolean excludeEphemeral) {
 		Collection<DAGNode> nodes = aliasTrie_.getValue(processAlias(alias),
-				caseSensitive, exactString);
+				!exactString, caseSensitive);
 		if (nodes == null)
 			return new ArrayList<>(0);
+
+		if (excludeEphemeral) {
+			Collection<DAGNode> nonEphemeral = new ArrayList<DAGNode>(
+					nodes.size());
+			for (DAGNode n : nodes)
+				if (n.getProperty(DirectedAcyclicGraph.EPHEMERAL_MARK) == null)
+					nonEphemeral.add(n);
+			nodes = nonEphemeral;
+		}
 
 		// Converting ID to node
 		return nodes;
@@ -143,7 +160,7 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> {
 	public Collection<DAGNode> findNodeByName(String nodeName,
 			boolean caseSensitive) {
 		Collection<DAGNode> aliasNodes = findNodeByAlias(
-				processAlias(nodeName), caseSensitive, true);
+				processAlias(nodeName), caseSensitive, true, false);
 		Collection<DAGNode> namedNodes = new HashSet<>(aliasNodes.size());
 		for (DAGNode aliasNode : aliasNodes) {
 			if (caseSensitive && aliasNode.getName().equals(nodeName)
@@ -186,5 +203,20 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> {
 	@Override
 	public String toString() {
 		return aliasTrie_.toString();
+	}
+
+	@Override
+	public Collection<DAGNode> findNodes(String alias, boolean caseSensitive,
+			boolean exactString) {
+		return execute(alias, caseSensitive, exactString);
+	}
+
+	@Override
+	public Collection<AliasedObject<Character, DAGNode>> findAliasedNodes(
+			String alias, boolean caseSensitive, boolean exactString) {
+		Collection<AliasedObject<Character, DAGNode>> aliased = new HashSet<>();
+		aliasTrie_.getValue(ArrayUtils.toObject(alias.toCharArray()), 0,
+				aliased, !exactString, caseSensitive);
+		return aliased;
 	}
 }

@@ -13,8 +13,10 @@ package graph.core.cli.comparator;
 public class StringCaseInsComparator extends DefaultComparator {
 	@Override
 	protected int compareInternal(Object o1, Object o2) {
-		return o1.toString().toLowerCase()
+		int result = o1.toString().toLowerCase()
 				.compareTo(o2.toString().toLowerCase());
+		if (result == 0)
+			result = o1.toString().compareTo(o2.toString());
+		return result;
 	}
-
 }

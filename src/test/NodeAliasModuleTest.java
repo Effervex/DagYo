@@ -87,7 +87,7 @@ public class NodeAliasModuleTest {
 
 	/**
 	 * Test method for
-	 * {@link graph.core.DirectedAcyclicGraph#findNodeByAlias(java.lang.String, boolean, boolean)}
+	 * {@link graph.core.DirectedAcyclicGraph#findNodeByAlias(java.lang.String, boolean, boolean, boolean)}
 	 * .
 	 * 
 	 * @throws NamingException
@@ -95,22 +95,20 @@ public class NodeAliasModuleTest {
 	@Test
 	public void testFindNodeByAlias() {
 		dag_.findOrCreateNode("Test", new StringNode("TestCreator"), true);
-		Collection<DAGNode> result = sut_.findNodeByAlias("Test", true, true);
+		Collection<DAGNode> result = sut_.findNodeByAlias("Test", true, true, true);
 		assertEquals(result.size(), 1);
-		result = sut_.findNodeByAlias("Tes", true, false);
+		result = sut_.findNodeByAlias("Tes", true, false, true);
 		assertEquals(result.size(), 1);
-		result = sut_.findNodeByAlias("tes", true, false);
+		result = sut_.findNodeByAlias("tes", true, false, true);
 		assertEquals(result.size(), 0);
-		result = sut_.findNodeByAlias("tes", false, false);
+		result = sut_.findNodeByAlias("tes", false, false, true);
 		assertEquals(result.size(), 1);
-		result = sut_.findNodeByAlias("te", false, false);
-		assertEquals(result.size(), 0);
 
 		dag_.findOrCreateNode("FruitFn", null, true);
 		dag_.findOrCreateNode("Fruit", null, true);
-		result = sut_.findNodeByAlias("Fruit", true, false);
+		result = sut_.findNodeByAlias("Fruit", true, false, true);
 		assertEquals(result.size(), 2);
-		result = sut_.findNodeByAlias("Fruit", true, true);
+		result = sut_.findNodeByAlias("Fruit", true, true, true);
 		assertEquals(result.size(), 1);
 	}
 

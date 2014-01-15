@@ -33,6 +33,7 @@ public abstract class DAGModule<T> implements Serializable {
 	private static final String MODULE_DIR = "modules";
 	private static final long serialVersionUID = -1752235659675219252L;
 	protected transient DirectedAcyclicGraph dag_;
+	// TODO Add capability to cache
 
 	protected DAGModule() {
 	}
@@ -169,7 +170,19 @@ public abstract class DAGModule<T> implements Serializable {
 		return (DAGModule<?>) moduleClass.newInstance();
 	}
 
+	/**
+	 * Gets any pertinent properties the module uses on nodes and edges.
+	 * 
+	 * @return The collection of all pertinent properties used.
+	 */
 	public Collection<String> getPertinentProperties() {
 		return new ArrayList<String>(0);
+	}
+
+	/**
+	 * Removes any cached information the module has, requiring it to compute
+	 * results on demand.
+	 */
+	public void disableCached() {
 	}
 }
