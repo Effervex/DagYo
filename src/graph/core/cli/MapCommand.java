@@ -11,8 +11,13 @@
 package graph.core.cli;
 
 import java.io.BufferedReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.StringUtils;
 
 import util.UtilityMethods;
 import core.Command;
@@ -22,12 +27,15 @@ public class MapCommand extends Command {
 
 	@Override
 	public String helpText() {
-		return "{0} function funcArgs delimiter \\n collection collectionArgs "
-				+ "\\n captureRegExp : Applies function with "
-				+ "args (using $1, $2,... syntax for regexp) to every "
-				+ "item in the output of collection using collectionArgs. "
-				+ "Every output is separated by delimiter. Note that "
-				+ "multiline commands may not be usable in this command.";
+		return "{0} function funcArgs delimiter [mapSort] \\n "
+				+ "collection collectionArgs \\n captureRegExp : "
+				+ "Applies function with args (using $1, $2,... "
+				+ "syntax for regexp) to every item in the output of "
+				+ "collection using collectionArgs. Every output is "
+				+ "separated by delimiter. Optional sorting by the "
+				+ "output of map command rather than collection command. "
+				+ "Multiline commands are not explicitly supported "
+				+ "by should work.";
 	}
 
 	@Override
@@ -37,22 +45,38 @@ public class MapCommand extends Command {
 
 	@Override
 	protected void executeImpl() {
+		DAGPortHandler dagHandler = (DAGPortHandler) handler;
 		// Format each element into individual commands
 		int spaceIndex = data.indexOf(' ');
 		if (spaceIndex == -1) {
 			print("No function or args specified.\n");
 			return;
 		}
-		int lastSpace = data.lastIndexOf(' ');
-		if (lastSpace == spaceIndex) {
+		String[] split = data.split("\\s+");
+		if (split.length <= 2) {
 			print("No args or delimiter specified.\n");
 			return;
 		}
 
 		BufferedReader in = getPortHandler().getReader();
-		String functionName = data.substring(0, spaceIndex);
-		String funcArgs = data.substring(spaceIndex + 1, lastSpace).trim();
-		String delimiter = data.substring(lastSpace).trim();
+		int funcExtent = split.length - 1;
+		String delimiter = split[funcExtent];
+		boolean sortByMap = false;
+		if (delimiter.equalsIgnoreCase("T") || delimiter.equalsIgnoreCase("F")) {
+			if (delimiter.equalsIgnoreCase("T"))
+				sortByMap = true;
+			funcExtent--;
+			delimiter = split[funcExtent];
+		}
+
+		// Parse mapped function
+		if (funcExtent == 0) {
+			print("No args or delimiter specified.\n");
+			return;
+		}
+		String functionName = split[0];
+		String[] funcArgs = Arrays.copyOfRange(split, 1, funcExtent);
+		String funcArgsStr = StringUtils.join(funcArgs, ' ');
 
 		try {
 			// Read collection
@@ -67,6 +91,12 @@ public class MapCommand extends Command {
 			}
 
 			// Run the command
+			// Disable sorting (temporarily)
+			String sortOrder = null;
+			if (sortByMap) {
+				sortOrder = dagHandler.get(DAGPortHandler.SORT_ORDER);
+				dagHandler.set(DAGPortHandler.SORT_ORDER, "");
+			}
 			Command command = CommandParser.parse(collectionName + " "
 					+ collectionArgs);
 			command.setPortHandler(handler);
@@ -79,16 +109,27 @@ public class MapCommand extends Command {
 
 			// Map function to it
 			Matcher m = regex.matcher(output);
+			Collection<String> mappedResults = new ArrayList<>();
 			while (m.find()) {
 				String[] groups = new String[m.groupCount() + 1];
 				for (int i = 0; i < groups.length; i++)
 					groups[i] = m.group(i);
 
 				Command funcCommand = CommandParser.parse(functionName + " "
-						+ UtilityMethods.replaceToken(funcArgs, groups));
+						+ UtilityMethods.replaceToken(funcArgsStr, groups));
 				funcCommand.setPortHandler(handler);
 				funcCommand.execute();
-				print(funcCommand.getResult());
+				mappedResults.add(funcCommand.getResult());
+			}
+
+			// Re-enable sort-order and sort mapped results.
+			if (sortByMap) {
+				dagHandler.set(DAGPortHandler.SORT_ORDER, sortOrder);
+				mappedResults = dagHandler.sort(mappedResults, 0,
+						mappedResults.size());
+			}
+			for (String result : mappedResults) {
+				print(result + "\n");
 				print(delimiter + "\n");
 			}
 		} catch (Exception e) {

@@ -24,6 +24,7 @@ import java.util.HashSet;
 import org.apache.commons.lang3.ArrayUtils;
 
 import util.AliasedObject;
+import util.collection.MergeSet;
 import util.collection.StringTrie;
 
 /**
@@ -214,7 +215,7 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> implements
 	@Override
 	public Collection<AliasedObject<Character, DAGNode>> findAliasedNodes(
 			String alias, boolean caseSensitive, boolean exactString) {
-		Collection<AliasedObject<Character, DAGNode>> aliased = new HashSet<>();
+		Collection<AliasedObject<Character, DAGNode>> aliased = new MergeSet<>();
 		aliasTrie_.getValue(ArrayUtils.toObject(alias.toCharArray()), 0,
 				aliased, !exactString, caseSensitive);
 		return aliased;

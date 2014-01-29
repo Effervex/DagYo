@@ -132,6 +132,31 @@ public class RelatedEdgeModule extends DAGModule<Collection<Edge>> {
 		return edges;
 	}
 
+	/**
+	 * Gets all edges but the one given by the key.
+	 * 
+	 * @param node
+	 *            The edges must include this node.
+	 * @param butEdgeKey
+	 *            The key that is NOT added to the results.
+	 * @return A collection of edges that are indexed by node, but none from the
+	 *         butEdgeKey (though they may be added if included under other
+	 *         keys).
+	 */
+	public Collection<Edge> getAllButEdges(Node node, Object butEdgeKey) {
+		MultiMap<Object, Edge> indexedEdges = relatedEdges_.get(node);
+		if (indexedEdges == null) {
+			return new ConcurrentLinkedQueue<>();
+		}
+
+		Collection<Edge> edges = new HashSet<>();
+		for (Object key : indexedEdges.keySet()) {
+			if (!key.equals(butEdgeKey))
+				edges.addAll(indexedEdges.get(key));
+		}
+		return edges;
+	}
+
 	protected List<EdgeCol> locateEdgeCollections(boolean createNew,
 			Object... args) {
 		List<EdgeCol> edgeCols = new ArrayList<>();

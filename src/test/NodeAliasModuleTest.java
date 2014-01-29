@@ -25,6 +25,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import util.AliasedObject;
+
 public class NodeAliasModuleTest {
 	private NodeAliasModule sut_;
 	private DirectedAcyclicGraph dag_;
@@ -95,7 +97,8 @@ public class NodeAliasModuleTest {
 	@Test
 	public void testFindNodeByAlias() {
 		dag_.findOrCreateNode("Test", new StringNode("TestCreator"), true);
-		Collection<DAGNode> result = sut_.findNodeByAlias("Test", true, true, true);
+		Collection<DAGNode> result = sut_.findNodeByAlias("Test", true, true,
+				true);
 		assertEquals(result.size(), 1);
 		result = sut_.findNodeByAlias("Tes", true, false, true);
 		assertEquals(result.size(), 1);
@@ -112,4 +115,11 @@ public class NodeAliasModuleTest {
 		assertEquals(result.size(), 1);
 	}
 
+	@Test
+	public void testFindNode() {
+		dag_.findOrCreateNode("Test", new StringNode("TestCreator"), true);
+		Collection<AliasedObject<Character, DAGNode>> aliased = sut_
+				.findAliasedNodes("Test", true, true);
+		assertEquals(aliased.size(), 1);
+	}
 }
