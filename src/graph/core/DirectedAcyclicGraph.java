@@ -567,7 +567,7 @@ public class DirectedAcyclicGraph {
 	}
 
 	public Node[] parseNodes(String strNodes, Node creator,
-			boolean createNodes, boolean allowVariables) {
+			boolean createNodes, boolean dagNodeOnly) {
 		if (strNodes.startsWith("("))
 			strNodes = UtilityMethods.shrinkString(strNodes, 1);
 		ArrayList<String> split = UtilityMethods.split(strNodes, ' ');
@@ -575,10 +575,8 @@ public class DirectedAcyclicGraph {
 		Node[] nodes = new Node[split.size()];
 		int i = 0;
 		for (String arg : split) {
-			if (!allowVariables && arg.startsWith("?"))
-				return null;
 			nodes[i] = findOrCreateNode(arg, creator, createNodes, false,
-					false, allowVariables);
+					dagNodeOnly);
 
 			if (nodes[i] == null)
 				return null;

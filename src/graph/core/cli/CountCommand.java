@@ -44,7 +44,7 @@ public class CountCommand extends Command {
 			else
 				print("-1|No count value found.\n");
 		} catch (Exception e) {
-			e.printStackTrace();
+			print("-1|Invalid command.\n");
 		}
 	}
 
