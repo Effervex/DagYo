@@ -35,6 +35,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import javax.activity.InvalidActivityException;
 
+import org.apache.commons.collections4.CollectionUtils;
+
 import util.BooleanFlags;
 import util.FSTDAGObjectSerialiser;
 import util.UtilityMethods;
