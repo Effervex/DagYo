@@ -10,6 +10,7 @@
  ******************************************************************************/
 package graph.module;
 
+import graph.core.DAGEdge;
 import graph.core.DAGNode;
 import graph.core.DirectedAcyclicGraph;
 import graph.core.Edge;
@@ -45,6 +46,8 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> implements
 	}
 
 	public boolean addAlias(DAGNode node, String alias) {
+		if (alias.isEmpty())
+			return false;
 		aliasTrie_.put(processAlias(alias), node);
 		return true;
 	}
@@ -54,11 +57,24 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> implements
 		if (edge instanceof Alias) {
 			Alias aliasEdge = (Alias) edge;
 			for (StringNode alias : aliasEdge.getAliases())
-				aliasTrie_.put(processAlias(alias.getName()),
-						aliasEdge.getNode());
+				addAlias(aliasEdge.getNode(), alias.getName());
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public boolean initialisationComplete(Collection<DAGNode> nodes,
+			Collection<DAGEdge> edges, boolean forceRebuild) {
+		if (!aliasTrie_.isEmpty() && !forceRebuild)
+			return false;
+
+		// Iterate through all nodes and edges, adding aliases
+		System.out.print("Rebuilding alias trie... ");
+		aliasTrie_.clear();
+		defaultRebuild(nodes, true, edges, true);
+		System.out.println("Done!");
+		return true;
 	}
 
 	@Override
@@ -114,6 +130,15 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> implements
 			return findNodeByName(alias, caseSensitive);
 		else
 			return findNodeByAlias(alias, caseSensitive, exactString, true);
+	}
+
+	@Override
+	public Collection<AliasedObject<Character, DAGNode>> findAliasedNodes(
+			String alias, boolean caseSensitive, boolean exactString) {
+		Collection<AliasedObject<Character, DAGNode>> aliased = new MergeSet<>();
+		aliasTrie_.getValue(ArrayUtils.toObject(alias.toCharArray()), 0,
+				aliased, !exactString, caseSensitive);
+		return aliased;
 	}
 
 	/**
@@ -173,6 +198,12 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> implements
 	}
 
 	@Override
+	public Collection<DAGNode> findNodes(String alias, boolean caseSensitive,
+			boolean exactString) {
+		return execute(alias, caseSensitive, exactString);
+	}
+
+	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
@@ -204,20 +235,5 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> implements
 	@Override
 	public String toString() {
 		return aliasTrie_.toString();
-	}
-
-	@Override
-	public Collection<DAGNode> findNodes(String alias, boolean caseSensitive,
-			boolean exactString) {
-		return execute(alias, caseSensitive, exactString);
-	}
-
-	@Override
-	public Collection<AliasedObject<Character, DAGNode>> findAliasedNodes(
-			String alias, boolean caseSensitive, boolean exactString) {
-		Collection<AliasedObject<Character, DAGNode>> aliased = new MergeSet<>();
-		aliasTrie_.getValue(ArrayUtils.toObject(alias.toCharArray()), 0,
-				aliased, !exactString, caseSensitive);
-		return aliased;
 	}
 }

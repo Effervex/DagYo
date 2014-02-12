@@ -33,9 +33,21 @@ public abstract class DAGModule<T> implements Serializable {
 	private static final String MODULE_DIR = "modules";
 	private static final long serialVersionUID = -1752235659675219252L;
 	protected transient DirectedAcyclicGraph dag_;
+
 	// TODO Add capability to cache
 
 	protected DAGModule() {
+	}
+
+	protected void defaultRebuild(Collection<DAGNode> nodes,
+			boolean iterateNodes, Collection<DAGEdge> edges,
+			boolean iterateEdges) {
+		if (iterateNodes)
+			for (DAGNode node : nodes)
+				addNode(node);
+		if (iterateEdges)
+			for (DAGEdge edge : edges)
+				addEdge(edge);
 	}
 
 	/**
@@ -68,8 +80,24 @@ public abstract class DAGModule<T> implements Serializable {
 
 	}
 
+	/**
+	 * Removes any cached information the module has, requiring it to compute
+	 * results on demand.
+	 */
+	public void disableCached() {
+	}
+
 	public abstract T execute(Object... args) throws IllegalArgumentException,
 			ModuleException;
+
+	/**
+	 * Gets any pertinent properties the module uses on nodes and edges.
+	 * 
+	 * @return The collection of all pertinent properties used.
+	 */
+	public Collection<String> getPertinentProperties() {
+		return new ArrayList<String>(0);
+	}
 
 	/**
 	 * A method that is called once initialisation of a DAG is complete. Note
@@ -168,21 +196,5 @@ public abstract class DAGModule<T> implements Serializable {
 
 		// TODO In this case, need to rescan dirs.
 		return (DAGModule<?>) moduleClass.newInstance();
-	}
-
-	/**
-	 * Gets any pertinent properties the module uses on nodes and edges.
-	 * 
-	 * @return The collection of all pertinent properties used.
-	 */
-	public Collection<String> getPertinentProperties() {
-		return new ArrayList<String>(0);
-	}
-
-	/**
-	 * Removes any cached information the module has, requiring it to compute
-	 * results on demand.
-	 */
-	public void disableCached() {
 	}
 }

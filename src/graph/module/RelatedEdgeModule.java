@@ -10,6 +10,7 @@
  ******************************************************************************/
 package graph.module;
 
+import graph.core.DAGEdge;
 import graph.core.DAGNode;
 import graph.core.Edge;
 import graph.core.Node;
@@ -72,6 +73,20 @@ public class RelatedEdgeModule extends DAGModule<Collection<Edge>> {
 				filtered.add(e);
 		}
 		return filtered;
+	}
+
+	@Override
+	public boolean initialisationComplete(Collection<DAGNode> nodes,
+			Collection<DAGEdge> edges, boolean forceRebuild) {
+		if (!relatedEdges_.isEmpty() && !forceRebuild)
+			return false;
+
+		// Iterate through all nodes and edges, adding aliases
+		System.out.print("Rebuilding related edge map... ");
+		relatedEdges_.clear();
+		defaultRebuild(nodes, false, edges, true);
+		System.out.println("Done!");
+		return true;
 	}
 
 	protected final Collection<Pair<Node, Object>> findNonDAGs(Object[] args) {
