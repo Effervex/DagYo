@@ -43,6 +43,7 @@ public class NodeCommand extends Command {
 				return;
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		print("-1|Could not parse node from arguments.\n");
 	}

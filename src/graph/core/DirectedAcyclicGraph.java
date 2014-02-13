@@ -35,8 +35,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import javax.activity.InvalidActivityException;
 
-import org.apache.commons.collections4.CollectionUtils;
-
 import util.BooleanFlags;
 import util.FSTDAGObjectSerialiser;
 import util.UtilityMethods;
@@ -391,22 +389,26 @@ public class DirectedAcyclicGraph {
 
 		nodeLock_.lock();
 		try {
+			DAGNode node = null;
 			if (nodeStr == null) {
 				return null;
 			} else if (createNew && nodeStr.isEmpty()) {
-				DAGNode node = new DAGNode(creator);
+				node = new DAGNode(creator);
 				if (bFlags.getFlag("ephemeral"))
 					addProperty(node, EPHEMERAL_MARK, "true");
 				return node;
 			} else if (!dagNodeOnly && nodeStr.startsWith("\"")) {
 				return new StringNode(nodeStr);
 			} else if (nodeStr.matches("\\d+")) {
-				return getNodeByID(Long.parseLong(nodeStr));
+				node = getNodeByID(Long.parseLong(nodeStr));
 			} else if (!dagNodeOnly && nodeStr.startsWith("'")) {
 				return PrimitiveNode.parseNode(nodeStr.substring(1));
 			}
 
-			DAGNode node = findDAGNode(nodeStr);
+			if (node != null)
+				return node;
+
+			node = findDAGNode(nodeStr);
 			if (node == null && createNew && DAGNode.isValidName(nodeStr)) {
 				// Create a new node
 				node = new DAGNode(nodeStr, creator);

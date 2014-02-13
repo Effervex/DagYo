@@ -108,7 +108,8 @@ public abstract class DAGModule<T> implements Serializable {
 	 * @param edges
 	 *            The collection of all existing edges.
 	 * @param forceRebuild
-	 *            TODO
+	 *            If the modules should be forcibly rebuilt (even if they are
+	 *            up-to-date).
 	 * @return If something changed.
 	 */
 	public boolean initialisationComplete(Collection<DAGNode> nodes,
