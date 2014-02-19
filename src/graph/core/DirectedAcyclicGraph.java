@@ -342,7 +342,7 @@ public class DirectedAcyclicGraph {
 						if (n instanceof DAGNode
 								&& findOrCreateNode(n.getIdentifier(), null,
 										bFlags.getFlag("createNew")) == null)
-							return DAGErrorEdge.NON_EXISTENT_NODE;
+							return new NonExistentErrorEdge(n);
 				}
 
 				edge = new DAGEdge(creator, true, edgeNodes);

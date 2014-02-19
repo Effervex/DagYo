@@ -24,10 +24,10 @@ import org.apache.commons.lang3.StringUtils;
  * @author Sam Sarjant
  */
 public class DAGEdge extends DAGObject implements Edge {
+	private static final long serialVersionUID = 8148137157637389069L;
+
 	/** The counter for assigning ids to edges. */
 	public static long idCounter_ = 1;
-
-	private static final long serialVersionUID = 8148137157637389069L;
 
 	/** The nodes of the edge. */
 	protected Node[] edgeNodes_;
@@ -58,7 +58,6 @@ public class DAGEdge extends DAGObject implements Edge {
 	 */
 	public DAGEdge(Node creator, boolean placeholder, Node... nodes) {
 		super(creator);
-		id_ = idCounter_++;
 		if (nodes.length < 2)
 			throw new IllegalArgumentException(
 					"An edge must be between two or more nodes. "
@@ -71,6 +70,22 @@ public class DAGEdge extends DAGObject implements Edge {
 								+ Arrays.toString(nodes));
 			edgeNodes_[i] = nodes[i];
 		}
+	}
+
+	@Override
+	protected void readFullObject(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+		edgeNodes_ = (Node[]) in.readObject();
+	}
+
+	@Override
+	protected long requestID() {
+		return idCounter_++;
+	}
+
+	@Override
+	protected void writeFullObject(ObjectOutput out) throws IOException {
+		out.writeObject(edgeNodes_);
 	}
 
 	@Override
@@ -131,16 +146,5 @@ public class DAGEdge extends DAGObject implements Edge {
 
 	public static void setCounter(int count) {
 		idCounter_ = count;
-	}
-
-	@Override
-	protected void readFullObject(ObjectInput in) throws IOException,
-			ClassNotFoundException {
-		edgeNodes_ = (Node[]) in.readObject();
-	}
-
-	@Override
-	protected void writeFullObject(ObjectOutput out) throws IOException {
-		out.writeObject(edgeNodes_);
 	}
 }

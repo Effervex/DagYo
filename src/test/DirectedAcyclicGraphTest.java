@@ -105,7 +105,7 @@ public class DirectedAcyclicGraphTest {
 				new Node[] { isa, cow, mammal }, false));
 		assertSame(edge, sut_.findOrCreateEdge(null, new Node[] { isa, cow,
 				mammal }, false));
-		DAGNode bovine = new DAGNode("Bovine");
+		DAGNode bovine = new DAGNode("Bovine", null);
 		Edge otherEdge = sut_.findOrCreateEdge(new StringNode("TestCreator"),
 				new Node[] { isa, cow, bovine }, false);
 		assertNotSame(edge, otherEdge);
@@ -113,7 +113,7 @@ public class DirectedAcyclicGraphTest {
 
 	@Test
 	public void testRemoveNode() {
-		DAGNode test = new DAGNode("test");
+		DAGNode test = new DAGNode("test", null);
 		assertFalse(sut_.removeNode(test));
 		assertFalse(sut_.removeNode(test.getID()));
 		assertNull(sut_.getNodeByID(test.getID()));

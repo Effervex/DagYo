@@ -48,6 +48,11 @@ public abstract class DAGObject implements UniqueID, Serializable,
 		if (creator != null)
 			properties_.put(CREATOR, creator.getIdentifier());
 		properties_.put(CREATION_DATE, System.currentTimeMillis() + "");
+		id_ = requestID();
+	}
+
+	protected long requestID() {
+		return -1;
 	}
 
 	protected abstract void readFullObject(ObjectInput in) throws IOException,

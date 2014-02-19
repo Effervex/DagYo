@@ -49,21 +49,19 @@ public class DAGNode extends DAGObject implements Node {
 
 	public DAGNode() {
 		super(null);
-		id_ = idCounter_++;
+	}
+
+	@Override
+	protected long requestID() {
+		return idCounter_++;
 	}
 
 	public DAGNode(Node creator) {
 		super(creator);
-		id_ = idCounter_++;
-	}
-
-	public DAGNode(String name) {
-		this(name, null);
 	}
 
 	public DAGNode(String name, Node creator) {
 		super(creator);
-		id_ = idCounter_++;
 
 		if (!name.matches(VALID_NAME.pattern())) {
 			System.err.println("Node name:" + name
