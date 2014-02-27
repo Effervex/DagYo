@@ -13,9 +13,8 @@ package graph.module;
 import graph.core.DAGEdge;
 import graph.core.DAGNode;
 import graph.core.DirectedAcyclicGraph;
-import graph.core.Edge;
+import graph.core.Node;
 import graph.core.StringNode;
-import graph.edge.properties.Alias;
 import graph.module.cli.AliasModule;
 
 import java.util.ArrayList;
@@ -37,6 +36,7 @@ import util.collection.StringTrie;
 public class NodeAliasModule extends DAGModule<Collection<DAGNode>> implements
 		AliasModule {
 	private static final long serialVersionUID = 7451861373081932549L;
+	public static final String ALIAS_PROP = "alias";
 	/** The Long actually represents a DAGNode ID. */
 	private StringTrie<DAGNode> aliasTrie_ = new StringTrie<>();
 
@@ -53,11 +53,13 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> implements
 	}
 
 	@Override
-	public boolean addEdge(Edge edge) {
-		if (edge instanceof Alias) {
-			Alias aliasEdge = (Alias) edge;
-			for (StringNode alias : aliasEdge.getAliases())
-				addAlias(aliasEdge.getNode(), alias.getName());
+	public boolean addEdge(DAGEdge edge) {
+		if (edge.getProperty(ALIAS_PROP) != null) {
+			Node[] edgeNodes = edge.getNodes();
+			for (int i = 2; i < edgeNodes.length; i++) {
+				if (edgeNodes[i] instanceof StringNode)
+					addAlias((DAGNode) edgeNodes[1], edgeNodes[i].getName());
+			}
 			return true;
 		}
 		return false;
@@ -213,13 +215,15 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> implements
 	}
 
 	@Override
-	public boolean removeEdge(Edge edge) {
-		if (edge instanceof Alias) {
-			Alias aliasEdge = (Alias) edge;
+	public boolean removeEdge(DAGEdge edge) {
+		if (edge.getProperty(ALIAS_PROP) != null) {
+			Node[] edgeNodes = edge.getNodes();
 			boolean changed = false;
-			for (StringNode alias : aliasEdge.getAliases())
-				changed |= aliasTrie_.remove(processAlias(alias.getName()),
-						aliasEdge.getNode());
+			for (int i = 2; i < edgeNodes.length; i++) {
+				changed |= aliasTrie_.remove(
+						processAlias(edgeNodes[i].getName()),
+						(DAGNode) edgeNodes[1]);
+			}
 			return changed;
 		}
 		return false;

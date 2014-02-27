@@ -18,6 +18,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import de.ruedigermoeller.serialization.annotations.EqualnessIsBinary;
+import de.ruedigermoeller.serialization.annotations.EqualnessIsIdentity;
+import de.ruedigermoeller.serialization.annotations.OneOf;
+
 import util.UniqueID;
 
 /**
@@ -28,13 +32,15 @@ import util.UniqueID;
  * 
  * @author Sam Sarjant
  */
-// @EqualnessIsBinary
+@EqualnessIsIdentity
 public abstract class DAGObject implements UniqueID, Serializable,
 		Identifiable, Comparable<DAGObject> {
 	private static final long serialVersionUID = -5088948795943227278L;
 	public static final String CREATION_DATE = "creationDate";
 	public static final String CREATOR = "creator";
 
+	@OneOf({ "creationDate", "creator", "ancsID", "predID",
+			DirectedAcyclicGraph.EPHEMERAL_MARK })
 	private Map<String, String> properties_;
 
 	protected long id_;

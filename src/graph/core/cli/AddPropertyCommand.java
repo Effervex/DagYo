@@ -24,7 +24,7 @@ import core.Command;
 
 public class AddPropertyCommand extends Command {
 	private static final Pattern ARG_PATTERN = Pattern
-			.compile("^([NE])\\s(.+?)\\s\"(.+?)\"\\s(\\S+?)$");
+			.compile("^([NE])\\s(.+?)\\s\"([^\"]+?)\"\\s(\\S+?)$");
 
 	@Override
 	public String helpText() {
@@ -54,7 +54,7 @@ public class AddPropertyCommand extends Command {
 			if (m.group(1).equals("N")) {
 				// Node
 				dagObj = (DAGNode) dag.findOrCreateNode(m.group(2), null,
-						false, false, true, false);
+						false, false, true);
 			} else if (m.group(1).equals("E")) {
 				// Edge
 				try {
@@ -93,6 +93,8 @@ public class AddPropertyCommand extends Command {
 			} catch (Exception e) {
 				print("-1|Error parsing properties.\n");
 			}
+		} else {
+			print("-1|Could not parse arguments.\n");
 		}
 	}
 }

@@ -14,7 +14,6 @@ import graph.core.DAGEdge;
 import graph.core.DAGNode;
 import graph.core.DAGObject;
 import graph.core.DirectedAcyclicGraph;
-import graph.core.Edge;
 
 import java.io.File;
 import java.io.Serializable;
@@ -57,7 +56,7 @@ public abstract class DAGModule<T> implements Serializable {
 	 *            The edge that was added.
 	 * @return False if the edge should be removed.
 	 */
-	public boolean addEdge(Edge edge) {
+	public boolean addEdge(DAGEdge edge) {
 		return true;
 	}
 
@@ -124,7 +123,7 @@ public abstract class DAGModule<T> implements Serializable {
 	 *            The edge being removed.
 	 * @return Returns boolean (no default meaning).
 	 */
-	public boolean removeEdge(Edge edge) {
+	public boolean removeEdge(DAGEdge edge) {
 		return false;
 	}
 

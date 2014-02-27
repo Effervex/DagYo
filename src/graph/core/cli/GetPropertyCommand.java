@@ -46,7 +46,7 @@ public class GetPropertyCommand extends Command {
 			if (split.get(0).equals("N")) {
 				// Node
 				dagObj = (DAGNode) dagHandler.getDAG().findOrCreateNode(
-						split.get(1), null, false, false, true, false);
+						split.get(1), null, false, false, true);
 			} else if (split.get(0).equals("E")) {
 				// Edge
 				try {

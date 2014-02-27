@@ -84,7 +84,7 @@ public class DirectedAcyclicGraphTest {
 
 	/**
 	 * Test method for
-	 * {@link graph.core.DirectedAcyclicGraph#addEdge(graph.core.DAGEdge)}.
+	 * {@link graph.core.DirectedAcyclicGraph#addEdge(DAGEdge)}.
 	 * 
 	 * @throws NamingException
 	 */

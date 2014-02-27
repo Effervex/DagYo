@@ -353,7 +353,7 @@ public class DirectedAcyclicGraph {
 					else {
 						// Trigger modules
 						for (DAGModule<?> module : modules_)
-							module.addEdge(edge);
+							module.addEdge((DAGEdge) edge);
 					}
 				}
 			}
@@ -415,7 +415,7 @@ public class DirectedAcyclicGraph {
 				boolean result = nodes_.add(node);
 				if (result) {
 					if (bFlags.getFlag("ephemeral"))
-						addProperty(node, EPHEMERAL_MARK, "true");
+						addProperty(node, EPHEMERAL_MARK, "t");
 					// Trigger modules
 					for (DAGModule<?> module : modules_)
 						module.addNode(node);
@@ -608,7 +608,7 @@ public class DirectedAcyclicGraph {
 			if (result && ((DAGEdge) edge).getProperty(EPHEMERAL_MARK) == null) {
 				// Trigger modules
 				for (DAGModule<?> module : modules_)
-					module.removeEdge(edge);
+					module.removeEdge((DAGEdge) edge);
 			}
 			return result;
 		} finally {

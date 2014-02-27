@@ -42,7 +42,7 @@ public class DAGNode extends DAGObject implements Node {
 			+ "(?:" + QUOTED_NAME.pattern() + ")|(?:" + UNSPACED_NAME.pattern()
 			+ ")");
 
-	private static final String ANON_TO_STRING = "__ANON__";
+	public static final String ANON_TO_STRING = "__ANON__";
 
 	/** The unique name of the node. */
 	protected String nodeName_;

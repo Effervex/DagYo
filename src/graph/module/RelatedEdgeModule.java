@@ -208,7 +208,7 @@ public class RelatedEdgeModule extends DAGModule<Collection<Edge>> {
 	}
 
 	@Override
-	public boolean addEdge(Edge edge) {
+	public boolean addEdge(DAGEdge edge) {
 		Collection<EdgeCol> edgeCollections = locateEdgeCollections(true,
 				asIndexed(edge.getNodes()));
 		for (EdgeCol edgeCol : edgeCollections)
@@ -251,7 +251,7 @@ public class RelatedEdgeModule extends DAGModule<Collection<Edge>> {
 	}
 
 	@Override
-	public boolean removeEdge(Edge edge) {
+	public boolean removeEdge(DAGEdge edge) {
 		boolean result = false;
 		Collection<EdgeCol> indexedEdges = locateEdgeCollections(false,
 				asIndexed(edge.getNodes()));

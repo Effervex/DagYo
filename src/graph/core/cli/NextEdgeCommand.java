@@ -54,7 +54,7 @@ public class NextEdgeCommand extends Command {
 				if (nextEdge == null)
 					print("-1|No edges after input edge.\n");
 				else
-					print(id
+					print(nextEdge.getID()
 							+ "|"
 							+ nextEdge.toString(!dagHandler.get(
 									DAGPortHandler.PRETTY_RESULTS).equals(

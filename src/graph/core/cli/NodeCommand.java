@@ -35,7 +35,7 @@ public class NodeCommand extends Command {
 
 		try {
 			DAGNode node = (DAGNode) dagHandler.getDAG().findOrCreateNode(data,
-					null, false, false, true, false);
+					null, false, false, true);
 			if (node != null) {
 				print(node.getID() + "|" + node.getName() + "|"
 						+ node.getCreator() + "|"

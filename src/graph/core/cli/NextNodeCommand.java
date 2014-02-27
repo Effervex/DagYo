@@ -39,7 +39,7 @@ public class NextNodeCommand extends Command {
 				id = Long.parseLong(data);
 			else {
 				DAGNode node = (DAGNode) dagHandler.getDAG().findOrCreateNode(
-						data, null, false, false, true, false);
+						data, null, false, false, true);
 				if (node != null)
 					id = node.getID();
 			}
