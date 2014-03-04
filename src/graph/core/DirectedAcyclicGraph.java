@@ -401,6 +401,8 @@ public class DirectedAcyclicGraph {
 				return new StringNode(nodeStr);
 			} else if (nodeStr.matches("\\d+")) {
 				node = getNodeByID(Long.parseLong(nodeStr));
+			} else if (nodeStr.matches("\\d+\\.[\\dE+-]+")) {
+				return PrimitiveNode.parseNode(nodeStr);
 			} else if (!dagNodeOnly && nodeStr.startsWith("'")) {
 				return PrimitiveNode.parseNode(nodeStr.substring(1));
 			}
@@ -535,14 +537,18 @@ public class DirectedAcyclicGraph {
 		}
 		for (DAGEdge e : reassertables) {
 			// Reassert edge
-			if (!removeEdge(e))
-				System.err.println("Error removing ephemeral edge: " + e);
-			String creatorStr = e.getCreator();
-			Node creator = (creatorStr == null) ? null : findOrCreateNode(
-					creatorStr, null);
-			Edge e2 = findOrCreateEdge(creator, e.getNodes(), false, false);
-			if (e2 instanceof ErrorEdge)
-				System.err.println("Error creating once-ephemeral edge: " + e2);
+			try {
+				if (!removeEdge(e))
+					System.err.println("Error removing ephemeral edge: " + e);
+				String creatorStr = e.getCreator();
+				Node creator = (creatorStr == null) ? null : findOrCreateNode(
+						creatorStr, null);
+				Edge e2 = findOrCreateEdge(creator, e.getNodes(), false, false);
+				if (e2 instanceof ErrorEdge)
+					System.err.println("Error creating once-ephemeral edge: "
+							+ e2);
+			} catch (Exception ex) {
+			}
 		}
 
 		for (DAGNode n : nodes_) {

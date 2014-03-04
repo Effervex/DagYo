@@ -27,6 +27,7 @@ public class StringNode implements Node {
 		while (string.startsWith("\"") && string.endsWith("\""))
 			string = UtilityMethods.shrinkString(string, 1);
 		str_ = string;
+		str_ = str_.replaceAll("(?<!\\\\)\"", "\\\"");
 	}
 
 	@Override
@@ -61,7 +62,7 @@ public class StringNode implements Node {
 
 	@Override
 	public String toString() {
-		return "\"" + str_ + "\"";
+		return "\"" + getName() + "\"";
 	}
 
 	@Override

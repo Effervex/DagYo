@@ -18,7 +18,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import de.ruedigermoeller.serialization.annotations.EqualnessIsBinary;
 import de.ruedigermoeller.serialization.annotations.EqualnessIsIdentity;
 import de.ruedigermoeller.serialization.annotations.OneOf;
 
@@ -39,7 +38,7 @@ public abstract class DAGObject implements UniqueID, Serializable,
 	public static final String CREATION_DATE = "creationDate";
 	public static final String CREATOR = "creator";
 
-	@OneOf({ "creationDate", "creator", "ancsID", "predID",
+	@OneOf({ CREATION_DATE, CREATOR, "ancsID", "predID",
 			DirectedAcyclicGraph.EPHEMERAL_MARK })
 	private Map<String, String> properties_;
 
