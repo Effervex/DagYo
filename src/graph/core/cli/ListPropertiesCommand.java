@@ -16,7 +16,6 @@ import graph.core.DAGObject;
 import graph.core.Node;
 
 import java.util.ArrayList;
-import java.util.Map;
 
 import util.UtilityMethods;
 import core.Command;
@@ -65,9 +64,10 @@ public class ListPropertiesCommand extends Command {
 				return;
 			}
 
-			Map<String, String> properties = dagObj.getProperties();
-			for (String key : properties.keySet()) {
-				print("\"" + key + "\"=\"" + properties.get(key) + "\"\n");
+			String[] properties = dagObj.getProperties();
+			for (int i = 0; i < properties.length; i += 2) {
+				print("\"" + properties[i] + "\"=\"" + properties[i + 1]
+						+ "\"\n");
 			}
 		} catch (Exception e) {
 			print("-1|Node/Edge '" + data + "' could not be found.\n");

@@ -76,31 +76,10 @@ public class DAGCommandLineInterface extends Main {
 	}
 
 	public static void main(String[] args) {
-		DirectedAcyclicGraph dag = new DirectedAcyclicGraph(getRootDir(args),
-				getNumNodes(args), getNumEdges(args));
+		DirectedAcyclicGraph dag = new DirectedAcyclicGraph(getRootDir(args));
 		new DAGCommandLineInterface(getPort(args), dag).start();
 
 		dag.initialise();
-	}
-
-	public static int getNumEdges(String[] args) {
-		if (arguments_ == null)
-			parseArgs(args);
-
-		int numEdges = DirectedAcyclicGraph.DEFAULT_NUM_EDGES;
-		if (arguments_.hasOption("e"))
-			numEdges = Integer.parseInt(arguments_.getOptionValue("e"));
-		return numEdges;
-	}
-
-	public static int getNumNodes(String[] args) {
-		if (arguments_ == null)
-			parseArgs(args);
-
-		int numNodes = DirectedAcyclicGraph.DEFAULT_NUM_NODES;
-		if (arguments_.hasOption("n"))
-			numNodes = Integer.parseInt(arguments_.getOptionValue("n"));
-		return numNodes;
 	}
 
 	public static int getPort(String[] args) {

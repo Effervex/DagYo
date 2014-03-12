@@ -70,6 +70,7 @@ public class RemovePropertyCommand extends Command {
 				key = UtilityMethods.shrinkString(key, 1);
 
 			dagHandler.getDAG().removeProperty(dagObj, key);
+			dagHandler.getDAG().writeCommand("removeprop " + data);
 			print("\"" + key + "\" removed from "
 					+ dagHandler.textIDObject(dagObj) + "\n");
 		} catch (Exception e) {

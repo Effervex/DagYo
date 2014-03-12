@@ -15,6 +15,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Collection;
 import java.util.Set;
 
 import org.junit.After;
@@ -39,7 +40,7 @@ public class TrieTest {
 		Trie<Integer, String> trie = new Trie<>();
 		Integer[] key = toArray("001");
 		assertTrue(trie.put(key, 0, "A"));
-		Set<String> values = trie.getValue(key, 0, null, false);
+		Collection<String> values = trie.getValue(key, 0, null, false);
 		assertTrue(values.size() == 1);
 		assertTrue(values.contains("A"));
 		assertEquals(trie.calcDepth(), 0);
@@ -98,7 +99,7 @@ public class TrieTest {
 	public void testStringTrie() {
 		StringTrie<String> strTrie = new StringTrie<>();
 		assertTrue(strTrie.put("cat", "Cat"));
-		Set<String> values = strTrie.getValue("cat", true, true);
+		Collection<String> values = strTrie.getValue("cat", true, true);
 		assertTrue(values.size() == 1);
 		assertTrue(values.contains("Cat"));
 		assertEquals(strTrie.calcDepth(), 0);
@@ -158,7 +159,7 @@ public class TrieTest {
 	public void testSpecial() {
 		StringTrie<String> strTrie = new StringTrie<>();
 		assertTrue(strTrie.put("FruitFn", "FruitFn"));
-		Set<String> values = strTrie.getValue("FruitFn", false, true);
+		Collection<String> values = strTrie.getValue("FruitFn", false, true);
 		assertEquals(values.size(), 1);
 		assertTrue(values.contains("FruitFn"));
 		assertEquals(strTrie.calcDepth(), 0);

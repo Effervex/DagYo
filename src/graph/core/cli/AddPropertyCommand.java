@@ -88,6 +88,10 @@ public class AddPropertyCommand extends Command {
 
 				String value = valueBuf.toString();
 				dag.addProperty(dagObj, key, value);
+				dagHandler.getDAG().writeCommand(
+						"addprop " + data + "\\n"
+								+ value.replaceAll("\\n", "\\\\n") + "\\n"
+								+ delimiter);
 				print(dagHandler.textIDObject(dagObj) + ": \"" + key + "\"=\""
 						+ value + "\"\n");
 			} catch (Exception e) {

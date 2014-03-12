@@ -14,9 +14,8 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import de.ruedigermoeller.serialization.annotations.EqualnessIsIdentity;
 import de.ruedigermoeller.serialization.annotations.OneOf;
@@ -31,16 +30,21 @@ import util.UniqueID;
  * 
  * @author Sam Sarjant
  */
-@EqualnessIsIdentity
+//@EqualnessIsIdentity
 public abstract class DAGObject implements UniqueID, Serializable,
 		Identifiable, Comparable<DAGObject> {
 	private static final long serialVersionUID = -5088948795943227278L;
 	public static final String CREATION_DATE = "creationDate";
 	public static final String CREATOR = "creator";
 
+	/**
+	 * Unfortunately, I cannot delegate this annotation to a subclass, so
+	 * serialisation shortcuts must be defined here.
+	 */
 	@OneOf({ CREATION_DATE, CREATOR, "ancsID", "predID",
-			DirectedAcyclicGraph.EPHEMERAL_MARK })
-	private Map<String, String> properties_;
+			DirectedAcyclicGraph.EPHEMERAL_MARK, "CommonConcepts", "CYCImport",
+			"MT" })
+	private String[] properties_;
 
 	protected long id_;
 
@@ -49,10 +53,15 @@ public abstract class DAGObject implements UniqueID, Serializable,
 	}
 
 	public DAGObject(Node creator) {
-		properties_ = new HashMap<>();
-		if (creator != null)
-			properties_.put(CREATOR, creator.getIdentifier());
-		properties_.put(CREATION_DATE, System.currentTimeMillis() + "");
+		int index = 0;
+		if (creator != null) {
+			properties_ = new String[4];
+			properties_[index++] = CREATOR;
+			properties_[index++] = creator.getIdentifier();
+		} else
+			properties_ = new String[2];
+		properties_[index++] = CREATION_DATE;
+		properties_[index++] = "" + System.currentTimeMillis();
 		id_ = requestID();
 	}
 
@@ -66,13 +75,35 @@ public abstract class DAGObject implements UniqueID, Serializable,
 	protected abstract void writeFullObject(ObjectOutput out)
 			throws IOException;
 
-	void put(String key, String value) {
-		properties_.put(key, value);
+	synchronized void put(String key, String value) {
+		for (int i = 0; i < properties_.length; i += 2) {
+			if (properties_[i].equals(key)) {
+				properties_[i + 1] = value;
+				return;
+			}
+		}
+
+		String[] propCopy = new String[properties_.length + 2];
+		System.arraycopy(properties_, 0, propCopy, 0, properties_.length);
+		propCopy[properties_.length] = key;
+		propCopy[properties_.length + 1] = value;
+		properties_ = propCopy;
 	}
 
-	void remove(String key) {
-		if (properties_ != null)
-			properties_.remove(key);
+	synchronized void remove(String key) {
+		for (int i = 0; i < properties_.length; i += 2) {
+			if (properties_[i].equals(key)) {
+				String[] propCopy = new String[properties_.length - 2];
+				if (i > 0) {
+					System.arraycopy(properties_, 0, propCopy, 0, i);
+				}
+				if (i < properties_.length - 2) {
+					System.arraycopy(properties_, i + 2, propCopy, i,
+							properties_.length - i - 2);
+				}
+				properties_ = propCopy;
+			}
+		}
 	}
 
 	@Override
@@ -97,11 +128,11 @@ public abstract class DAGObject implements UniqueID, Serializable,
 	}
 
 	public Date getCreationDate() {
-		return new Date(Long.parseLong(properties_.get(CREATION_DATE)));
+		return new Date(Long.parseLong(getProperty(CREATION_DATE)));
 	}
 
 	public String getCreator() {
-		return properties_.get(CREATOR);
+		return getProperty(CREATOR);
 	}
 
 	@Override
@@ -109,12 +140,15 @@ public abstract class DAGObject implements UniqueID, Serializable,
 		return "" + id_;
 	}
 
-	public Map<String, String> getProperties() {
-		return new HashMap<>(properties_);
+	public String[] getProperties() {
+		return Arrays.copyOf(properties_, properties_.length);
 	}
 
 	public String getProperty(String key) {
-		return properties_.get(key);
+		for (int i = 0; i < properties_.length; i += 2)
+			if (properties_[i].equals(key))
+				return properties_[i + 1];
+		return null;
 	}
 
 	@Override

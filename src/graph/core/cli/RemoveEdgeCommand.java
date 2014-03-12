@@ -39,6 +39,7 @@ public class RemoveEdgeCommand extends Command {
 			return;
 		}
 
+		dagHandler.getDAG().writeCommand("removeedge " + data);
 		if (dagHandler.getDAG().removeEdge(edgeID))
 			print("1|Edge successfully removed.\n");
 		else

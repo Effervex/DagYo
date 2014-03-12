@@ -23,7 +23,7 @@ public class AddNodeCommand extends Command {
 	@Override
 	public String helpText() {
 		return "{0} name [(creator)] : Adds a new named "
-				+ "(or anomymous: write as \"\") node "
+				+ "(or anonymous: write as \"\") node "
 				+ "(quoted if name contains spaces) to the DAG "
 				+ "with an optional creator argument.";
 	}
@@ -65,10 +65,11 @@ public class AddNodeCommand extends Command {
 			}
 		}
 
-		if (node != null)
+		if (node != null) {
+			dagHandler.getDAG().writeCommand("addnode " + data);
 			print(node.getID() + "|" + node.getName() + "|" + node.getCreator()
 					+ "|" + node.getCreationDate() + "\n");
-		else
+		} else
 			print("-1|Could not create node.\n");
 	}
 }

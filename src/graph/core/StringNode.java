@@ -62,6 +62,7 @@ public class StringNode implements Node {
 
 	@Override
 	public String toString() {
+		// TODO This is not coming up as escaped.
 		return "\"" + getName() + "\"";
 	}
 

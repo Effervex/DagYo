@@ -62,10 +62,6 @@ public class DirectedAcyclicGraph {
 
 	private static final String NUM_NODES_FIELD = "numNodes";
 
-	public static final int DEFAULT_NUM_EDGES = 1000000;
-
-	public static final int DEFAULT_NUM_NODES = 100000;
-
 	public static final File DEFAULT_ROOT = new File("dag");
 
 	public static final BooleanFlags edgeFlags_;
@@ -76,7 +72,11 @@ public class DirectedAcyclicGraph {
 
 	public static final File MODULE_FILE = new File("activeModules.config");
 
+	private static final String DAG_FILE = "commandLog.log";
+
 	public static final BooleanFlags nodeFlags_;
+
+	private static final int MAX_OBJ_SERIALISATION = 5000000;
 
 	public static DirectedAcyclicGraph selfRef_;
 
@@ -100,17 +100,14 @@ public class DirectedAcyclicGraph {
 
 	public final long startTime_;
 
-	public DirectedAcyclicGraph() {
-		this(DEFAULT_ROOT, DEFAULT_NUM_NODES, DEFAULT_NUM_EDGES);
-	}
+	private BufferedWriter dagOut_;
 
-	public DirectedAcyclicGraph(File rootDir) {
-		this(rootDir, DEFAULT_NUM_NODES, DEFAULT_NUM_EDGES);
+	public DirectedAcyclicGraph() {
+		this(DEFAULT_ROOT);
 	}
 
 	@SuppressWarnings("unchecked")
-	public DirectedAcyclicGraph(File rootDir, int initialNodeSize,
-			int initialEdgeSize) {
+	public DirectedAcyclicGraph(File rootDir) {
 		startTime_ = System.currentTimeMillis();
 		System.out.print("Initialising... ");
 
@@ -118,12 +115,21 @@ public class DirectedAcyclicGraph {
 				new FSTDAGObjectSerialiser(), true);
 		selfRef_ = this;
 
+		try {
+			int i = 0;
+			File dagFile = new File(DAG_FILE);
+			while (dagFile.exists())
+				dagFile = new File(DAG_FILE + i++);
+			dagOut_ = new BufferedWriter(new FileWriter(dagFile));
+		} catch (IOException e) {
+			System.err.println("Problem creating command out file.");
+			e.printStackTrace();
+		}
+
 		random_ = new Random();
-		nodes_ = (IndexedCollection<DAGNode>) readDAGFile(initialNodeSize,
-				rootDir, NODE_FILE);
+		nodes_ = (IndexedCollection<DAGNode>) readDAGFile(rootDir, NODE_FILE);
 		nodeLock_ = new ReentrantLock();
-		edges_ = (IndexedCollection<DAGEdge>) readDAGFile(initialEdgeSize,
-				rootDir, EDGE_FILE);
+		edges_ = (IndexedCollection<DAGEdge>) readDAGFile(rootDir, EDGE_FILE);
 		edgeLock_ = new ReentrantLock();
 
 		// Load the modules in
@@ -131,8 +137,6 @@ public class DirectedAcyclicGraph {
 		moduleMap_ = new HashMap<>();
 		rootDir_ = rootDir;
 		readModules(rootDir);
-
-		// TODO logStream_ = readInitLogFile();
 
 		System.out.println("Done!");
 	}
@@ -164,26 +168,53 @@ public class DirectedAcyclicGraph {
 	}
 
 	@SuppressWarnings("unchecked")
-	private IndexedCollection<? extends DAGObject> readDAGFile(int initialSize,
-			File rootDir, String collectionFile) {
+	private IndexedCollection<? extends DAGObject> readDAGFile(File rootDir,
+			String collectionFile) {
 		IndexedCollection<DAGObject> indexedCollection = null;
-		File serFile = new File(rootDir, collectionFile);
-		if (serFile.exists()) {
-			// Read it in
-			try {
+		try {
+			File serFile = new File(rootDir, collectionFile);
+			if (serFile.exists()) {
+				indexedCollection = new HashIndexedCollection<DAGObject>(
+						MAX_OBJ_SERIALISATION);
+				// Read it in
 				System.out.println("Loading " + collectionFile + "...");
-				indexedCollection = (IndexedCollection<DAGObject>) SerialisationMechanism.FST
+				Object deserialised = SerialisationMechanism.FST
 						.getSerialiser().deserialize(serFile);
-			} catch (InvalidActivityException e) {
-				System.err.println("Exception while deserialising '"
-						+ serFile.getPath() + "'. Creating new collection.");
+				if (deserialised instanceof DAGObject[]) {
+					DAGObject[] array = (DAGObject[]) deserialised;
+					for (DAGObject obj : array)
+						indexedCollection.add(obj);
+				} else
+					indexedCollection = (IndexedCollection<DAGObject>) deserialised;
+			} else {
+				serFile = new File(rootDir, collectionFile + "0");
+				if (serFile.exists()) {
+					// Find number of files
+					int n = 1;
+					while (new File(rootDir, collectionFile + n).exists())
+						n++;
+					indexedCollection = new HashIndexedCollection<DAGObject>(
+							MAX_OBJ_SERIALISATION * n);
+					// Load and deserialise the files
+					System.out.println("Loading the " + n + " split "
+							+ collectionFile + "s...");
+					for (int i = 0; i < n; i++) {
+						serFile = new File(rootDir, collectionFile + i);
+						DAGObject[] array = (DAGObject[]) SerialisationMechanism.FST
+								.getSerialiser().deserialize(serFile);
+						for (DAGObject obj : array)
+							indexedCollection.add(obj);
+					}
+				} else
+					// TODO Might be able to squeeze memory here by swapping
+					// hashmap for array
+					indexedCollection = new HashIndexedCollection<DAGObject>(
+							MAX_OBJ_SERIALISATION);
 			}
+		} catch (InvalidActivityException e) {
+			System.err.println("Exception while deserialising '"
+					+ collectionFile + "'. Creating new collection.");
 		}
-
-		// Otherwise, create new collection
-		if (indexedCollection == null)
-			indexedCollection = new HashIndexedCollection<DAGObject>(
-					initialSize);
 		return indexedCollection;
 	}
 
@@ -226,17 +257,40 @@ public class DirectedAcyclicGraph {
 	}
 
 	private void saveDAGFile(IndexedCollection<? extends DAGObject> collection,
-			File rootDir, String collectionFile) {
-		File serFile = new File(rootDir, collectionFile);
+			File rootDir, String collectionFile, int maxNumObjects) {
 		try {
-			serFile.getParentFile().mkdirs();
-			serFile.createNewFile();
 			byte serialisationType = (collectionFile.equals(EDGE_FILE)) ? FSTDAGObjectSerialiser.NODES
 					: DefaultSerialisationMechanism.NORMAL;
-			SerialisationMechanism.FST.getSerialiser().serialize(collection,
-					serFile, serialisationType);
+
+			// Splitting the file if necessary
+			int size = collection.size();
+			boolean isSplitting = size > maxNumObjects;
+			DAGObject[] array = collection.toArray(new DAGObject[size]);
+			for (int i = 0; i < size; i += maxNumObjects) {
+				DAGObject[] subarray = null;
+				File serFile = null;
+				if (isSplitting) {
+					int arraySize = Math.min(maxNumObjects, size - i);
+					subarray = new DAGObject[arraySize];
+					System.arraycopy(array, i, subarray, 0, arraySize);
+					serFile = new File(rootDir, collectionFile
+							+ (i / maxNumObjects));
+				} else {
+					subarray = array;
+					serFile = new File(rootDir, collectionFile);
+				}
+
+				// Write the subarray
+				serFile.getParentFile().mkdirs();
+				serFile.createNewFile();
+				SerialisationMechanism.FST.getSerialiser().serialize(subarray,
+						serFile, serialisationType);
+			}
+
+			if (isSplitting)
+				new File(rootDir, collectionFile).delete();
 		} catch (IOException e) {
-			System.err.println("Error serialising '" + serFile + "'.");
+			System.err.println("Error serialising '" + collectionFile + "'.");
 		}
 	}
 
@@ -508,6 +562,10 @@ public class DirectedAcyclicGraph {
 		return null;
 	}
 
+	public BufferedWriter getCommandOut() {
+		return dagOut_;
+	}
+
 	public final void initialise() {
 		initialiseInternal();
 		boolean saveState = false;
@@ -702,6 +760,11 @@ public class DirectedAcyclicGraph {
 	public synchronized void saveState() {
 		// Save 'global' values
 		System.out.print("Please wait while saving state... ");
+		try {
+			dagOut_.flush();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
 		File globals = new File(rootDir_, GLOBALS_FILE);
 		try {
 			globals.createNewFile();
@@ -713,8 +776,8 @@ public class DirectedAcyclicGraph {
 		}
 
 		// Save node and edge collections
-		saveDAGFile(nodes_, rootDir_, NODE_FILE);
-		saveDAGFile(edges_, rootDir_, EDGE_FILE);
+		saveDAGFile(nodes_, rootDir_, NODE_FILE, MAX_OBJ_SERIALISATION);
+		saveDAGFile(edges_, rootDir_, EDGE_FILE, MAX_OBJ_SERIALISATION);
 
 		// Save modules
 		Set<DAGModule<?>> saved = new HashSet<>();
@@ -744,5 +807,13 @@ public class DirectedAcyclicGraph {
 		edgeFlags_ = new BooleanFlags();
 		edgeFlags_.addFlag("createNew", false);
 		edgeFlags_.addFlag("ephemeral", false);
+	}
+
+	public synchronized void writeCommand(String command) {
+		try {
+			dagOut_.write(command + "\n");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

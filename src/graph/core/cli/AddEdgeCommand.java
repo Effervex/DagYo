@@ -66,6 +66,7 @@ public class AddEdgeCommand extends Command {
 					.asBooleanArray(DAGPortHandler.EDGE_FLAGS);
 			Edge edge = dagHandler.getDAG().findOrCreateEdge(creator, nodes,
 					flags);
+			dagHandler.getDAG().writeCommand("addedge " + data);
 
 			if (edge instanceof ErrorEdge) {
 				print("-1|" + ((ErrorEdge) edge).getError() + "\n");
