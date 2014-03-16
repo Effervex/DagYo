@@ -58,7 +58,7 @@ public class AddPropertyCommand extends Command {
 			} else if (m.group(1).equals("E")) {
 				// Edge
 				try {
-					long id = Long.parseLong(m.group(2));
+					int id = Integer.parseInt(m.group(2));
 					dagObj = dag.getEdgeByID(id);
 				} catch (Exception e) {
 					Node[] edgeNodes = dag.parseNodes(m.group(2), null, false,

@@ -45,7 +45,7 @@ public abstract class DAGObject implements UniqueID, Serializable,
 			"MT" })
 	private String[] properties_;
 
-	protected long id_;
+	protected int id_;
 
 	public DAGObject() {
 		this(null);
@@ -64,7 +64,7 @@ public abstract class DAGObject implements UniqueID, Serializable,
 		id_ = requestID();
 	}
 
-	protected long requestID() {
+	protected int requestID() {
 		return -1;
 	}
 
@@ -109,7 +109,7 @@ public abstract class DAGObject implements UniqueID, Serializable,
 	public int compareTo(DAGObject o) {
 		if (o == null)
 			return -1;
-		return Long.compare(getID(), o.getID());
+		return Integer.compare(getID(), o.getID());
 	}
 
 	@Override
@@ -154,7 +154,7 @@ public abstract class DAGObject implements UniqueID, Serializable,
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		long id = getID();
+		int id = getID();
 		result = prime * result + (int) (id ^ (id >>> 32));
 		return result;
 	}
@@ -171,12 +171,12 @@ public abstract class DAGObject implements UniqueID, Serializable,
 	 * @param id
 	 *            The ID to set.
 	 */
-	public void setID(long id) {
+	public void setID(int id) {
 		id_ = id;
 	}
 
 	@Override
-	public long getID() {
+	public int getID() {
 		return id_;
 	}
 }

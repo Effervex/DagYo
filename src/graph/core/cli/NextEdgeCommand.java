@@ -37,9 +37,9 @@ public class NextEdgeCommand extends Command {
 		}
 
 		try {
-			long id = -1;
+			int id = -1;
 			if (data.matches("\\d+")) {
-				id = Long.parseLong(data);
+				id = Integer.parseInt(data);
 			} else {
 				Node[] nodes = dag.parseNodes(data, null, false, false);
 				DAGEdge edge = (DAGEdge) dag.findEdge(nodes);

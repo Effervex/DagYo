@@ -50,7 +50,7 @@ public class RemovePropertyCommand extends Command {
 			} else if (split.get(0).equals("E")) {
 				// Edge
 				try {
-					long id = Long.parseLong(split.get(1));
+					int id = Integer.parseInt(split.get(1));
 					dagObj = dagHandler.getDAG().getEdgeByID(id);
 				} catch (Exception e) {
 					Node[] edgeNodes = dagHandler.getDAG().parseNodes(

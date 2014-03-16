@@ -34,9 +34,9 @@ public class NextNodeCommand extends Command {
 		}
 
 		try {
-			long id = -1;
+			int id = -1;
 			if (data.matches("\\d+"))
-				id = Long.parseLong(data);
+				id = Integer.parseInt(data);
 			else {
 				DAGNode node = (DAGNode) dagHandler.getDAG().findOrCreateNode(
 						data, null, false, false, true);

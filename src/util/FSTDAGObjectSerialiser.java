@@ -42,7 +42,7 @@ public class FSTDAGObjectSerialiser extends FSTBasicObjectSerializer {
 
 		out.writeBoolean(idOnly);
 		if (idOnly)
-			out.writeFLong(dagObj.getID());
+			out.writeFInt(dagObj.getID());
 		else
 			out.defaultWriteObject(toWrite, clzInfo);
 	}
@@ -63,7 +63,7 @@ public class FSTDAGObjectSerialiser extends FSTBasicObjectSerializer {
 		DAGObject obj = null;
 		boolean idOnly = in.readBoolean();
 		if (idOnly) {
-			long id = in.readFLong();
+			int id = in.readFInt();
 
 			if (DAGNode.class.isAssignableFrom(objectClass))
 				obj = DirectedAcyclicGraph.selfRef_.getNodeByID(id);

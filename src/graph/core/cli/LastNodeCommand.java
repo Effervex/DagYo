@@ -16,7 +16,7 @@ public class LastNodeCommand extends Command {
 		DAGPortHandler dagHandler = (DAGPortHandler) handler;
 		DirectedAcyclicGraph dag = dagHandler.getDAG();
 
-		long id = DAGNode.idCounter_;
+		int id = DAGNode.idCounter_;
 		do {
 			id--;
 			DAGNode node = dag.getNodeByID(id);

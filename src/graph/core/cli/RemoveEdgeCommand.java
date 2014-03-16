@@ -31,9 +31,9 @@ public class RemoveEdgeCommand extends Command {
 			return;
 		}
 
-		Long edgeID;
+		Integer edgeID;
 		try {
-			edgeID = Long.parseLong(data);
+			edgeID = Integer.parseInt(data);
 		} catch (NumberFormatException e) {
 			print("-1|Please enter edge ID.\n");
 			return;

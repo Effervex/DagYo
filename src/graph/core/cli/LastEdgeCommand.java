@@ -16,7 +16,7 @@ public class LastEdgeCommand extends Command {
 		DAGPortHandler dagHandler = (DAGPortHandler) handler;
 		DirectedAcyclicGraph dag = dagHandler.getDAG();
 
-		long id = DAGEdge.idCounter_;
+		int id = DAGEdge.idCounter_;
 		do {
 			id--;
 			DAGEdge edge = dag.getEdgeByID(id);

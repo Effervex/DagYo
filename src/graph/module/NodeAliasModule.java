@@ -37,7 +37,6 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> implements
 		AliasModule {
 	private static final long serialVersionUID = 7451861373081932549L;
 	public static final String ALIAS_PROP = "alias";
-	/** The Long actually represents a DAGNode ID. */
 	private StringTrie<DAGNode> aliasTrie_ = new StringTrie<>();
 
 	private String processAlias(String name) {

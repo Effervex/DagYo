@@ -27,7 +27,7 @@ public class DAGEdge extends DAGObject implements Edge {
 	private static final long serialVersionUID = 8148137157637389069L;
 
 	/** The counter for assigning ids to edges. */
-	public static long idCounter_ = 1;
+	public static int idCounter_ = 1;
 
 	/** The nodes of the edge. */
 	protected Node[] edgeNodes_;
@@ -79,7 +79,7 @@ public class DAGEdge extends DAGObject implements Edge {
 	}
 
 	@Override
-	protected long requestID() {
+	protected int requestID() {
 		return idCounter_++;
 	}
 

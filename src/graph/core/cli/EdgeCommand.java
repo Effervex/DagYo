@@ -34,7 +34,7 @@ public class EdgeCommand extends Command {
 		}
 
 		try {
-			long id = Long.parseLong(data);
+			int id = Integer.parseInt(data);
 			DAGEdge edge = dagHandler.getDAG().getEdgeByID(id);
 			if (edge != null) {
 				print(id

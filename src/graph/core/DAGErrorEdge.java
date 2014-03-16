@@ -33,7 +33,7 @@ public abstract class DAGErrorEdge implements ErrorEdge {
 	}
 
 	@Override
-	public final long getID() {
+	public final int getID() {
 		return -1;
 	}
 }

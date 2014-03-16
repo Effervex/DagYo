@@ -455,7 +455,7 @@ public class DirectedAcyclicGraph {
 			} else if (!dagNodeOnly && nodeStr.startsWith("\"")) {
 				return new StringNode(nodeStr);
 			} else if (nodeStr.matches("\\d+")) {
-				node = getNodeByID(Long.parseLong(nodeStr));
+				node = getNodeByID(Integer.parseInt(nodeStr));
 			} else if (nodeStr.matches("\\d+\\.[\\dE+-]+")) {
 				return PrimitiveNode.parseNode(nodeStr);
 			} else if (!dagNodeOnly && nodeStr.startsWith("'")) {
@@ -492,7 +492,7 @@ public class DirectedAcyclicGraph {
 	 *            The ID of the edge.
 	 * @return The edge with the provided ID, or null if no edge exists.
 	 */
-	public DAGEdge getEdgeByID(long id) {
+	public DAGEdge getEdgeByID(int id) {
 		return edges_.get(id);
 	}
 
@@ -525,7 +525,7 @@ public class DirectedAcyclicGraph {
 	 *            The ID of the node.
 	 * @return The node with the provided ID, or null if no node exists.
 	 */
-	public DAGNode getNodeByID(long id) {
+	public DAGNode getNodeByID(int id) {
 		return nodes_.get(id);
 	}
 
@@ -543,8 +543,8 @@ public class DirectedAcyclicGraph {
 
 	public Edge getRandomEdge() {
 		while (DAGEdge.idCounter_ > 0) {
-			long maxID = DAGEdge.idCounter_ + 1;
-			long id = (long) (random_.nextDouble() * maxID);
+			int maxID = DAGEdge.idCounter_ + 1;
+			int id = (int) (random_.nextDouble() * maxID);
 			Edge e = getEdgeByID(id);
 			if (e != null)
 				return e;
@@ -554,8 +554,8 @@ public class DirectedAcyclicGraph {
 
 	public Node getRandomNode() {
 		while (DAGNode.idCounter_ > 0) {
-			long maxID = DAGNode.idCounter_ + 1;
-			long id = (long) (random_.nextDouble() * maxID);
+			int maxID = DAGNode.idCounter_ + 1;
+			int id = (int) (random_.nextDouble() * maxID);
 			Node n = getNodeByID(id);
 			if (n != null)
 				return n;
@@ -692,7 +692,7 @@ public class DirectedAcyclicGraph {
 	 *            The ID of the edge to be removed.
 	 * @return True if the edge was removed.
 	 */
-	public synchronized boolean removeEdge(long edgeID) {
+	public synchronized boolean removeEdge(int edgeID) {
 		return removeEdge(getEdgeByID(edgeID));
 	}
 
@@ -751,7 +751,7 @@ public class DirectedAcyclicGraph {
 	 *            The ID of the node to be removed.
 	 * @return True if the node was removed.
 	 */
-	public synchronized boolean removeNode(long nodeID) {
+	public synchronized boolean removeNode(int nodeID) {
 		return removeNode(getNodeByID(nodeID));
 	}
 
