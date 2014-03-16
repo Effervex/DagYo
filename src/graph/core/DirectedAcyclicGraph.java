@@ -204,6 +204,7 @@ public class DirectedAcyclicGraph {
 								.getSerialiser().deserialize(serFile);
 						for (DAGObject obj : array)
 							indexedCollection.add(obj);
+						System.out.println(collectionFile + i + " complete.");
 					}
 				} else
 					// TODO Might be able to squeeze memory here by swapping
@@ -587,7 +588,7 @@ public class DirectedAcyclicGraph {
 		// Run through the nodes, setting them as non-ephemeral
 		System.out.print("Grounding ephemeral nodes and edges... ");
 		// Run through the edges, reasserting them as non-ephemeral
-		SortedSet<DAGEdge> reassertables = new TreeSet<DAGEdge>();
+		SortedSet<DAGEdge> reassertables = orderedReassertables();
 		for (DAGEdge e : edges_) {
 			if (e.getProperty(EPHEMERAL_MARK) != null) {
 				reassertables.add(e);
@@ -618,6 +619,10 @@ public class DirectedAcyclicGraph {
 		// Rebuild the modules
 		for (DAGModule<?> module : modules_)
 			module.initialisationComplete(nodes_, edges_, true);
+	}
+
+	protected SortedSet<DAGEdge> orderedReassertables() {
+		return new TreeSet<DAGEdge>();
 	}
 
 	/**

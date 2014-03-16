@@ -17,7 +17,6 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Date;
 
-import de.ruedigermoeller.serialization.annotations.EqualnessIsIdentity;
 import de.ruedigermoeller.serialization.annotations.OneOf;
 
 import util.UniqueID;
