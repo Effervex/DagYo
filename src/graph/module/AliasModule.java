@@ -1,4 +1,4 @@
-package graph.module.cli;
+package graph.module;
 
 import graph.core.DAGNode;
 

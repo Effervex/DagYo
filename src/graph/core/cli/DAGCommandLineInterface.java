@@ -12,6 +12,8 @@ package graph.core.cli;
 
 import graph.core.DAGNode;
 import graph.core.DirectedAcyclicGraph;
+import graph.module.cli.ExtractSubDAGCommand;
+import graph.module.cli.SubDAGTagCommand;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,14 +61,15 @@ public class DAGCommandLineInterface extends Main {
 		CommandParser.addCommand("shutdown", ShutdownCommand.class);
 		CommandParser.addCommand("stats", DAGStatsCommand.class);
 		CommandParser.addCommand("sync", SyncCommand.class);
-		CommandParser.addCommand("groundEphemeral", GroundEphemeralCommand.class);
+		CommandParser.addCommand("groundEphemeral",
+				GroundEphemeralCommand.class);
 		CommandParser.addCommand("count", CountCommand.class);
 		CommandParser.addCommand("nextNode", NextNodeCommand.class);
 		CommandParser.addCommand("nextEdge", NextEdgeCommand.class);
 		CommandParser.addCommand("lastNode", LastNodeCommand.class);
 		CommandParser.addCommand("lastEdge", LastEdgeCommand.class);
 		CommandParser.addCommand("varHelp", DAGVarHelpCommand.class);
-		CommandParser.addCommand("script", DAGScriptCommand.class);
+		// CommandParser.addCommand("script", DAGScriptCommand.class);
 	}
 
 	@Override

@@ -10,6 +10,7 @@
  ******************************************************************************/
 package graph.core;
 
+import graph.module.SubDAGExtractorModule;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -29,7 +30,7 @@ import util.UniqueID;
  * 
  * @author Sam Sarjant
  */
-//@EqualnessIsIdentity
+// @EqualnessIsIdentity
 public abstract class DAGObject implements UniqueID, Serializable,
 		Identifiable, Comparable<DAGObject> {
 	private static final long serialVersionUID = -5088948795943227278L;
@@ -42,7 +43,7 @@ public abstract class DAGObject implements UniqueID, Serializable,
 	 */
 	@OneOf({ CREATION_DATE, CREATOR, "ancsID", "predID",
 			DirectedAcyclicGraph.EPHEMERAL_MARK, "CommonConcepts", "CYCImport",
-			"MT" })
+			"MT", SubDAGExtractorModule.TAG_PREFIX })
 	private String[] properties_;
 
 	protected int id_;
@@ -155,7 +156,7 @@ public abstract class DAGObject implements UniqueID, Serializable,
 		final int prime = 31;
 		int result = 1;
 		int id = getID();
-		result = prime * result + (int) (id ^ (id >>> 32));
+		result = prime * result + id;
 		return result;
 	}
 

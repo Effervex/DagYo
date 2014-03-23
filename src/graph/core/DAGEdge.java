@@ -97,30 +97,8 @@ public class DAGEdge extends DAGObject implements Edge {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		DAGEdge other = (DAGEdge) obj;
-		if (id_ != other.id_)
-			return false;
-		return true;
-	}
-
-	@Override
 	public Node[] getNodes() {
 		return edgeNodes_;
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + (int) (id_ ^ (id_ >>> 32));
-		return result;
 	}
 
 	@Override

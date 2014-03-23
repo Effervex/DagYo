@@ -15,7 +15,6 @@ import graph.core.DAGNode;
 import graph.core.DirectedAcyclicGraph;
 import graph.core.Node;
 import graph.core.StringNode;
-import graph.module.cli.AliasModule;
 
 import java.util.ArrayList;
 import java.util.Collection;

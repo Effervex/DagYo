@@ -42,7 +42,7 @@ public class RelatedEdgeCommand extends CollectionCommand {
 		RelatedEdgeModule relatedModule = (RelatedEdgeModule) dagHandler
 				.getDAG().getModule(RelatedEdgeModule.class);
 		if (relatedModule == null) {
-			print("Related Edge module is not in use for this DAG.\n");
+			print("-1|Related Edge module is not in use for this DAG.\n");
 			return;
 		}
 

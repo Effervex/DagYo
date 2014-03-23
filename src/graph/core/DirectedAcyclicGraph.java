@@ -387,10 +387,11 @@ public class DirectedAcyclicGraph {
 	public synchronized Edge findOrCreateEdge(Node creator, Node[] edgeNodes,
 			boolean... flags) {
 		BooleanFlags bFlags = edgeFlags_.loadFlags(flags);
+		boolean createNew = bFlags.getFlag("createNew");
 		edgeLock_.lock();
 		try {
 			Edge edge = findEdge(edgeNodes);
-			if (edge == null) {
+			if (edge == null && createNew) {
 				// Check all the nodes are in the DAG
 				if (!noChecks_) {
 					for (Node n : edgeNodes)

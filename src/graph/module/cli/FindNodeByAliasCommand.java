@@ -13,6 +13,7 @@ package graph.module.cli;
 import graph.core.DAGNode;
 import graph.core.cli.CollectionCommand;
 import graph.core.cli.DAGPortHandler;
+import graph.module.AliasModule;
 import graph.module.ModuleException;
 import graph.module.NodeAliasModule;
 
