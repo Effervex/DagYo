@@ -51,7 +51,7 @@ public class SubDAGTagCommand extends Command {
 						false);
 			if (split.get(0).equals("E")) {
 				Node[] parse = dag.parseNodes(split.get(1), null, false, false);
-				dagObj = (DAGObject) dag.findOrCreateEdge(null, parse);
+				dagObj = (DAGObject) dag.findOrCreateEdge(parse, null, false);
 			}
 
 			module.tagDAGObject(dagObj, split.get(2));

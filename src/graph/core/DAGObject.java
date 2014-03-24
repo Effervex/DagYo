@@ -52,7 +52,7 @@ public abstract class DAGObject implements UniqueID, Serializable,
 		this(null);
 	}
 
-	public DAGObject(Node creator) {
+	protected DAGObject(Node creator) {
 		int index = 0;
 		if (creator != null) {
 			properties_ = new String[4];
@@ -121,7 +121,7 @@ public abstract class DAGObject implements UniqueID, Serializable,
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		DAGNode other = (DAGNode) obj;
+		DAGObject other = (DAGObject) obj;
 		if (getID() != other.getID())
 			return false;
 		return true;

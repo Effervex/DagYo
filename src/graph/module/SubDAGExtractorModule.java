@@ -49,36 +49,31 @@ public class SubDAGExtractorModule extends DAGModule<Boolean> {
 		RelatedEdgeModule relatedEdgeModule = (RelatedEdgeModule) dag_
 				.getModule(RelatedEdgeModule.class);
 
-		try {
-			// Create new DAG
-			DirectedAcyclicGraph subDAG = createNewDAG(folder);
-			subDAG.initialise();
+		// Create new DAG
+		DirectedAcyclicGraph subDAG = createNewDAG(folder);
+		subDAG.initialise();
 
-			// Identify nodes
-			Collection<DAGNode> nodes = new HashSet<>(taggedNodes_.get(tag));
+		// Identify nodes
+		Collection<DAGNode> nodes = new HashSet<>(taggedNodes_.get(tag));
 
-			// Follow edges by distance to produce more nodes
-			followEdges(nodes, distance, relatedEdgeModule);
+		// Follow edges by distance to produce more nodes
+		followEdges(nodes, distance, relatedEdgeModule);
 
-			// Identify edges using nodes
-			Collection<DAGEdge> edges = findLinks(nodes, relatedEdgeModule);
+		// Identify edges using nodes
+		Collection<DAGEdge> edges = findLinks(nodes, relatedEdgeModule);
 
-			// Assert
-			StringNode creator = new StringNode(tag);
-			for (DAGNode node : nodes)
-				subDAG.findOrCreateNode(node.getName(), creator, true);
-			for (DAGEdge edge : edges) {
-				Node[] subDAGNodes = subDAG.parseNodes(edge.toString(false),
-						creator, false, false);
-				subDAG.findOrCreateEdge(creator, subDAGNodes, true);
-			}
-
-			// Serialise to folder
-			subDAG.saveState();
-
-		} catch (Exception e) {
-			return false;
+		// Assert
+		StringNode creator = new StringNode(tag);
+		for (DAGNode node : nodes)
+			subDAG.findOrCreateNode(node.getName(), creator, true);
+		for (DAGEdge edge : edges) {
+			Node[] subDAGNodes = subDAG.parseNodes(edge.toString(false),
+					creator, false, false);
+			subDAG.findOrCreateEdge(subDAGNodes, creator, true);
 		}
+
+		// Serialise to folder
+		subDAG.saveState();
 
 		return true;
 	}
@@ -96,6 +91,7 @@ public class SubDAGExtractorModule extends DAGModule<Boolean> {
 			RelatedEdgeModule relatedEdgeModule) {
 		Collection<DAGEdge> linkedEdges = new HashSet<>();
 		Collection<DAGNode> predicates = new HashSet<>();
+		boolean addPredicate = true;
 		// For every node
 		for (Node n : nodes) {
 			Collection<Edge> relatedEdges = relatedEdgeModule.execute(n, -1, n);
@@ -111,10 +107,12 @@ public class SubDAGExtractorModule extends DAGModule<Boolean> {
 				}
 
 				if (addEdge) {
-					linkedEdges.add((DAGEdge) e);
+					if (addPredicate || nodes.contains(args[0])) {
+						// Add the predicate
+						predicates.add((DAGNode) args[0]);
 
-					// Add the predicate
-					predicates.add((DAGNode) args[0]);
+						linkedEdges.add((DAGEdge) e);
+					}
 				}
 			}
 		}
@@ -135,7 +133,7 @@ public class SubDAGExtractorModule extends DAGModule<Boolean> {
 	public void followEdges(Collection<DAGNode> nodes, int distance,
 			RelatedEdgeModule relatedEdgeModule) {
 		// Move through the distance in a breadth-first fashion (level-by-level)
-		Collection<DAGNode> completed = new HashSet<>();
+		Collection<DAGNode> completed = new HashSet<>(nodes);
 		Collection<DAGNode> currentLevel = nodes;
 		for (int d = distance; d > 0; d--) {
 			Collection<DAGNode> nextLevel = new HashSet<>();

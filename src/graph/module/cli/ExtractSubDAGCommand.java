@@ -53,7 +53,7 @@ public class ExtractSubDAGCommand extends Command {
 				return;
 			}
 		} catch (Exception e) {
-
+			e.printStackTrace();
 		}
 		print("Extraction of SubDAG to " + folder + " unsuccessful...\n");
 	}

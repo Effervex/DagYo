@@ -64,7 +64,10 @@ public class AddEdgeCommand extends Command {
 			}
 			boolean[] flags = dagHandler
 					.asBooleanArray(DAGPortHandler.EDGE_FLAGS);
-			Edge edge = dagHandler.getDAG().findOrCreateEdge(creator, nodes,
+			if (flags.length < 1)
+				flags = new boolean[1];
+			flags[0] = true;
+			Edge edge = dagHandler.getDAG().findOrCreateEdge(nodes, creator,
 					flags);
 			dagHandler.getDAG().writeCommand("addedge " + data);
 

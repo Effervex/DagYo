@@ -52,9 +52,9 @@ public class SubDAGExtractorModuleTest {
 		Node canis = dag_.findOrCreateNode("CanisGenus", creator, true);
 		Node fido = dag_.findOrCreateNode("Fido", creator, true);
 		Node pet = dag_.findOrCreateNode("Pet", creator, true);
-		dag_.findOrCreateEdge(creator, new Node[] { genls, dog, canis }, true);
-		dag_.findOrCreateEdge(creator, new Node[] { isa, fido, dog }, true);
-		dag_.findOrCreateEdge(creator, new Node[] { isa, fido, pet }, true);
+		dag_.findOrCreateEdge(new Node[] { genls, dog, canis }, creator, true);
+		dag_.findOrCreateEdge(new Node[] { isa, fido, dog }, creator, true);
+		dag_.findOrCreateEdge(new Node[] { isa, fido, pet }, creator, true);
 
 		sut_.tagDAGObject((DAGObject) dog, tag);
 		File folder = new File("testSubDAG");
@@ -137,12 +137,12 @@ public class SubDAGExtractorModuleTest {
 		Node canis = dag_.findOrCreateNode("CanisGenus", creator, true);
 		Node fido = dag_.findOrCreateNode("Fido", creator, true);
 		Node pet = dag_.findOrCreateNode("Pet", creator, true);
-		Edge dogCanis = dag_.findOrCreateEdge(creator, new Node[] { genls, dog,
-				canis }, true);
-		Edge fidoDog = dag_.findOrCreateEdge(creator, new Node[] { isa, fido,
-				dog }, true);
-		Edge fidoPet = dag_.findOrCreateEdge(creator, new Node[] { isa, fido,
-				pet }, true);
+		Edge dogCanis = dag_.findOrCreateEdge(new Node[] { genls, dog,
+				canis }, creator, true);
+		Edge fidoDog = dag_.findOrCreateEdge(new Node[] { isa, fido,
+				dog }, creator, true);
+		Edge fidoPet = dag_.findOrCreateEdge(new Node[] { isa, fido,
+				pet }, creator, true);
 
 		nodes.clear();
 		nodes.add((DAGNode) dog);
@@ -185,8 +185,8 @@ public class SubDAGExtractorModuleTest {
 
 		// Predicate addition
 		Node canBe = dag_.findOrCreateNode("canBe", creator, true);
-		Edge canisPet = dag_.findOrCreateEdge(creator, new Node[] { canBe,
-				canis, pet }, true);
+		Edge canisPet = dag_.findOrCreateEdge(new Node[] { canBe,
+				canis, pet }, creator, true);
 		nodes.clear();
 		nodes.add((DAGNode) canis);
 		nodes.add((DAGNode) pet);
@@ -210,9 +210,9 @@ public class SubDAGExtractorModuleTest {
 		Node canis = dag_.findOrCreateNode("CanisGenus", creator, true);
 		Node fido = dag_.findOrCreateNode("Fido", creator, true);
 		Node pet = dag_.findOrCreateNode("Pet", creator, true);
-		dag_.findOrCreateEdge(creator, new Node[] { genls, dog, canis }, true);
-		dag_.findOrCreateEdge(creator, new Node[] { isa, fido, dog }, true);
-		dag_.findOrCreateEdge(creator, new Node[] { isa, fido, pet }, true);
+		dag_.findOrCreateEdge(new Node[] { genls, dog, canis }, creator, true);
+		dag_.findOrCreateEdge(new Node[] { isa, fido, dog }, creator, true);
+		dag_.findOrCreateEdge(new Node[] { isa, fido, pet }, creator, true);
 
 		nodes.clear();
 		nodes.add((DAGNode) dog);

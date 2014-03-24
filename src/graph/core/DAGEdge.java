@@ -42,7 +42,7 @@ public class DAGEdge extends DAGObject implements Edge {
 	 * @param nodes
 	 *            The nodes of the edge.
 	 */
-	public DAGEdge(Node... nodes) {
+	protected DAGEdge(Node... nodes) {
 		this(null, true, nodes);
 	}
 
@@ -56,7 +56,7 @@ public class DAGEdge extends DAGObject implements Edge {
 	 * @param nodes
 	 *            The nodes of the edge.
 	 */
-	public DAGEdge(Node creator, boolean placeholder, Node... nodes) {
+	protected DAGEdge(Node creator, boolean placeholder, Node... nodes) {
 		super(creator);
 		if (nodes.length < 2)
 			throw new IllegalArgumentException(

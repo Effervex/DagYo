@@ -374,17 +374,18 @@ public class DirectedAcyclicGraph {
 	 * Finds or creates an edge from a set of nodes. The returned edge either
 	 * already exists, or is newly created and added.
 	 * 
-	 * @param creator
-	 *            The creator of the edge.
 	 * @param edgeNodes
 	 *            The nodes of the edge.
+	 * @param creator
+	 *            The creator of the edge.
 	 * @param flags
 	 *            The boolean flags to use during edge creation: createNew
 	 *            (false), forceConstraints (false), ephemeral (false).
+	 * 
 	 * @return True if the edge was not already in the graph.
 	 * @throws DAGException
 	 */
-	public synchronized Edge findOrCreateEdge(Node creator, Node[] edgeNodes,
+	public synchronized Edge findOrCreateEdge(Node[] edgeNodes, Node creator,
 			boolean... flags) {
 		BooleanFlags bFlags = edgeFlags_.loadFlags(flags);
 		boolean createNew = bFlags.getFlag("createNew");
@@ -396,8 +397,8 @@ public class DirectedAcyclicGraph {
 				if (!noChecks_) {
 					for (Node n : edgeNodes)
 						if (n instanceof DAGNode
-								&& findOrCreateNode(n.getIdentifier(), null,
-										bFlags.getFlag("createNew")) == null)
+								&& ((DAGNode) n).getID() != -1
+								&& !n.equals(getNodeByID(((DAGNode) n).getID())))
 							return new NonExistentErrorEdge(n);
 				}
 
@@ -405,7 +406,7 @@ public class DirectedAcyclicGraph {
 				boolean result = edges_.add((DAGEdge) edge);
 				if (result) {
 					if (bFlags.getFlag("ephemeral"))
-						addProperty((DAGEdge) edge, EPHEMERAL_MARK, "true");
+						addProperty((DAGEdge) edge, EPHEMERAL_MARK, "T");
 					else {
 						// Trigger modules
 						for (DAGModule<?> module : modules_)
@@ -451,7 +452,7 @@ public class DirectedAcyclicGraph {
 			} else if (createNew && nodeStr.isEmpty()) {
 				node = new DAGNode(creator);
 				if (bFlags.getFlag("ephemeral"))
-					addProperty(node, EPHEMERAL_MARK, "true");
+					addProperty(node, EPHEMERAL_MARK, "T");
 				return node;
 			} else if (!dagNodeOnly && nodeStr.startsWith("\"")) {
 				return new StringNode(nodeStr);
@@ -603,7 +604,8 @@ public class DirectedAcyclicGraph {
 				String creatorStr = e.getCreator();
 				Node creator = (creatorStr == null) ? null : findOrCreateNode(
 						creatorStr, null);
-				Edge e2 = findOrCreateEdge(creator, e.getNodes(), false, false);
+				Edge e2 = findOrCreateEdge(e.getNodes(), creator, true, false,
+						false);
 				if (e2 instanceof ErrorEdge)
 					System.err.println("Error creating once-ephemeral edge: "
 							+ e2);
