@@ -85,6 +85,13 @@ public class DAGNode extends DAGObject implements Node {
 	}
 
 	@Override
+	public String getIdentifier(boolean useName) {
+		if (useName)
+			return getName();
+		return getIdentifier();
+	}
+
+	@Override
 	public String getName() {
 		if (isAnonymous())
 			return ANON_TO_STRING + id_;

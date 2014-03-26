@@ -61,13 +61,17 @@ public class StringNode implements Node {
 
 	@Override
 	public String toString() {
-		// TODO This is not coming up as escaped.
 		return "\"" + getName() + "\"";
 	}
 
 	@Override
 	public String getIdentifier() {
 		return toString();
+	}
+	
+	@Override
+	public String getIdentifier(boolean useName) {
+		return getIdentifier();
 	}
 
 	public void readExternal(ObjectInput in) throws IOException,

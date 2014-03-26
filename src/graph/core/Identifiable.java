@@ -12,4 +12,6 @@ package graph.core;
 
 public interface Identifiable {
 	public String getIdentifier();
+	
+	public String getIdentifier(boolean useName);
 }

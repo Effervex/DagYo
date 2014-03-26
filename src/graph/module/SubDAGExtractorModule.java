@@ -4,11 +4,13 @@ import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import util.collection.MultiMap;
 
 import graph.core.DAGEdge;
 import graph.core.DAGNode;
-import graph.core.DAGObject;
 import graph.core.DirectedAcyclicGraph;
 import graph.core.Edge;
 import graph.core.Node;
@@ -23,6 +25,8 @@ public class SubDAGExtractorModule extends DAGModule<Boolean> {
 	private static final long serialVersionUID = 1L;
 	public static final String TAG_PREFIX = "subDAG";
 	private MultiMap<String, DAGNode> taggedNodes_;
+	private static Logger logger = LoggerFactory
+			.getLogger(SubDAGExtractorModule.class);
 
 	public SubDAGExtractorModule() {
 		taggedNodes_ = MultiMap.createListMultiMap();
@@ -50,32 +54,62 @@ public class SubDAGExtractorModule extends DAGModule<Boolean> {
 				.getModule(RelatedEdgeModule.class);
 
 		// Create new DAG
+		logger.debug("Creating SubDAG");
 		DirectedAcyclicGraph subDAG = createNewDAG(folder);
 		subDAG.initialise();
 
 		// Identify nodes
-		Collection<DAGNode> nodes = new HashSet<>(taggedNodes_.get(tag));
+		Collection<DAGNode> newlyAddedNodes = new HashSet<>(
+				taggedNodes_.get(tag));
+		logger.debug("Getting tagged nodes: {}", newlyAddedNodes);
 
 		// Follow edges by distance to produce more nodes
-		followEdges(nodes, distance, relatedEdgeModule);
+		logger.debug("Following edges by distance {}", distance);
+		followEdges(newlyAddedNodes, distance, relatedEdgeModule);
+		logger.debug("Number of nodes: {}", newlyAddedNodes.size());
 
-		// Identify edges using nodes
-		Collection<DAGEdge> edges = findLinks(nodes, relatedEdgeModule);
+		// Identify edges using nodes. If nodes change, re-run
+		Collection<DAGEdge> edges = new HashSet<>();
+		Collection<DAGNode> nodes = new HashSet<>();
+		boolean loop = true;
+		do {
+			logger.debug("Processing before assertions");
+			preAssertionProcessing(newlyAddedNodes, nodes, edges);
+
+			logger.debug("Linking nodes");
+			edges.addAll(incorporateNewAndLinkEdges(nodes, newlyAddedNodes,
+					relatedEdgeModule));
+			logger.debug("Found {} linking edges.", edges.size());
+
+			loop = !newlyAddedNodes.isEmpty();
+		} while (loop);
 
 		// Assert
 		StringNode creator = new StringNode(tag);
+		logger.debug("Asserting {} nodes.", nodes.size());
 		for (DAGNode node : nodes)
 			subDAG.findOrCreateNode(node.getName(), creator, true);
+		logger.debug("Asserting {} edges.", edges.size());
 		for (DAGEdge edge : edges) {
-			Node[] subDAGNodes = subDAG.parseNodes(edge.toString(false),
-					creator, false, false);
-			subDAG.findOrCreateEdge(subDAGNodes, creator, true);
+			Node[] edgeNodes = edge.getNodes();
+			Node[] newEdgeNodes = new Node[edgeNodes.length];
+			for (int i = 0; i < edgeNodes.length; i++) {
+				newEdgeNodes[i] = subDAG
+						.findOrCreateNode(edgeNodes[i].getIdentifier(true),
+								creator, false, false);
+			}
+			subDAG.findOrCreateEdge(newEdgeNodes, creator, true);
 		}
 
 		// Serialise to folder
+		logger.debug("Saving state.");
 		subDAG.saveState();
 
 		return true;
+	}
+
+	protected void preAssertionProcessing(Collection<DAGNode> newlyAddedNodes,
+			Collection<DAGNode> processedNodes, Collection<DAGEdge> edges) {
 	}
 
 	/**
@@ -83,40 +117,56 @@ public class SubDAGExtractorModule extends DAGModule<Boolean> {
 	 * edges that introduce new DAGNodes (though non-DAG nodes are fine). With
 	 * the exception of introducing predicates that define the edge.
 	 * 
-	 * @param nodes
-	 *            The nodes to find edges for.
+	 * @param linkedNodes
+	 *            The nodes that have already been linked up together
+	 * @param toBeLinkedNodes
+	 *            The nodes to be added and linked up.
+	 * @param relatedEdgeModule
+	 *            The Related Edge Module access.
 	 * @return The collection of edges linking these nodes
 	 */
-	public Collection<DAGEdge> findLinks(Collection<DAGNode> nodes,
+	public Collection<DAGEdge> incorporateNewAndLinkEdges(
+			Collection<DAGNode> linkedNodes,
+			Collection<DAGNode> toBeLinkedNodes,
 			RelatedEdgeModule relatedEdgeModule) {
 		Collection<DAGEdge> linkedEdges = new HashSet<>();
-		Collection<DAGNode> predicates = new HashSet<>();
 		boolean addPredicate = true;
-		// For every node
-		for (Node n : nodes) {
-			Collection<Edge> relatedEdges = relatedEdgeModule.execute(n, -1, n);
+
+		// Incorporate the new nodes into the linked nodes
+		linkedNodes.addAll(toBeLinkedNodes);
+
+		// Link up the newly incorporated nodes with edges.
+		Collection<DAGNode> predicates = new HashSet<>();
+		for (DAGNode newNode : toBeLinkedNodes) {
+			Collection<Edge> relatedEdges = relatedEdgeModule.execute(newNode,
+					-1, newNode);
 			// Check every edge
 			for (Edge e : relatedEdges) {
 				Node[] args = e.getNodes();
 				boolean addEdge = true;
 				for (int i = 1; i < args.length; i++) {
-					if (args[i] instanceof DAGNode && !nodes.contains(args[i])) {
+					if (args[i] instanceof DAGNode
+							&& !linkedNodes.contains(args[i])) {
 						addEdge = false;
 						break;
 					}
 				}
 
 				if (addEdge) {
-					if (addPredicate || nodes.contains(args[0])) {
+					if (addPredicate || linkedNodes.contains(args[0])) {
 						// Add the predicate
-						predicates.add((DAGNode) args[0]);
+						if (!linkedNodes.contains(args[0]))
+							predicates.add((DAGNode) args[0]);
 
 						linkedEdges.add((DAGEdge) e);
 					}
 				}
 			}
 		}
-		nodes.addAll(predicates);
+
+		// Store predicates as to-be-linked
+		toBeLinkedNodes.clear();
+		toBeLinkedNodes.addAll(predicates);
 		return linkedEdges;
 	}
 
@@ -164,17 +214,20 @@ public class SubDAGExtractorModule extends DAGModule<Boolean> {
 		return dag;
 	}
 
-	public synchronized void tagDAGObject(DAGObject dagObj, String tag) {
+	public synchronized void tagDAGObject(DAGNode dagObj, String tag) {
 		String alterTag = TAG_PREFIX + tag;
-		if (dagObj instanceof DAGNode) {
-			dag_.addProperty(dagObj, alterTag, "T");
-			taggedNodes_.put(alterTag, (DAGNode) dagObj);
-		} else if (dagObj instanceof DAGEdge) {
-			for (Node n : ((DAGEdge) dagObj).getNodes()) {
-				if (n instanceof DAGNode)
-					tagDAGObject((DAGObject) n, tag);
-			}
-		}
+		dag_.addProperty(dagObj, alterTag, "T");
+		taggedNodes_.put(alterTag, dagObj);
 	}
 
+	public synchronized void removeTagDAGObject(DAGNode dagObj, String tag) {
+		String alterTag = TAG_PREFIX + tag;
+		dag_.removeProperty(dagObj, alterTag);
+		taggedNodes_.get(alterTag).remove(dagObj);
+	}
+
+	public Collection<DAGNode> listTagged(String tag) {
+		String alterTag = TAG_PREFIX + tag;
+		return taggedNodes_.get(alterTag);
+	}
 }

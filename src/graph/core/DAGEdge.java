@@ -107,6 +107,17 @@ public class DAGEdge extends DAGObject implements Edge {
 	}
 
 	@Override
+	public String getIdentifier(boolean useName) {
+		if (useName) {
+			String[] identifiers = new String[edgeNodes_.length];
+			for (int i = 0; i < identifiers.length; i++)
+				identifiers[i] = edgeNodes_[i].getIdentifier(true);
+			return "(" + StringUtils.join(identifiers, ' ') + ")";
+		}
+		return getIdentifier();
+	}
+
+	@Override
 	public String toString(boolean useIDs) {
 		if (!useIDs)
 			return toString();

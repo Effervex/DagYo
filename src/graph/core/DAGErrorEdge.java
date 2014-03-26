@@ -33,6 +33,11 @@ public abstract class DAGErrorEdge implements ErrorEdge {
 	}
 
 	@Override
+	public final String getIdentifier(boolean useName) {
+		return getError();
+	}
+
+	@Override
 	public final int getID() {
 		return -1;
 	}

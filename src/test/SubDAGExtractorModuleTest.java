@@ -3,7 +3,6 @@ package test;
 import static org.junit.Assert.*;
 import graph.core.DAGEdge;
 import graph.core.DAGNode;
-import graph.core.DAGObject;
 import graph.core.DirectedAcyclicGraph;
 import graph.core.Edge;
 import graph.core.Node;
@@ -56,7 +55,7 @@ public class SubDAGExtractorModuleTest {
 		dag_.findOrCreateEdge(new Node[] { isa, fido, dog }, creator, true);
 		dag_.findOrCreateEdge(new Node[] { isa, fido, pet }, creator, true);
 
-		sut_.tagDAGObject((DAGObject) dog, tag);
+		sut_.tagDAGObject((DAGNode) dog, tag);
 		File folder = new File("testSubDAG");
 		if (folder.exists())
 			FileUtils.deleteDirectory(folder);
@@ -94,7 +93,7 @@ public class SubDAGExtractorModuleTest {
 		assertTrue(subDAG.findOrCreateNode("genls", null, false) != null);
 		assertEquals(subDAG.getEdges().size(), 3);
 
-		sut_.tagDAGObject((DAGObject) pet, tag);
+		sut_.tagDAGObject((DAGNode) pet, tag);
 		if (folder.exists())
 			FileUtils.deleteDirectory(folder);
 		folder.mkdir();
@@ -105,7 +104,7 @@ public class SubDAGExtractorModuleTest {
 		assertTrue(subDAG.findOrCreateNode("Pet", null, false) != null);
 		assertEquals(subDAG.getEdges().size(), 0);
 
-		sut_.tagDAGObject((DAGObject) pet, tag);
+		sut_.tagDAGObject((DAGNode) pet, tag);
 		if (folder.exists())
 			FileUtils.deleteDirectory(folder);
 		folder.mkdir();
@@ -137,37 +136,40 @@ public class SubDAGExtractorModuleTest {
 		Node canis = dag_.findOrCreateNode("CanisGenus", creator, true);
 		Node fido = dag_.findOrCreateNode("Fido", creator, true);
 		Node pet = dag_.findOrCreateNode("Pet", creator, true);
-		Edge dogCanis = dag_.findOrCreateEdge(new Node[] { genls, dog,
-				canis }, creator, true);
-		Edge fidoDog = dag_.findOrCreateEdge(new Node[] { isa, fido,
-				dog }, creator, true);
-		Edge fidoPet = dag_.findOrCreateEdge(new Node[] { isa, fido,
-				pet }, creator, true);
+		Edge dogCanis = dag_.findOrCreateEdge(new Node[] { genls, dog, canis },
+				creator, true);
+		Edge fidoDog = dag_.findOrCreateEdge(new Node[] { isa, fido, dog },
+				creator, true);
+		Edge fidoPet = dag_.findOrCreateEdge(new Node[] { isa, fido, pet },
+				creator, true);
 
 		nodes.clear();
 		nodes.add((DAGNode) dog);
-		Collection<DAGEdge> linkedEdges = sut_.findLinks(nodes,
-				relatedEdgeModule);
+		Collection<DAGEdge> linkedEdges = sut_.incorporateNewAndLinkEdges(
+				new HashSet<DAGNode>(), nodes, relatedEdgeModule);
 		assertEquals(linkedEdges.size(), 0);
 
 		nodes.clear();
 		nodes.add((DAGNode) dog);
 		nodes.add((DAGNode) fido);
-		linkedEdges = sut_.findLinks(nodes, relatedEdgeModule);
+		linkedEdges = sut_.incorporateNewAndLinkEdges(
+				new HashSet<DAGNode>(), nodes, relatedEdgeModule);
 		assertEquals(linkedEdges.size(), 1);
 		assertTrue(linkedEdges.contains(fidoDog));
 
 		nodes.clear();
 		nodes.add((DAGNode) canis);
 		nodes.add((DAGNode) fido);
-		linkedEdges = sut_.findLinks(nodes, relatedEdgeModule);
+		linkedEdges = sut_.incorporateNewAndLinkEdges(
+				new HashSet<DAGNode>(), nodes, relatedEdgeModule);
 		assertEquals(linkedEdges.size(), 0);
 
 		nodes.clear();
 		nodes.add((DAGNode) canis);
 		nodes.add((DAGNode) dog);
 		nodes.add((DAGNode) fido);
-		linkedEdges = sut_.findLinks(nodes, relatedEdgeModule);
+		linkedEdges = sut_.incorporateNewAndLinkEdges(
+				new HashSet<DAGNode>(), nodes, relatedEdgeModule);
 		assertEquals(linkedEdges.size(), 2);
 		assertTrue(linkedEdges.contains(fidoDog));
 		assertTrue(linkedEdges.contains(dogCanis));
@@ -177,7 +179,8 @@ public class SubDAGExtractorModuleTest {
 		nodes.add((DAGNode) dog);
 		nodes.add((DAGNode) fido);
 		nodes.add((DAGNode) pet);
-		linkedEdges = sut_.findLinks(nodes, relatedEdgeModule);
+		linkedEdges = sut_.incorporateNewAndLinkEdges(
+				new HashSet<DAGNode>(), nodes, relatedEdgeModule);
 		assertEquals(linkedEdges.size(), 3);
 		assertTrue(linkedEdges.contains(fidoDog));
 		assertTrue(linkedEdges.contains(fidoPet));
@@ -185,15 +188,16 @@ public class SubDAGExtractorModuleTest {
 
 		// Predicate addition
 		Node canBe = dag_.findOrCreateNode("canBe", creator, true);
-		Edge canisPet = dag_.findOrCreateEdge(new Node[] { canBe,
-				canis, pet }, creator, true);
+		Edge canisPet = dag_.findOrCreateEdge(new Node[] { canBe, canis, pet },
+				creator, true);
 		nodes.clear();
 		nodes.add((DAGNode) canis);
 		nodes.add((DAGNode) pet);
-		linkedEdges = sut_.findLinks(nodes, relatedEdgeModule);
+		linkedEdges = sut_.incorporateNewAndLinkEdges(
+				new HashSet<DAGNode>(), nodes, relatedEdgeModule);
 		assertEquals(linkedEdges.size(), 1);
 		assertTrue(linkedEdges.contains(canisPet));
-		assertEquals(nodes.size(), 3);
+		assertEquals(nodes.size(), 1);
 		assertTrue(nodes.contains(canBe));
 	}
 

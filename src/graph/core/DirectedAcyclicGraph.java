@@ -50,9 +50,13 @@ import util.serialisation.SerialisationMechanism;
  * @author Sam Sarjant
  */
 public class DirectedAcyclicGraph {
+	private static final String DAG_FILE = "commandLog.log";
+
 	private static final String EDGE_FILE = "edges.dat";
 
 	private static final String EDGE_ID_FIELD = "edgeID";
+
+	private static final int MAX_OBJ_SERIALISATION = 5000000;
 
 	private static final String NODE_FILE = "nodes.dat";
 
@@ -72,13 +76,13 @@ public class DirectedAcyclicGraph {
 
 	public static final File MODULE_FILE = new File("activeModules.config");
 
-	private static final String DAG_FILE = "commandLog.log";
-
 	public static final BooleanFlags nodeFlags_;
 
-	private static final int MAX_OBJ_SERIALISATION = 5000000;
-
 	public static DirectedAcyclicGraph selfRef_;
+
+	private boolean changedState_ = false;
+
+	private BufferedWriter dagOut_;
 
 	private Map<String, Integer> moduleMap_;
 
@@ -99,8 +103,6 @@ public class DirectedAcyclicGraph {
 	public boolean noChecks_ = false;
 
 	public final long startTime_;
-
-	private BufferedWriter dagOut_;
 
 	public DirectedAcyclicGraph() {
 		this(DEFAULT_ROOT);
@@ -315,6 +317,10 @@ public class DirectedAcyclicGraph {
 		readDAGDetails(rootDir_);
 	}
 
+	protected SortedSet<DAGEdge> orderedReassertables() {
+		return new TreeSet<DAGEdge>();
+	}
+
 	protected String preParseNode(String nodeStr, Node creator,
 			boolean createNew, boolean dagNodeOnly) {
 		return nodeStr;
@@ -322,6 +328,7 @@ public class DirectedAcyclicGraph {
 
 	public synchronized void addProperty(DAGObject dagObj, String key,
 			String value) {
+		changedState_ = true;
 		dagObj.put(key, value);
 		if (dagObj instanceof DAGNode)
 			nodes_.update((DAGNode) dagObj);
@@ -333,6 +340,7 @@ public class DirectedAcyclicGraph {
 	}
 
 	public void clear() {
+		changedState_ = true;
 		nodes_.clear();
 		edges_.clear();
 
@@ -412,6 +420,7 @@ public class DirectedAcyclicGraph {
 						for (DAGModule<?> module : modules_)
 							module.addEdge((DAGEdge) edge);
 					}
+					changedState_ = true;
 				}
 			}
 			return edge;
@@ -453,6 +462,7 @@ public class DirectedAcyclicGraph {
 				node = new DAGNode(creator);
 				if (bFlags.getFlag("ephemeral"))
 					addProperty(node, EPHEMERAL_MARK, "T");
+				changedState_ = true;
 				return node;
 			} else if (!dagNodeOnly && nodeStr.startsWith("\"")) {
 				return new StringNode(nodeStr);
@@ -478,6 +488,7 @@ public class DirectedAcyclicGraph {
 					// Trigger modules
 					for (DAGModule<?> module : modules_)
 						module.addNode(node);
+					changedState_ = true;
 				} else
 					return null;
 			}
@@ -485,6 +496,10 @@ public class DirectedAcyclicGraph {
 		} finally {
 			nodeLock_.unlock();
 		}
+	}
+
+	public BufferedWriter getCommandOut() {
+		return dagOut_;
 	}
 
 	/**
@@ -565,19 +580,6 @@ public class DirectedAcyclicGraph {
 		return null;
 	}
 
-	public BufferedWriter getCommandOut() {
-		return dagOut_;
-	}
-
-	public final void initialise() {
-		initialiseInternal();
-		boolean saveState = false;
-		for (DAGModule<?> module : modules_)
-			saveState |= module.initialisationComplete(nodes_, edges_, false);
-		if (saveState)
-			saveState();
-	}
-
 	public synchronized void groundEphemeral() {
 		// Compile module properties to remove
 		Collection<String> props = new ArrayList<>();
@@ -624,8 +626,13 @@ public class DirectedAcyclicGraph {
 			module.initialisationComplete(nodes_, edges_, true);
 	}
 
-	protected SortedSet<DAGEdge> orderedReassertables() {
-		return new TreeSet<DAGEdge>();
+	public final void initialise() {
+		initialiseInternal();
+		boolean saveState = false;
+		for (DAGModule<?> module : modules_)
+			saveState |= module.initialisationComplete(nodes_, edges_, false);
+		if (saveState)
+			saveState();
 	}
 
 	/**
@@ -640,6 +647,7 @@ public class DirectedAcyclicGraph {
 	 */
 	public void mergeNodes(DAGNode baseNode, DAGNode mergingNode) {
 		// TODO Complete this method.
+		changedState_ = true;
 	}
 
 	public Node[] parseNodes(String strNodes, Node creator,
@@ -681,6 +689,7 @@ public class DirectedAcyclicGraph {
 				// Trigger modules
 				for (DAGModule<?> module : modules_)
 					module.removeEdge((DAGEdge) edge);
+				changedState_ = true;
 			}
 			return result;
 		} finally {
@@ -739,6 +748,7 @@ public class DirectedAcyclicGraph {
 				// Trigger modules
 				for (DAGModule<?> module : modules_)
 					module.removeNode(node);
+				changedState_ = true;
 			}
 			return result;
 		} finally {
@@ -763,9 +773,12 @@ public class DirectedAcyclicGraph {
 
 		for (DAGModule<?> module : modules_)
 			module.removeProperty(dagObj, key);
+		changedState_ = true;
 	}
 
 	public synchronized void saveState() {
+		if (!changedState_ )
+			return;
 		// Save 'global' values
 		System.out.print("Please wait while saving state... ");
 		try {
@@ -804,6 +817,14 @@ public class DirectedAcyclicGraph {
 		System.exit(0);
 	}
 
+	public synchronized void writeCommand(String command) {
+		try {
+			dagOut_.write(command + "\n");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	static {
 		// Node flags
 		nodeFlags_ = new BooleanFlags();
@@ -815,13 +836,5 @@ public class DirectedAcyclicGraph {
 		edgeFlags_ = new BooleanFlags();
 		edgeFlags_.addFlag("createNew", false);
 		edgeFlags_.addFlag("ephemeral", false);
-	}
-
-	public synchronized void writeCommand(String command) {
-		try {
-			dagOut_.write(command + "\n");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 }

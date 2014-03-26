@@ -95,6 +95,11 @@ public class PrimitiveNode implements Node {
 	public String getIdentifier() {
 		return "'" + getName();
 	}
+	
+	@Override
+	public String getIdentifier(boolean useName) {
+		return getIdentifier();
+	}
 
 	public static PrimitiveNode parseNode(String name) {
 		try {

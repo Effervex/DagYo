@@ -1,25 +1,25 @@
 package graph.module.cli;
 
-import java.util.ArrayList;
-
-import util.UtilityMethods;
 import graph.core.DAGNode;
 import graph.core.DirectedAcyclicGraph;
 import graph.core.cli.DAGPortHandler;
 import graph.module.SubDAGExtractorModule;
+
+import java.util.ArrayList;
+
+import util.UtilityMethods;
 import core.Command;
 
-public class SubDAGTagCommand extends Command {
+public class SubDAGRemoveCommand extends Command {
 	@Override
 	public String helpText() {
-		return "{0} node tag : Tags a node with a given "
-				+ "tag such that when a subDAG is extracted using that "
-				+ "tag, it is one of the extracted objects.";
+		return "{0} node tag : Removes a tag from a node such "
+				+ "that it is no longer extracted.";
 	}
 
 	@Override
 	public String shortDescription() {
-		return "Tags a node to be extracted under a specific ID.";
+		return "Untags a node to be extracted under a specific ID.";
 	}
 
 	@Override
@@ -47,9 +47,8 @@ public class SubDAGTagCommand extends Command {
 			DAGNode node = (DAGNode) dag.findOrCreateNode(split.get(0), null,
 					false);
 
-			module.tagDAGObject(node, split.get(1));
-			print("1|" + dagHandler.textIDObject(node) + " tagged under \""
-					+ split.get(1) + "\"\n");
+			module.removeTagDAGObject(node, split.get(1));
+			print("1|" + dagHandler.textIDObject(node) + " untagged.\n");
 		} catch (Exception e) {
 			print("-1|Could not parse DAG object.\n");
 		}
