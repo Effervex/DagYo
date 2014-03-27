@@ -12,8 +12,6 @@ package graph.core.cli;
 
 import graph.core.DAGNode;
 import graph.core.DirectedAcyclicGraph;
-import graph.module.cli.ExtractSubDAGCommand;
-import graph.module.cli.SubDAGTagCommand;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,7 +49,7 @@ public class DAGCommandLineInterface extends Main {
 		CommandParser.addCommand("removeEdge", RemoveEdgeCommand.class);
 		CommandParser.addCommand("randomNode", RandomNodeCommand.class);
 		CommandParser.addCommand("randomEdge", RandomEdgeCommand.class);
-		CommandParser.addCommand("map", MapCommand.class);
+		CommandParser.addCommand("map", SortableMapCommand.class);
 		CommandParser.addCommand("numNodes", NumNodeCommand.class);
 		CommandParser.addCommand("numEdges", NumEdgeCommand.class);
 		CommandParser.addCommand("addProp", AddPropertyCommand.class);
@@ -63,13 +61,12 @@ public class DAGCommandLineInterface extends Main {
 		CommandParser.addCommand("sync", SyncCommand.class);
 		CommandParser.addCommand("groundEphemeral",
 				GroundEphemeralCommand.class);
-		CommandParser.addCommand("count", CountCommand.class);
 		CommandParser.addCommand("nextNode", NextNodeCommand.class);
 		CommandParser.addCommand("nextEdge", NextEdgeCommand.class);
 		CommandParser.addCommand("lastNode", LastNodeCommand.class);
 		CommandParser.addCommand("lastEdge", LastEdgeCommand.class);
 		CommandParser.addCommand("varHelp", DAGVarHelpCommand.class);
-		// CommandParser.addCommand("script", DAGScriptCommand.class);
+		CommandParser.addCommand("script", DAGScriptCommand.class);
 	}
 
 	@Override
@@ -79,10 +76,15 @@ public class DAGCommandLineInterface extends Main {
 	}
 
 	public static void main(String[] args) {
-		DirectedAcyclicGraph dag = new DirectedAcyclicGraph(getRootDir(args));
-		new DAGCommandLineInterface(getPort(args), dag).start();
+		try {
+			DirectedAcyclicGraph dag = new DirectedAcyclicGraph(
+					getRootDir(args));
+			new DAGCommandLineInterface(getPort(args), dag).start();
 
-		dag.initialise();
+			dag.initialise();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static int getPort(String[] args) {

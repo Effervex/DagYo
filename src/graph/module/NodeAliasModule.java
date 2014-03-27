@@ -55,8 +55,14 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> implements
 		if (edge.getProperty(ALIAS_PROP) != null) {
 			Node[] edgeNodes = edge.getNodes();
 			for (int i = 2; i < edgeNodes.length; i++) {
-				if (edgeNodes[i] instanceof StringNode)
-					addAlias((DAGNode) edgeNodes[1], edgeNodes[i].getName());
+				if (edgeNodes[i] instanceof StringNode) {
+					if (edgeNodes[1] instanceof DAGNode)
+						addAlias((DAGNode) edgeNodes[1], edgeNodes[i].getName());
+					else
+						System.err
+								.println("Alias edge defined by non-DAG node: "
+										+ edge.toString());
+				}
 			}
 			return true;
 		}

@@ -108,6 +108,7 @@ public class DAGNode extends DAGObject implements Node {
 	}
 
 	public static boolean isValidName(String nodeStr) {
-		return nodeStr.matches(VALID_NAME.pattern());
+		return nodeStr.matches(VALID_NAME.pattern())
+				&& PrimitiveNode.parseNode(nodeStr) == null;
 	}
 }

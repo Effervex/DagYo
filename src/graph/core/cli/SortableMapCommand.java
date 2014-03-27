@@ -19,11 +19,13 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
+import commands.MapCommand;
+
 import util.UtilityMethods;
 import core.Command;
 import core.CommandParser;
 
-public class MapCommand extends Command {
+public class SortableMapCommand extends MapCommand {
 
 	@Override
 	public String helpText() {
@@ -36,11 +38,6 @@ public class MapCommand extends Command {
 				+ "output of map command rather than collection command. "
 				+ "Multiline commands are not explicitly supported "
 				+ "by should work.";
-	}
-
-	@Override
-	public String shortDescription() {
-		return "Uses the outputs of one command as input to another.";
 	}
 
 	@Override
