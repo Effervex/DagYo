@@ -14,7 +14,7 @@ public class ModuleRejectedErrorEdge extends DAGErrorEdge {
 
 	@Override
 	public String getError() {
-		return "Edge " + edge_ + " was rejected by module " + module_ + ".";
+		return "Edge " + edge_ + " was rejected by module '" + module_ + "'.";
 	}
 
 	@Override
