@@ -57,7 +57,7 @@ public abstract class DAGObject implements UniqueID, Serializable,
 		if (creator != null) {
 			properties_ = new String[4];
 			properties_[index++] = CREATOR;
-			properties_[index++] = creator.getIdentifier();
+			properties_[index++] = creator.getIdentifier(true);
 		} else
 			properties_ = new String[2];
 		properties_[index++] = CREATION_DATE;

@@ -240,4 +240,10 @@ public class SubDAGExtractorModule extends DAGModule<Boolean> {
 		String alterTag = TAG_PREFIX + tag;
 		return taggedNodes_.get(alterTag);
 	}
+
+	@Override
+	public String toString() {
+		return "SubDAG Extractor Module: " + taggedNodes_.sizeTotal()
+				+ " tagged nodes from " + taggedNodes_.size() + " tags";
+	}
 }

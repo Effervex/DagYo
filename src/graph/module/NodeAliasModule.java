@@ -242,6 +242,6 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> implements
 
 	@Override
 	public String toString() {
-		return aliasTrie_.toString();
+		return "Node Alias Module: " + aliasTrie_.toString();
 	}
 }

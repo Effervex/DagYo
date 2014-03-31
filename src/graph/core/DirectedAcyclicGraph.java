@@ -426,7 +426,8 @@ public class DirectedAcyclicGraph {
 						}
 						if (rejectedModule != null) {
 							removeEdge(edge);
-							return new ModuleRejectedErrorEdge(edge, rejectedModule);
+							return new ModuleRejectedErrorEdge(edge,
+									rejectedModule);
 						}
 					}
 					changedState_ = true;
@@ -591,11 +592,7 @@ public class DirectedAcyclicGraph {
 
 	public synchronized void groundEphemeral() {
 		// Compile module properties to remove
-		Collection<String> props = new ArrayList<>();
-		for (DAGModule<?> module : modules_) {
-			props.addAll(module.getPertinentProperties());
-			module.disableCached();
-		}
+		Collection<String> props = compilePertinentProperties();
 		props.add(EPHEMERAL_MARK);
 
 		// Run through the nodes, setting them as non-ephemeral
@@ -633,6 +630,15 @@ public class DirectedAcyclicGraph {
 		// Rebuild the modules
 		for (DAGModule<?> module : modules_)
 			module.initialisationComplete(nodes_, edges_, true);
+	}
+
+	private Collection<String> compilePertinentProperties() {
+		Collection<String> props = new ArrayList<>();
+		for (DAGModule<?> module : modules_) {
+			props.addAll(module.getPertinentProperties());
+			module.disableCached();
+		}
+		return props;
 	}
 
 	public final void initialise() {
@@ -845,5 +851,37 @@ public class DirectedAcyclicGraph {
 		edgeFlags_ = new BooleanFlags();
 		edgeFlags_.addFlag("createNew", false);
 		edgeFlags_.addFlag("ephemeral", false);
+	}
+
+	public void export(File file, DAGExportFormat format) throws IOException {
+		BufferedWriter out = new BufferedWriter(new FileWriter(file));
+
+		if (format == DAGExportFormat.DAG)
+			exportToDAG(out);
+
+		out.close();
+	}
+
+	private void exportToDAG(BufferedWriter out) throws IOException {
+		Collection<String> pertinentProperties = compilePertinentProperties();
+
+		for (DAGNode n : nodes_) {
+			out.write("$0$=addnode " + n.getIdentifier(true) + "\n");
+			String[] props = n.getProperties();
+			for (int i = 0; i < props.length; i += 2) {
+				if (!pertinentProperties.contains(props[i]))
+					out.write("addprop N $0$ \"" + props[i] + "\" |\\n"
+							+ props[i + 1] + "\\n|\n");
+			}
+		}
+		for (DAGEdge e : edges_) {
+			out.write("$0$=addedge " + e.getIdentifier(true) + "\n");
+			String[] props = e.getProperties();
+			for (int i = 0; i < props.length; i += 2) {
+				if (!pertinentProperties.contains(props[i]))
+					out.write("addprop E $0$ \"" + props[i] + "\" |\\n"
+							+ props[i + 1] + "\\n|\n");
+			}
+		}
 	}
 }
