@@ -417,8 +417,17 @@ public class DirectedAcyclicGraph {
 						addProperty((DAGEdge) edge, EPHEMERAL_MARK, "T");
 					else {
 						// Trigger modules
-						for (DAGModule<?> module : modules_)
-							module.addEdge((DAGEdge) edge);
+						DAGModule<?> rejectedModule = null;
+						for (DAGModule<?> module : modules_) {
+							if (!module.addEdge((DAGEdge) edge)) {
+								rejectedModule = module;
+								break;
+							}
+						}
+						if (rejectedModule != null) {
+							removeEdge(edge);
+							return new ModuleRejectedErrorEdge(edge, rejectedModule);
+						}
 					}
 					changedState_ = true;
 				}
@@ -777,7 +786,7 @@ public class DirectedAcyclicGraph {
 	}
 
 	public synchronized void saveState() {
-		if (!changedState_ )
+		if (!changedState_)
 			return;
 		// Save 'global' values
 		System.out.print("Please wait while saving state... ");

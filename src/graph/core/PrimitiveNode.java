@@ -95,7 +95,7 @@ public class PrimitiveNode implements Node {
 	public String getIdentifier() {
 		return "'" + getName();
 	}
-	
+
 	@Override
 	public String getIdentifier(boolean useName) {
 		return getIdentifier();
@@ -105,9 +105,9 @@ public class PrimitiveNode implements Node {
 		try {
 			if (name.matches("'.'"))
 				return new PrimitiveNode(name.charAt(1));
-			if (name.equalsIgnoreCase("true"))
+			if (name.equals("true"))
 				return new PrimitiveNode(true);
-			if (name.equalsIgnoreCase("false"))
+			if (name.equals("false"))
 				return new PrimitiveNode(false);
 			if (name.matches("-?\\d{1,4}"))
 				return new PrimitiveNode(Short.valueOf(name));

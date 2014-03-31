@@ -66,7 +66,7 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> implements
 			}
 			return true;
 		}
-		return false;
+		return true;
 	}
 
 	@Override
