@@ -388,7 +388,7 @@ public class DirectedAcyclicGraph {
 	 *            The creator of the edge.
 	 * @param flags
 	 *            The boolean flags to use during edge creation: createNew
-	 *            (false), forceConstraints (false), ephemeral (false).
+	 *            (false), ephemeral (false), forceConstraints (false).
 	 * 
 	 * @return True if the edge was not already in the graph.
 	 * @throws DAGException
@@ -612,8 +612,7 @@ public class DirectedAcyclicGraph {
 				String creatorStr = e.getCreator();
 				Node creator = (creatorStr == null) ? null : findOrCreateNode(
 						creatorStr, null);
-				Edge e2 = findOrCreateEdge(e.getNodes(), creator, true, false,
-						false);
+				Edge e2 = findOrCreateEdge(e.getNodes(), creator, true, false);
 				if (e2 instanceof ErrorEdge)
 					System.err.println("Error creating once-ephemeral edge: "
 							+ e2);
@@ -628,8 +627,7 @@ public class DirectedAcyclicGraph {
 		System.out.println("Done!");
 
 		// Rebuild the modules
-		for (DAGModule<?> module : modules_)
-			module.initialisationComplete(nodes_, edges_, true);
+		reloadModules();
 	}
 
 	private Collection<String> compilePertinentProperties() {
@@ -643,11 +641,16 @@ public class DirectedAcyclicGraph {
 
 	public final void initialise() {
 		initialiseInternal();
+		boolean saveState = reloadModules();
+		if (saveState)
+			saveState();
+	}
+
+	public boolean reloadModules() {
 		boolean saveState = false;
 		for (DAGModule<?> module : modules_)
 			saveState |= module.initialisationComplete(nodes_, edges_, false);
-		if (saveState)
-			saveState();
+		return saveState;
 	}
 
 	/**

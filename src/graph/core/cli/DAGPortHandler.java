@@ -16,13 +16,15 @@ import graph.core.cli.comparator.DefaultComparator;
 import graph.core.cli.comparator.IDComparator;
 import graph.core.cli.comparator.StringCaseInsComparator;
 import graph.core.cli.comparator.StringComparator;
+import graph.core.cli.filters.SubDAGFilter;
 
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
+
+import org.apache.commons.collections4.Predicate;
 
 import util.AliasedObject;
 import core.CommandQueue;
@@ -34,6 +36,7 @@ public class DAGPortHandler extends PortHandler {
 	public static final String SORT_ORDER = "/env/sort";
 	public static final String EDGE_FLAGS = "/env/edgeFlags";
 	public static final String NODE_FLAGS = "/env/nodeFlags";
+	public static final String SUBDAG_FILTERING = "/env/subDAGFilter";
 	protected DirectedAcyclicGraph dag_;
 
 	public DAGPortHandler(Socket aSocket, CommandQueue aQueue,
@@ -42,6 +45,7 @@ public class DAGPortHandler extends PortHandler {
 		set(SORT_ORDER, "default");
 		set(EDGE_FLAGS, "");
 		set(NODE_FLAGS, "");
+		set(SUBDAG_FILTERING, "");
 		dag_ = dag;
 	}
 
@@ -59,44 +63,57 @@ public class DAGPortHandler extends PortHandler {
 	}
 
 	/**
-	 * Sorts a collection by the collection defined in the variables.
+	 * Processes a collection of objects that are the result of prior
+	 * operations. This includes sorting, filtering, and subsetting.
 	 * 
 	 * @param items
 	 *            The collection to be sorted.
 	 * @return A sorted collection, or the same collection if no sorter
 	 *         defined/defined as default.
 	 */
-	public final <T> Collection<T> sort(Collection<T> items, int start, int end) {
+	public final <T> Collection<T> postProcess(Collection<T> items, int start,
+			int end) {
 		if (items == null || items.isEmpty())
 			return items;
+		Collection<Predicate<Object>> filters = getFilters();
+
+		// Filter
+		List<T> output = new ArrayList<T>();
+		for (T item : items) {
+			boolean keep = true;
+			for (Predicate<Object> filter : filters) {
+				if (!filter.evaluate(item)) {
+					keep = false;
+					break;
+				}
+			}
+
+			if (keep)
+				output.add(item);
+		}
+
+		// Sort
 		DefaultComparator comparator = getComparator();
-
-		// Range values
-		start = Math.max(0, start);
-		end = Math.min(items.size(), end);
-
 		if (comparator != null) {
 			comparator.setHandler(this);
-			List<T> sortedNodes = new ArrayList<>(items);
-			Collections.sort(sortedNodes, comparator);
-			if (start != 0 || end != items.size())
-				sortedNodes = sortedNodes.subList(start, end);
-			return sortedNodes;
+			Collections.sort(output, comparator);
 		}
 
-		// Trim the results
-		if (start != 0 || end != items.size()) {
-			Collection<T> trimmedItems = new ArrayList<T>(end - start);
-			Iterator<T> iter = items.iterator();
-			for (int i = 0; i < end; i++) {
-				T item = iter.next();
-				if (i >= start)
-					trimmedItems.add(item);
-			}
-			return trimmedItems;
-		}
+		// Trim
+		start = Math.max(0, start);
+		end = Math.min(output.size(), end);
+		if (start != 0 || end != items.size())
+			output = output.subList(start, end);
+		return output;
+	}
 
-		return items;
+	private Collection<Predicate<Object>> getFilters() {
+		Collection<Predicate<Object>> filters = new ArrayList<>();
+		String subDagFilter = get(SUBDAG_FILTERING);
+		if (subDagFilter != null && !subDagFilter.isEmpty()) {
+			filters.add(new SubDAGFilter(subDagFilter));
+		}
+		return filters;
 	}
 
 	/**

@@ -68,7 +68,7 @@ public class FindNodeByAliasCommand extends CollectionCommand {
 		if (nodes == null)
 			return;
 
-		nodes = dagHandler.sort(nodes, rangeStart_, rangeEnd_);
+		nodes = dagHandler.postProcess(nodes, rangeStart_, rangeEnd_);
 
 		print(nodes.size() + "|");
 		int objectIndicator = 0;

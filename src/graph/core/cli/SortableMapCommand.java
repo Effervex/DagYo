@@ -122,7 +122,7 @@ public class SortableMapCommand extends MapCommand {
 			// Re-enable sort-order and sort mapped results.
 			if (sortByMap) {
 				dagHandler.set(DAGPortHandler.SORT_ORDER, sortOrder);
-				mappedResults = dagHandler.sort(mappedResults, 0,
+				mappedResults = dagHandler.postProcess(mappedResults, 0,
 						mappedResults.size());
 			}
 			for (String result : mappedResults) {

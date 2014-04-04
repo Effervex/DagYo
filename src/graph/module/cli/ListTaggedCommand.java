@@ -51,7 +51,7 @@ public class ListTaggedCommand extends CollectionCommand {
 			print("0|\n");
 			return;
 		}
-		dagHandler.sort(taggedNodes, rangeStart_, rangeEnd_);
+		dagHandler.postProcess(taggedNodes, rangeStart_, rangeEnd_);
 		
 		print(taggedNodes.size() + "|");
 		for (DAGNode n : taggedNodes)

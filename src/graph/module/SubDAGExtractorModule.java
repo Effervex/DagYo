@@ -39,14 +39,14 @@ public class SubDAGExtractorModule extends DAGModule<Boolean> {
 			.getLogger(SubDAGExtractorModule.class);
 
 	public SubDAGExtractorModule() {
-		taggedNodes_ = MultiMap.createListMultiMap();
+		taggedNodes_ = MultiMap.createSortedSetMultiMap();
 	}
 
 	@Override
 	public boolean initialisationComplete(Collection<DAGNode> nodes,
 			Collection<DAGEdge> edges, boolean forceRebuild) {
 		if (taggedNodes_ == null)
-			taggedNodes_ = MultiMap.createListMultiMap();
+			taggedNodes_ = MultiMap.createSortedSetMultiMap();
 		return super.initialisationComplete(nodes, edges, forceRebuild);
 	}
 
@@ -58,41 +58,50 @@ public class SubDAGExtractorModule extends DAGModule<Boolean> {
 		return extractSubDAG((File) args[0], (String) args[1], (int) args[2]);
 	}
 
+	/**
+	 * This method only increases the reach of tagged nodes by distance (as well
+	 * as any other effects that normally apply).
+	 * 
+	 * @param tag The tag to grow from.
+	 * @param distance The distance to grow by.
+	 * @return True.
+	 */
+	public boolean growSubDAG(String tag, int distance) {
+		Collection<DAGEdge> edges = new HashSet<>();
+		Collection<DAGNode> nodes = new HashSet<>();
+		// Find the relevant nodes and edges
+		if (!getSubNodesAndEdges(TAG_PREFIX + tag, distance, edges, nodes))
+			return false;
+
+		for (Node n : nodes) {
+			if (n instanceof DAGNode)
+				tagDAGObject((DAGNode) n, tag);
+		}
+		return true;
+	}
+
+	/**
+	 * Extracts a subDAG from the DAG, saving it into a given folder.
+	 *
+	 * @param folder The folder in which to save the subDAG.
+	 * @param tag The tag to extract the subDAG from.
+	 * @param distance The distance in which the subDAG reaches from tagged nodes.
+	 * @return True.
+	 */
 	public boolean extractSubDAG(File folder, String tag, int distance) {
 		tag = TAG_PREFIX + tag;
-		RelatedEdgeModule relatedEdgeModule = (RelatedEdgeModule) dag_
-				.getModule(RelatedEdgeModule.class);
 
 		// Create new DAG
 		logger.debug("Creating SubDAG");
 		DirectedAcyclicGraph subDAG = createNewDAG(folder);
 		subDAG.initialise();
 
-		// Identify nodes
-		Collection<DAGNode> newlyAddedNodes = new HashSet<>(
-				taggedNodes_.get(tag));
-		logger.debug("Getting tagged nodes: {}", newlyAddedNodes);
-
-		// Follow edges by distance to produce more nodes
-		logger.debug("Following edges by distance {}", distance);
-		followEdges(newlyAddedNodes, distance, relatedEdgeModule);
-		logger.debug("Number of nodes: {}", newlyAddedNodes.size());
-
-		// Identify edges using nodes. If nodes change, re-run
 		Collection<DAGEdge> edges = new HashSet<>();
 		Collection<DAGNode> nodes = new HashSet<>();
-		boolean loop = true;
-		do {
-			logger.debug("Processing before assertions");
-			preAssertionProcessing(newlyAddedNodes, nodes, edges);
 
-			logger.debug("Linking nodes");
-			edges.addAll(incorporateNewAndLinkEdges(nodes, newlyAddedNodes,
-					relatedEdgeModule));
-			logger.debug("Found {} linking edges.", edges.size());
-
-			loop = !newlyAddedNodes.isEmpty();
-		} while (loop);
+		// Find the relevant nodes and edges.
+		if (!getSubNodesAndEdges(tag, distance, edges, nodes))
+			return false;
 
 		// Assert
 		StringNode creator = new StringNode(tag);
@@ -115,6 +124,40 @@ public class SubDAGExtractorModule extends DAGModule<Boolean> {
 		logger.debug("Saving state.");
 		subDAG.saveState();
 
+		return true;
+	}
+
+	private boolean getSubNodesAndEdges(String tag, int distance,
+			Collection<DAGEdge> edges, Collection<DAGNode> nodes) {
+		RelatedEdgeModule relatedEdgeModule = (RelatedEdgeModule) dag_
+				.getModule(RelatedEdgeModule.class);
+		
+		if (!taggedNodes_.containsKey(tag))
+			return false;
+
+		// Identify nodes
+		Collection<DAGNode> newlyAddedNodes = new HashSet<>(
+				taggedNodes_.get(tag));
+		logger.debug("Getting tagged nodes: {}", newlyAddedNodes);
+
+		// Follow edges by distance to produce more nodes
+		logger.debug("Following edges by distance {}", distance);
+		followEdges(newlyAddedNodes, distance, relatedEdgeModule);
+		logger.debug("Number of nodes: {}", newlyAddedNodes.size());
+
+		// Identify edges using nodes. If nodes change, re-run
+		boolean loop = true;
+		do {
+			logger.debug("Processing before assertions");
+			preAssertionProcessing(newlyAddedNodes, nodes, edges);
+
+			logger.debug("Linking nodes");
+			edges.addAll(incorporateNewAndLinkEdges(nodes, newlyAddedNodes,
+					relatedEdgeModule));
+			logger.debug("Found {} linking edges.", edges.size());
+
+			loop = !newlyAddedNodes.isEmpty();
+		} while (loop);
 		return true;
 	}
 

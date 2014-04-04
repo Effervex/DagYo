@@ -20,5 +20,6 @@ public class DAGScriptCommand extends ScriptCommand {
 		dagHandler.getDAG().noChecks_ = true;
 		super.execute();
 		dagHandler.getDAG().noChecks_ = false;
+		dagHandler.getDAG().reloadModules();
 	}
 }

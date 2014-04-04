@@ -49,7 +49,7 @@ public class ExtractSubDAGCommand extends Command {
 
 		String[] split = data.split("\\s+");
 		if (split.length < 3) {
-			print("-1|Please enter three arguments: folder, tag, and distance.");
+			print("-1|Please enter three arguments: tag, folder, and distance.\n");
 			return;
 		}
 
@@ -57,7 +57,7 @@ public class ExtractSubDAGCommand extends Command {
 		try {
 			folder.mkdirs();
 			int distance = Integer.parseInt(split[2]);
-			boolean result = module.execute(folder, split[0], distance);
+			boolean result = module.extractSubDAG(folder, split[0], distance);
 			if (result) {
 				print("Extraction of SubDAG to \"" + folder + "\" successful!\n");
 				return;
