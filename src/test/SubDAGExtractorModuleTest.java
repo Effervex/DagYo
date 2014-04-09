@@ -21,6 +21,7 @@ import graph.module.SubDAGExtractorModule;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -216,6 +217,7 @@ public class SubDAGExtractorModuleTest {
 		RelatedEdgeModule relatedEdgeModule = (RelatedEdgeModule) dag_
 				.getModule(RelatedEdgeModule.class);
 		Collection<DAGNode> nodes = new HashSet<>();
+		Collection<DAGNode> existingNodes = new ArrayList<>();
 
 		Node creator = dag_.findOrCreateNode("TestCreator", null, true);
 		Node genls = dag_.findOrCreateNode("genls", creator, true);
@@ -230,13 +232,13 @@ public class SubDAGExtractorModuleTest {
 
 		nodes.clear();
 		nodes.add((DAGNode) dog);
-		sut_.followEdges(nodes, 0, relatedEdgeModule);
+		sut_.findLinks(nodes, existingNodes, 0, relatedEdgeModule);
 		assertEquals(nodes.size(), 1);
 		assertTrue(nodes.contains(dog));
 
 		nodes.clear();
 		nodes.add((DAGNode) dog);
-		sut_.followEdges(nodes, 1, relatedEdgeModule);
+		sut_.findLinks(nodes, existingNodes, 1, relatedEdgeModule);
 		assertEquals(nodes.size(), 3);
 		assertTrue(nodes.contains(dog));
 		assertTrue(nodes.contains(fido));
@@ -244,7 +246,7 @@ public class SubDAGExtractorModuleTest {
 
 		nodes.clear();
 		nodes.add((DAGNode) fido);
-		sut_.followEdges(nodes, 1, relatedEdgeModule);
+		sut_.findLinks(nodes, existingNodes, 1, relatedEdgeModule);
 		assertEquals(nodes.size(), 3);
 		assertTrue(nodes.contains(dog));
 		assertTrue(nodes.contains(fido));
@@ -252,7 +254,7 @@ public class SubDAGExtractorModuleTest {
 
 		nodes.clear();
 		nodes.add((DAGNode) dog);
-		sut_.followEdges(nodes, 2, relatedEdgeModule);
+		sut_.findLinks(nodes, existingNodes, 2, relatedEdgeModule);
 		assertEquals(nodes.size(), 4);
 		assertTrue(nodes.contains(dog));
 		assertTrue(nodes.contains(fido));
@@ -261,7 +263,7 @@ public class SubDAGExtractorModuleTest {
 
 		nodes.clear();
 		nodes.add((DAGNode) canis);
-		sut_.followEdges(nodes, 2, relatedEdgeModule);
+		sut_.findLinks(nodes, existingNodes, 2, relatedEdgeModule);
 		assertEquals(nodes.size(), 3);
 		assertTrue(nodes.contains(canis));
 		assertTrue(nodes.contains(dog));

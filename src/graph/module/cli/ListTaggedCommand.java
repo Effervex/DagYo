@@ -46,12 +46,12 @@ public class ListTaggedCommand extends CollectionCommand {
 			return;
 		}
 
-		Collection<DAGNode> taggedNodes = subDAGModule.listTagged(data);
+		Collection<DAGNode> taggedNodes = subDAGModule.getTagged(data);
 		if (taggedNodes == null) {
 			print("0|\n");
 			return;
 		}
-		dagHandler.postProcess(taggedNodes, rangeStart_, rangeEnd_);
+		taggedNodes = dagHandler.postProcess(taggedNodes, rangeStart_, rangeEnd_);
 		
 		print(taggedNodes.size() + "|");
 		for (DAGNode n : taggedNodes)
