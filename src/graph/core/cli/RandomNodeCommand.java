@@ -30,7 +30,7 @@ public class RandomNodeCommand extends Command {
 		DAGPortHandler dagHandler = (DAGPortHandler) handler;
 		String filter = dagHandler.get(DAGPortHandler.SUBDAG_FILTERING);
 		Identifiable obj = null;
-		if (filter == null)
+		if (filter == null || filter.isEmpty())
 			obj = dagHandler.getDAG().getRandomNode();
 		else {
 			SubDAGExtractorModule subDAGModule = (SubDAGExtractorModule) dagHandler

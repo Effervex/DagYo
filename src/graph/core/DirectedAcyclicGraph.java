@@ -832,6 +832,7 @@ public class DirectedAcyclicGraph {
 	public void shutdown() {
 		System.out.println("Saving state and shutting down.");
 		saveState();
+		System.out.println("Goodbye.");
 		System.exit(0);
 	}
 

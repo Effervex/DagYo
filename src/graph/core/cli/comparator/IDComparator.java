@@ -10,9 +10,14 @@
  ******************************************************************************/
 package graph.core.cli.comparator;
 
+import graph.core.cli.DAGPortHandler;
 import util.UniqueID;
 
 public class IDComparator extends DefaultComparator {
+	public IDComparator(DAGPortHandler handler) {
+		super(handler);
+	}
+
 	@Override
 	protected int compareInternal(Object o1, Object o2) {
 		// Need to be identifiable

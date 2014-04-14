@@ -10,7 +10,12 @@
  ******************************************************************************/
 package graph.core.cli.comparator;
 
+import graph.core.cli.DAGPortHandler;
+
 public class StringComparator extends DefaultComparator {
+	public StringComparator(DAGPortHandler handler) {
+		super(handler);
+	}
 
 	@Override
 	protected int compareInternal(Object o1, Object o2) {

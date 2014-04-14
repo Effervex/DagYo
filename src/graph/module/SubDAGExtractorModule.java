@@ -301,6 +301,8 @@ public class SubDAGExtractorModule extends DAGModule<Boolean> {
 		String alterTag = TAG_PREFIX + tag;
 		dag_.removeProperty(dagObj, alterTag);
 		taggedNodes_.get(alterTag).remove(dagObj);
+		if (taggedNodes_.isValueEmpty(alterTag))
+			taggedNodes_.remove(alterTag);
 	}
 
 	public synchronized void tagDAGObject(DAGNode dagObj, String tag) {

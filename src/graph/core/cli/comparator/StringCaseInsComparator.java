@@ -10,7 +10,13 @@
  ******************************************************************************/
 package graph.core.cli.comparator;
 
+import graph.core.cli.DAGPortHandler;
+
 public class StringCaseInsComparator extends DefaultComparator {
+	public StringCaseInsComparator(DAGPortHandler handler) {
+		super(handler);
+	}
+	
 	@Override
 	protected int compareInternal(Object o1, Object o2) {
 		int result = o1.toString().toLowerCase()

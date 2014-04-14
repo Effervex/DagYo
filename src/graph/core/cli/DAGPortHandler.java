@@ -10,6 +10,7 @@
  ******************************************************************************/
 package graph.core.cli;
 
+import graph.core.DAGObject;
 import graph.core.DirectedAcyclicGraph;
 import graph.core.Identifiable;
 import graph.core.cli.comparator.DefaultComparator;
@@ -94,10 +95,8 @@ public class DAGPortHandler extends PortHandler {
 
 		// Sort
 		DefaultComparator comparator = getComparator();
-		if (comparator != null) {
-			comparator.setHandler(this);
+		if (comparator != null)
 			Collections.sort(output, comparator);
-		}
 
 		// Trim
 		start = Math.max(0, start);
@@ -107,11 +106,11 @@ public class DAGPortHandler extends PortHandler {
 		return output;
 	}
 
-	private Collection<Predicate<Object>> getFilters() {
+	protected Collection<Predicate<Object>> getFilters() {
 		Collection<Predicate<Object>> filters = new ArrayList<>();
 		String subDagFilter = get(SUBDAG_FILTERING);
 		if (subDagFilter != null && !subDagFilter.isEmpty()) {
-			filters.add(new SubDAGFilter(subDagFilter));
+			filters.add(new SubDAGFilter(subDagFilter, this));
 		}
 		return filters;
 	}
@@ -124,11 +123,11 @@ public class DAGPortHandler extends PortHandler {
 	protected DefaultComparator getComparator() {
 		DefaultComparator comparator = null;
 		if (get(SORT_ORDER).equals("id"))
-			comparator = new IDComparator();
+			comparator = new IDComparator(this);
 		else if (get(SORT_ORDER).equals("alpha"))
-			comparator = new StringComparator();
+			comparator = new StringComparator(this);
 		else if (get(SORT_ORDER).equals("alphaNoCase"))
-			comparator = new StringCaseInsComparator();
+			comparator = new StringCaseInsComparator(this);
 		return comparator;
 	}
 
@@ -149,5 +148,16 @@ public class DAGPortHandler extends PortHandler {
 		for (int i = 0; i < array.length; i++)
 			array[i] = value.charAt(i) == 't';
 		return array;
+	}
+
+	public DAGObject convertToDAGObject(Object obj) {
+		if (obj == null)
+			return null;
+		if (obj instanceof AliasedObject)
+			obj = ((AliasedObject) obj).object_;
+		if (obj instanceof DAGObject)
+			return (DAGObject) obj;
+		else
+			return null;
 	}
 }

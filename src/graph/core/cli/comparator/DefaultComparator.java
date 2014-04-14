@@ -16,6 +16,10 @@ import java.util.Comparator;
 
 public abstract class DefaultComparator implements Comparator<Object> {
 	private DAGPortHandler handler_;
+	
+	public DefaultComparator(DAGPortHandler handler) {
+		handler_ = handler;
+	}
 
 	@Override
 	public final int compare(Object o1, Object o2) {
@@ -48,8 +52,4 @@ public abstract class DefaultComparator implements Comparator<Object> {
 	}
 
 	protected abstract int compareInternal(Object o1, Object o2);
-
-	public void setHandler(DAGPortHandler handler) {
-		handler_ = handler;
-	}
 }
