@@ -57,7 +57,7 @@ public class SubDAGTagCommand extends Command {
 			DAGNode node = (DAGNode) dag.findOrCreateNode(split.get(0), null,
 					false);
 
-			module.tagDAGObject(node, split.get(1));
+			module.tagDAGObject(node, split.get(1), true);
 			print("1|" + dagHandler.textIDObject(node) + " tagged under \""
 					+ split.get(1) + "\"\n");
 		} catch (Exception e) {

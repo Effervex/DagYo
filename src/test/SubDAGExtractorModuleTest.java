@@ -66,7 +66,7 @@ public class SubDAGExtractorModuleTest {
 		dag_.findOrCreateEdge(new Node[] { isa, fido, dog }, creator, true);
 		dag_.findOrCreateEdge(new Node[] { isa, fido, pet }, creator, true);
 
-		sut_.tagDAGObject((DAGNode) dog, tag);
+		sut_.tagDAGObject((DAGNode) dog, tag, true);
 		File folder = new File("testSubDAG");
 		if (folder.exists())
 			FileUtils.deleteDirectory(folder);
@@ -104,7 +104,7 @@ public class SubDAGExtractorModuleTest {
 		assertTrue(subDAG.findOrCreateNode("genls", null, false) != null);
 		assertEquals(subDAG.getEdges().size(), 3);
 
-		sut_.tagDAGObject((DAGNode) pet, tag);
+		sut_.tagDAGObject((DAGNode) pet, tag, true);
 		if (folder.exists())
 			FileUtils.deleteDirectory(folder);
 		folder.mkdir();
@@ -115,7 +115,7 @@ public class SubDAGExtractorModuleTest {
 		assertTrue(subDAG.findOrCreateNode("Pet", null, false) != null);
 		assertEquals(subDAG.getEdges().size(), 0);
 
-		sut_.tagDAGObject((DAGNode) pet, tag);
+		sut_.tagDAGObject((DAGNode) pet, tag, true);
 		if (folder.exists())
 			FileUtils.deleteDirectory(folder);
 		folder.mkdir();

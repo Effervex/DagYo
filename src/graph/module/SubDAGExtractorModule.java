@@ -11,6 +11,7 @@
 package graph.module;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -35,7 +36,10 @@ public class SubDAGExtractorModule extends DAGModule<Boolean> {
 	private static Logger logger = LoggerFactory
 			.getLogger(SubDAGExtractorModule.class);
 	private static final long serialVersionUID = 1L;
+	/** The prefix used for user-tagged concepts. */
 	public static final String TAG_PREFIX = "subDAG";
+	/** The prefix used for grown tags. */
+	public static final String NON_CORE_PREFIX = "subDAGNC";
 	private transient MultiMap<String, DAGNode> taggedNodes_;
 
 	public SubDAGExtractorModule() {
@@ -188,7 +192,13 @@ public class SubDAGExtractorModule extends DAGModule<Boolean> {
 
 	public Collection<DAGNode> getTagged(String tag) {
 		String alterTag = TAG_PREFIX + tag;
-		return taggedNodes_.get(alterTag);
+		Collection<DAGNode> allTagged = new ArrayList<>();
+		if (taggedNodes_.containsKey(alterTag))
+			allTagged.addAll(taggedNodes_.get(alterTag));
+		String nonCoreTag = NON_CORE_PREFIX + tag;
+		if (taggedNodes_.containsKey(nonCoreTag))
+			allTagged.addAll(taggedNodes_.get(nonCoreTag));
+		return allTagged;
 	}
 
 	/**
@@ -210,7 +220,7 @@ public class SubDAGExtractorModule extends DAGModule<Boolean> {
 
 		for (Node n : nodes) {
 			if (n instanceof DAGNode)
-				tagDAGObject((DAGNode) n, tag);
+				tagDAGObject((DAGNode) n, tag, false);
 		}
 		return true;
 	}
@@ -293,22 +303,36 @@ public class SubDAGExtractorModule extends DAGModule<Boolean> {
 	}
 
 	public boolean isTagged(DAGNode node, String tag) {
-		String alterTag = TAG_PREFIX + tag;
-		return node.getProperty(alterTag) != null;
+		String coreTag = TAG_PREFIX + tag;
+		String nonCoreTag = NON_CORE_PREFIX + tag;
+		return node.getProperty(coreTag) != null
+				|| node.getProperty(nonCoreTag) != null;
 	}
 
 	public synchronized void removeTagDAGObject(DAGNode dagObj, String tag) {
-		String alterTag = TAG_PREFIX + tag;
-		dag_.removeProperty(dagObj, alterTag);
-		taggedNodes_.get(alterTag).remove(dagObj);
-		if (taggedNodes_.isValueEmpty(alterTag))
-			taggedNodes_.remove(alterTag);
+		String[] coreAndNonCore = { TAG_PREFIX + tag, NON_CORE_PREFIX + tag };
+		for (String alterTag : coreAndNonCore) {
+			dag_.removeProperty(dagObj, alterTag);
+			taggedNodes_.get(alterTag).remove(dagObj);
+			if (taggedNodes_.isValueEmpty(alterTag))
+				taggedNodes_.remove(alterTag);
+		}
 	}
 
-	public synchronized void tagDAGObject(DAGNode dagObj, String tag) {
+	public synchronized void tagDAGObject(DAGNode dagObj, String tag,
+			boolean coreTag) {
 		String alterTag = TAG_PREFIX + tag;
-		dag_.addProperty(dagObj, alterTag, "T");
-		taggedNodes_.put(alterTag, dagObj);
+		String nonCoreTag = NON_CORE_PREFIX + tag;
+		String appliedTag = (coreTag) ? alterTag : nonCoreTag;
+		if (coreTag && dagObj.getProperty(nonCoreTag) != null) {
+			// Upgrade non-core to core
+			removeTagDAGObject(dagObj, tag);
+		} else if (!coreTag && dagObj.getProperty(alterTag) != null)
+			// Do not revert to non-core
+			return;
+		
+		dag_.addProperty(dagObj, appliedTag, "T");
+		taggedNodes_.put(appliedTag, dagObj);
 	}
 
 	@Override

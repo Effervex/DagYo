@@ -70,20 +70,6 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> implements
 	}
 
 	@Override
-	public boolean initialisationComplete(Collection<DAGNode> nodes,
-			Collection<DAGEdge> edges, boolean forceRebuild) {
-		if (!aliasTrie_.isEmpty() && !forceRebuild)
-			return false;
-
-		// Iterate through all nodes and edges, adding aliases
-		System.out.print("Rebuilding alias trie... ");
-		aliasTrie_.clear();
-		defaultRebuild(nodes, true, edges, true);
-		System.out.println("Done!");
-		return true;
-	}
-
-	@Override
 	public boolean addNode(DAGNode node) {
 		if (!node.isAnonymous())
 			addAlias(node, node.getName());
@@ -216,6 +202,20 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> implements
 		result = prime * result
 				+ ((aliasTrie_ == null) ? 0 : aliasTrie_.hashCode());
 		return result;
+	}
+
+	@Override
+	public boolean initialisationComplete(Collection<DAGNode> nodes,
+			Collection<DAGEdge> edges, boolean forceRebuild) {
+		if (!aliasTrie_.isEmpty() && !forceRebuild)
+			return false;
+
+		// Iterate through all nodes and edges, adding aliases
+		System.out.print("Rebuilding alias trie... ");
+		aliasTrie_.clear();
+		defaultRebuild(nodes, true, edges, true);
+		System.out.println("Done!");
+		return true;
 	}
 
 	@Override
