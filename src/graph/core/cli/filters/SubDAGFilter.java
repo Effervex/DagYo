@@ -14,7 +14,7 @@ public class SubDAGFilter implements Predicate<Object> {
 	private DAGPortHandler handler_;
 
 	public SubDAGFilter(String subDagFilter, DAGPortHandler handler) {
-		filterName_ = SubDAGExtractorModule.TAG_PREFIX + subDagFilter;
+		filterName_ = subDagFilter;
 		handler_ = handler;
 	}
 
@@ -22,12 +22,16 @@ public class SubDAGFilter implements Predicate<Object> {
 	public boolean evaluate(Object obj) {
 		// Get DAGObject
 		DAGObject dagObj = handler_.convertToDAGObject(obj);
-		
+
 		if (dagObj == null)
 			return true;
-		
+
 		if (dagObj instanceof DAGNode) {
-			if (((DAGNode) dagObj).getProperty(filterName_) != null)
+			if (((DAGNode) dagObj).getProperty(SubDAGExtractorModule.TAG_PREFIX
+					+ filterName_) != null
+					|| ((DAGNode) dagObj)
+							.getProperty(SubDAGExtractorModule.NON_CORE_PREFIX
+									+ filterName_) != null)
 				return true;
 			else
 				return false;

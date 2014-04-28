@@ -6,5 +6,5 @@ package graph.core;
  * @author Sam Sarjant
  */
 public enum DAGExportFormat {
-	DAG;
+	DAG, CSV_TAXONOMIC, CSV_ALL;
 }

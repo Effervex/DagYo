@@ -68,6 +68,8 @@ public class FindNodeByAliasCommand extends CollectionCommand {
 		if (nodes == null)
 			return;
 
+		// TODO See if the results can be sorted categorically (identical node
+		// name, then identical alias name, then non-exact names)
 		nodes = dagHandler.postProcess(nodes, rangeStart_, rangeEnd_);
 
 		print(nodes.size() + "|");

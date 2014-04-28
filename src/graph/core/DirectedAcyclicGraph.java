@@ -862,11 +862,25 @@ public class DirectedAcyclicGraph {
 
 		if (format == DAGExportFormat.DAG)
 			exportToDAG(out);
+		if (format == DAGExportFormat.CSV_ALL
+				|| format == DAGExportFormat.CSV_TAXONOMIC)
+			exportToCSV(out, format);
 
 		out.close();
 	}
 
-	private void exportToDAG(BufferedWriter out) throws IOException {
+	protected void exportToCSV(BufferedWriter out, DAGExportFormat format) throws IOException {
+		for (DAGEdge e : edges_) {
+			Node[] nodes = e.getNodes();
+			for (Node n : nodes) {
+				String name = n.getIdentifier(true);
+				out.write(name + ",");
+			}
+			out.write("\n");
+		}
+	}
+
+	protected void exportToDAG(BufferedWriter out) throws IOException {
 		Collection<String> pertinentProperties = compilePertinentProperties();
 
 		for (DAGNode n : nodes_) {

@@ -10,13 +10,14 @@
  ******************************************************************************/
 package graph.core.cli.comparator;
 
+import graph.core.DAGObject;
 import graph.core.cli.DAGPortHandler;
 
 import java.util.Comparator;
 
 public abstract class DefaultComparator implements Comparator<Object> {
 	private DAGPortHandler handler_;
-	
+
 	public DefaultComparator(DAGPortHandler handler) {
 		handler_ = handler;
 	}
@@ -30,17 +31,29 @@ public abstract class DefaultComparator implements Comparator<Object> {
 				return 1;
 		else if (o2 == null)
 			return -1;
-		
+
 		// Convert where appropriate
+		Object comp1 = o1;
+		Object comp2 = o2;
 		if (o1.getClass().equals(o2.getClass())) {
-			o1 = handler_.convertToComparable(o1);
-			o2 = handler_.convertToComparable(o2);
+			comp1 = handler_.convertToComparable(o1);
+			comp2 = handler_.convertToComparable(o2);
 		}
 
 		// Perform internal check
-		int result = compareInternal(o1, o2);
+		int result = compareInternal(comp1, comp2);
 		if (result != 0)
 			return result;
+
+		if (!(o1 instanceof DAGObject && o2 instanceof DAGObject)) {
+			DAGObject dag1 = handler_.convertToDAGObject(o1);
+			DAGObject dag2 = handler_.convertToDAGObject(o2);
+			if (dag1 != null && dag2 != null) {
+				result = compareInternal(dag1, dag2);
+				if (result != 0)
+					return result;
+			}
+		}
 
 		// Default to hashCode and classname comparison
 		result = Integer.compare(o1.hashCode(), o2.hashCode());
