@@ -869,7 +869,8 @@ public class DirectedAcyclicGraph {
 		out.close();
 	}
 
-	protected void exportToCSV(BufferedWriter out, DAGExportFormat format) throws IOException {
+	protected void exportToCSV(BufferedWriter out, DAGExportFormat format)
+			throws IOException {
 		for (DAGEdge e : edges_) {
 			Node[] nodes = e.getNodes();
 			for (Node n : nodes) {

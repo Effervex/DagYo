@@ -55,6 +55,8 @@ public class DAGPortHandler extends PortHandler {
 	}
 
 	public String textIDObject(Identifiable obj) {
+		if (get(PRETTY_RESULTS) == null)
+			return obj.getIdentifier();
 		if (get(PRETTY_RESULTS).equals("true"))
 			return obj.getIdentifier() + ":" + obj.toString();
 		else if (get(PRETTY_RESULTS).equals("only"))
