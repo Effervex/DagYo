@@ -829,9 +829,11 @@ public class DirectedAcyclicGraph {
 		System.out.println("Done!");
 	}
 
-	public void shutdown() {
-		System.out.println("Saving state and shutting down.");
-		saveState();
+	public void shutdown(boolean sync) {
+		if (sync) {
+			System.out.println("Saving state and shutting down.");
+			saveState();
+		}
 		System.out.println("Goodbye.");
 		System.exit(0);
 	}

@@ -19,11 +19,17 @@ public class ShutdownCommand extends Command {
 
 	@Override
 	public String shortDescription() {
-		return "Shuts down the entire DAG. Requires correct passphrase.";
+		return "Shuts down the entire DAG.";
 	}
+
+	private boolean sync_;
 
 	@Override
 	protected void executeImpl() {
+		sync_ = true;
+		if (!data.isEmpty() && data.equalsIgnoreCase("F"))
+			sync_ = false;
+
 		BufferedReader in = getPortHandler().getReader();
 		String passphrase;
 		try {
@@ -34,7 +40,7 @@ public class ShutdownCommand extends Command {
 					@Override
 					public void run() {
 						DAGPortHandler dagHandler = (DAGPortHandler) handler;
-						dagHandler.dag_.shutdown();
+						dagHandler.dag_.shutdown(sync_);
 					}
 				}).start();
 				handler.terminate();
