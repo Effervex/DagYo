@@ -10,10 +10,6 @@
  ******************************************************************************/
 package graph.core;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-
 public class PrimitiveNode implements Node {
 	private static final long serialVersionUID = 3362826577155380695L;
 
@@ -124,14 +120,5 @@ public class PrimitiveNode implements Node {
 		} catch (Exception e) {
 		}
 		return null;
-	}
-
-	public void readExternal(ObjectInput in) throws IOException,
-			ClassNotFoundException {
-		primitive_ = in.readObject();
-	}
-
-	public void writeExternal(ObjectOutput out) throws IOException {
-		out.writeObject(primitive_);
 	}
 }

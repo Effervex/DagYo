@@ -43,7 +43,7 @@ public abstract class DAGObject implements UniqueID, Serializable,
 	 */
 	@OneOf({ CREATION_DATE, CREATOR, "ancsID", "predID",
 			DirectedAcyclicGraph.EPHEMERAL_MARK, "CommonConcepts", "CYCImport",
-			"MT", SubDAGExtractorModule.TAG_PREFIX })
+			"MT", SubDAGExtractorModule.TAG_PREFIX, "provenance" })
 	private String[] properties_;
 
 	protected int id_;
