@@ -330,13 +330,15 @@ public class SubDAGExtractorModule extends DAGModule<Boolean> {
 		} else if (!coreTag && dagObj.getProperty(alterTag) != null)
 			// Do not revert to non-core
 			return;
-		
+
 		dag_.addProperty(dagObj, appliedTag, "T");
 		taggedNodes_.put(appliedTag, dagObj);
 	}
 
 	@Override
 	public String toString() {
+		if (taggedNodes_ == null)
+			return "SubDAG Extractor Module (not yet initialised)";
 		return "SubDAG Extractor Module: " + taggedNodes_.sizeTotal()
 				+ " tagged nodes from " + taggedNodes_.size() + " tags";
 	}

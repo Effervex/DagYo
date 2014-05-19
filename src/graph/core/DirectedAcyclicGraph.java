@@ -88,7 +88,7 @@ public class DirectedAcyclicGraph {
 
 	private ArrayList<DAGModule<?>> modules_;
 
-	private File rootDir_;
+	protected File rootDir_;
 
 	protected final Lock edgeLock_;
 

@@ -12,8 +12,10 @@ package graph.module;
 
 import graph.core.DAGEdge;
 import graph.core.DAGNode;
+import graph.core.DirectedAcyclicGraph;
 import graph.core.Edge;
 import graph.core.Node;
+import graph.core.StringNode;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -43,7 +45,37 @@ import util.collection.MultiMap;
 public class RelatedEdgeModule extends DAGModule<Collection<Edge>> {
 	private static final long serialVersionUID = 1588174113071358990L;
 	protected ConcurrentMap<Node, MultiMap<Object, Edge>> relatedEdges_ = new ConcurrentHashMap<>();
+	protected StringHashedEdgeModule stringHashedModule_;
 
+	protected void addIfNonDAG(Node node, Object key,
+			Collection<Pair<Node, Object>> nonDAGNodes) {
+		if (!(node instanceof DAGNode))
+			nonDAGNodes.add(new Pair<Node, Object>(node, key));
+	}
+
+	protected Object[] asIndexed(Node... nodes) {
+		Object[] indexedNodes = new Object[nodes.length * 2];
+		for (int i = 0; i < nodes.length; i++) {
+			indexedNodes[i * 2] = nodes[i];
+			indexedNodes[i * 2 + 1] = i + 1;
+		}
+		return indexedNodes;
+	}
+
+	protected Object defaultKey() {
+		return -1;
+	}
+
+	/**
+	 * Filters out the non-DAG results for the query that do not match the
+	 * non-DAG inputs.
+	 * 
+	 * @param edges
+	 *            The edges to filter.
+	 * @param args
+	 *            The args to filter by.
+	 * @return The collection of filtered edges.
+	 */
 	protected final Collection<Edge> filterNonDAGs(Collection<Edge> edges,
 			Object[] args) {
 		Collection<Pair<Node, Object>> nonDAGNodes = findNonDAGs(args);
@@ -75,20 +107,6 @@ public class RelatedEdgeModule extends DAGModule<Collection<Edge>> {
 		return filtered;
 	}
 
-	@Override
-	public boolean initialisationComplete(Collection<DAGNode> nodes,
-			Collection<DAGEdge> edges, boolean forceRebuild) {
-		if (!relatedEdges_.isEmpty() && !forceRebuild)
-			return false;
-
-		// Iterate through all nodes and edges, adding aliases
-		System.out.print("Rebuilding related edge map... ");
-		relatedEdges_.clear();
-		defaultRebuild(nodes, false, edges, true);
-		System.out.println("Done!");
-		return true;
-	}
-
 	protected final Collection<Pair<Node, Object>> findNonDAGs(Object[] args) {
 		Collection<Pair<Node, Object>> nonDAGNodes = new ArrayList<>();
 		for (int i = 0; i < args.length; i++) {
@@ -103,25 +121,6 @@ public class RelatedEdgeModule extends DAGModule<Collection<Edge>> {
 		}
 
 		return nonDAGNodes;
-	}
-
-	protected void addIfNonDAG(Node node, Object key,
-			Collection<Pair<Node, Object>> nonDAGNodes) {
-		if (!(node instanceof DAGNode))
-			nonDAGNodes.add(new Pair<Node, Object>(node, key));
-	}
-
-	protected Object[] asIndexed(Node... nodes) {
-		Object[] indexedNodes = new Object[nodes.length * 2];
-		for (int i = 0; i < nodes.length; i++) {
-			indexedNodes[i * 2] = nodes[i];
-			indexedNodes[i * 2 + 1] = i + 1;
-		}
-		return indexedNodes;
-	}
-
-	protected Object defaultKey() {
-		return -1;
 	}
 
 	protected Collection<Edge> getEdges(Node node, Object edgeKey,
@@ -147,31 +146,6 @@ public class RelatedEdgeModule extends DAGModule<Collection<Edge>> {
 		return edges;
 	}
 
-	/**
-	 * Gets all edges but the one given by the key.
-	 * 
-	 * @param node
-	 *            The edges must include this node.
-	 * @param butEdgeKey
-	 *            The key that is NOT added to the results.
-	 * @return A collection of edges that are indexed by node, but none from the
-	 *         butEdgeKey (though they may be added if included under other
-	 *         keys).
-	 */
-	public Collection<Edge> getAllButEdges(Node node, Object butEdgeKey) {
-		MultiMap<Object, Edge> indexedEdges = relatedEdges_.get(node);
-		if (indexedEdges == null) {
-			return new ConcurrentLinkedQueue<>();
-		}
-
-		Collection<Edge> edges = new HashSet<>();
-		for (Object key : indexedEdges.keySet()) {
-			if (!key.equals(butEdgeKey))
-				edges.addAll(indexedEdges.get(key));
-		}
-		return edges;
-	}
-
 	protected List<EdgeCol> locateEdgeCollections(boolean createNew,
 			Object... args) {
 		List<EdgeCol> edgeCols = new ArrayList<>();
@@ -190,11 +164,14 @@ public class RelatedEdgeModule extends DAGModule<Collection<Edge>> {
 				}
 			}
 
-			if (!(n instanceof DAGNode))
-				continue;
-
-			Collection<Edge> edgeCol = getEdges(n, index, createNew);
-			edgeCols.add(new EdgeCol(additive, edgeCol));
+			Collection<Edge> edgeCol = null;
+			if (n instanceof DAGNode)
+				edgeCol = getEdges(n, index, createNew);
+			else if (n instanceof StringNode && stringHashedModule_ != null)
+				edgeCol = stringHashedModule_.execute(n.getName());
+			
+			if (edgeCol != null)
+				edgeCols.add(new EdgeCol(additive, edgeCol));
 		}
 		return edgeCols;
 	}
@@ -228,6 +205,8 @@ public class RelatedEdgeModule extends DAGModule<Collection<Edge>> {
 		Collections.sort(edgeCollections, new SmallestFirstComparator());
 		Collection<Edge> edges = null;
 		for (EdgeCol edgeCol : edgeCollections) {
+			if (edgeCol.edgeCol_ == null)
+				continue;
 			if (edges == null)
 				edges = edgeCol.edgeCol_;
 			else if (edgeCol.additive_)
@@ -250,6 +229,45 @@ public class RelatedEdgeModule extends DAGModule<Collection<Edge>> {
 		return execute(indexedNodes);
 	}
 
+	/**
+	 * Gets all edges but the one given by the key.
+	 * 
+	 * @param node
+	 *            The edges must include this node.
+	 * @param butEdgeKey
+	 *            The key that is NOT added to the results.
+	 * @return A collection of edges that are indexed by node, but none from the
+	 *         butEdgeKey (though they may be added if included under other
+	 *         keys).
+	 */
+	public Collection<Edge> getAllButEdges(Node node, Object butEdgeKey) {
+		MultiMap<Object, Edge> indexedEdges = relatedEdges_.get(node);
+		if (indexedEdges == null) {
+			return new ConcurrentLinkedQueue<>();
+		}
+
+		Collection<Edge> edges = new HashSet<>();
+		for (Object key : indexedEdges.keySet()) {
+			if (!key.equals(butEdgeKey))
+				edges.addAll(indexedEdges.get(key));
+		}
+		return edges;
+	}
+
+	@Override
+	public boolean initialisationComplete(Collection<DAGNode> nodes,
+			Collection<DAGEdge> edges, boolean forceRebuild) {
+		if (!relatedEdges_.isEmpty() && !forceRebuild)
+			return false;
+
+		// Iterate through all nodes and edges, adding aliases
+		System.out.print("Rebuilding related edge map... ");
+		relatedEdges_.clear();
+		defaultRebuild(nodes, false, edges, true);
+		System.out.println("Done!");
+		return true;
+	}
+
 	@Override
 	public boolean removeEdge(DAGEdge edge) {
 		boolean result = false;
@@ -259,6 +277,13 @@ public class RelatedEdgeModule extends DAGModule<Collection<Edge>> {
 		for (EdgeCol col : indexedEdges)
 			result |= col.remove(edge);
 		return result;
+	}
+
+	@Override
+	public void setDAG(DirectedAcyclicGraph directedAcyclicGraph) {
+		super.setDAG(directedAcyclicGraph);
+		stringHashedModule_ = (StringHashedEdgeModule) directedAcyclicGraph
+				.getModule(StringHashedEdgeModule.class);
 	}
 
 	@Override

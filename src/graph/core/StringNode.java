@@ -14,19 +14,36 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-import de.ruedigermoeller.serialization.annotations.Compress;
-
 import util.UtilityMethods;
+import de.ruedigermoeller.serialization.annotations.Compress;
 
 public class StringNode implements Node {
 	private static final long serialVersionUID = 2912475401266723942L;
 	@Compress
 	private String str_;
+	private int[] strPointer_;
+
+//	private static FileChannel fileIO_;
+//
+//	static {
+//		try {
+//			RandomAccessFile raf = new RandomAccessFile(
+//					DirectedAcyclicGraph.selfRef_.rootDir_, "rwd");
+//			fileIO_ = raf.getChannel();
+//		} catch (FileNotFoundException e) {
+//			e.printStackTrace();
+//		}
+//	}
 
 	public StringNode(String string) {
 		while (string.startsWith("\"") && string.endsWith("\""))
 			string = UtilityMethods.shrinkString(string, 1);
 		str_ = string;
+		// TODO Maybe offload this to file?
+
+//		if (string.length() > WRITE_TO_FILE) {
+//			strPointer_ = writeToStringFile(string);
+//		}
 	}
 
 	@Override
@@ -68,7 +85,7 @@ public class StringNode implements Node {
 	public String getIdentifier() {
 		return toString();
 	}
-	
+
 	@Override
 	public String getIdentifier(boolean useName) {
 		return getIdentifier();
@@ -82,4 +99,8 @@ public class StringNode implements Node {
 	public void writeExternal(ObjectOutput out) throws IOException {
 		out.writeObject(str_);
 	}
+
+//	public static int[] writeToStringFile(String str) {
+//		fileIO_.write()
+//	}
 }
