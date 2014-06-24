@@ -46,6 +46,7 @@ public class RelatedEdgeModule extends DAGModule<Collection<Edge>> {
 	private static final long serialVersionUID = 1588174113071358990L;
 	protected ConcurrentMap<Node, MultiMap<Object, Edge>> relatedEdges_ = new ConcurrentHashMap<>();
 	protected StringHashedEdgeModule stringHashedModule_;
+	protected StringStorageModule stringStorageModule_;
 
 	protected void addIfNonDAG(Node node, Object key,
 			Collection<Pair<Node, Object>> nonDAGNodes) {
@@ -149,6 +150,7 @@ public class RelatedEdgeModule extends DAGModule<Collection<Edge>> {
 	protected List<EdgeCol> locateEdgeCollections(boolean createNew,
 			Object... args) {
 		List<EdgeCol> edgeCols = new ArrayList<>();
+		Node pred = null;
 		for (int i = 0; i < args.length; i++) {
 			Node n = (Node) args[i];
 			boolean additive = true;
@@ -161,23 +163,44 @@ public class RelatedEdgeModule extends DAGModule<Collection<Edge>> {
 				if (index < 0) {
 					additive = false;
 					index *= -1;
-				}
+				} else if (index == 1)
+					pred = n;
 			}
 
 			Collection<Edge> edgeCol = null;
 			if (n instanceof DAGNode)
 				edgeCol = getEdges(n, index, createNew);
-			else if (n instanceof StringNode && stringHashedModule_ != null)
+			else if (canSearchHashedModule(pred, n))
 				edgeCol = stringHashedModule_.execute(n.getName());
-			
+
 			if (edgeCol != null)
 				edgeCols.add(new EdgeCol(additive, edgeCol));
 		}
 		return edgeCols;
 	}
 
+	/**
+	 * If the string hash index should be used for string searching.
+	 * 
+	 * @param predicate
+	 *            The predicate of the edge to search. If not-null, checks with
+	 *            string storage to see if the predicate is registered.
+	 * @param stringNode
+	 *            The node to search for (only returns true if a string node).
+	 * @return True if the string hash module should be used.
+	 */
+	protected boolean canSearchHashedModule(Node predicate, Node stringNode) {
+		if (stringHashedModule_ == null || !(stringNode instanceof StringNode))
+			return false;
+		if (predicate != null && stringStorageModule_ != null
+				&& stringStorageModule_.isCompressedEdge(predicate))
+			return false;
+		return true;
+	}
+
 	protected boolean matchingNonDAG(Pair<Node, Object> nonDAG, Node[] edgeNodes) {
-		return edgeNodes[(Integer) nonDAG.objB_].equals(nonDAG.objA_);
+		return edgeNodes[(Integer) nonDAG.objB_].toString().equals(
+				nonDAG.objA_.toString());
 	}
 
 	protected Object parseKeyArg(Object arg) {
@@ -284,6 +307,8 @@ public class RelatedEdgeModule extends DAGModule<Collection<Edge>> {
 		super.setDAG(directedAcyclicGraph);
 		stringHashedModule_ = (StringHashedEdgeModule) directedAcyclicGraph
 				.getModule(StringHashedEdgeModule.class);
+		stringStorageModule_ = (StringStorageModule) directedAcyclicGraph
+				.getModule(StringStorageModule.class);
 	}
 
 	@Override

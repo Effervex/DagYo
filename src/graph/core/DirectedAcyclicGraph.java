@@ -88,7 +88,7 @@ public class DirectedAcyclicGraph {
 
 	private ArrayList<DAGModule<?>> modules_;
 
-	protected File rootDir_;
+	public File rootDir_;
 
 	protected final Lock edgeLock_;
 
@@ -627,7 +627,7 @@ public class DirectedAcyclicGraph {
 		System.out.println("Done!");
 
 		// Rebuild the modules
-		reloadModules();
+		reloadModules(true);
 	}
 
 	private Collection<String> compilePertinentProperties() {
@@ -641,15 +641,16 @@ public class DirectedAcyclicGraph {
 
 	public final void initialise() {
 		initialiseInternal();
-		boolean saveState = reloadModules();
+		boolean saveState = reloadModules(false);
 		if (saveState)
 			saveState();
 	}
 
-	public boolean reloadModules() {
+	public boolean reloadModules(boolean forceRebuild) {
 		boolean saveState = false;
 		for (DAGModule<?> module : modules_)
-			saveState |= module.initialisationComplete(nodes_, edges_, false);
+			saveState |= module.initialisationComplete(nodes_, edges_,
+					forceRebuild);
 		return saveState;
 	}
 

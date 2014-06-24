@@ -121,7 +121,7 @@ public class DAGEdge extends DAGObject implements Edge {
 	public String toString(boolean useIDs) {
 		if (!useIDs)
 			return toString();
-		StringBuffer buffer = new StringBuffer("(");
+		StringBuilder buffer = new StringBuilder("(");
 		boolean first = true;
 		for (Node n : edgeNodes_) {
 			if (!first)

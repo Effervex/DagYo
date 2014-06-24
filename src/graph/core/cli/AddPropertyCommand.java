@@ -78,7 +78,7 @@ public class AddPropertyCommand extends Command {
 			try {
 				BufferedReader in = dagHandler.getReader();
 				String line = null;
-				StringBuffer valueBuf = new StringBuffer();
+				StringBuilder valueBuf = new StringBuilder();
 				while ((line = in.readLine()) != null
 						&& !line.equals(delimiter)) {
 					if (valueBuf.length() != 0)

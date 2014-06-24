@@ -71,7 +71,7 @@ public class SerialisationTest {
 	}
 
 	private static String generateRandomString(Random random, int numChars) {
-		StringBuffer name = new StringBuffer();
+		StringBuilder name = new StringBuilder();
 		for (int j = 0; j < numChars; j++) {
 			if (random.nextBoolean())
 				name.append((char) ('A' + random.nextInt(26)));

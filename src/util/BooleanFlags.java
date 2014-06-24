@@ -67,7 +67,7 @@ public class BooleanFlags {
 	}
 
 	public String flagString() {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		SortedSet<String> flags = new TreeSet<>(new Comparator<String>() {
 			@Override
 			public int compare(String o1, String o2) {
