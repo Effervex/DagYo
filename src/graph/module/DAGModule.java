@@ -41,12 +41,16 @@ public abstract class DAGModule<T> implements Serializable {
 	protected void defaultRebuild(Collection<DAGNode> nodes,
 			boolean iterateNodes, Collection<DAGEdge> edges,
 			boolean iterateEdges) {
-		if (iterateNodes)
-			for (DAGNode node : nodes)
+		if (iterateNodes) {
+			DAGNode[] nodeArray = nodes.toArray(new DAGNode[nodes.size()]);
+			for (DAGNode node : nodeArray)
 				addNode(node);
-		if (iterateEdges)
-			for (DAGEdge edge : edges)
+		}
+		if (iterateEdges) {
+			DAGEdge[] edgeArray = edges.toArray(new DAGEdge[nodes.size()]);
+			for (DAGEdge edge : edgeArray)
 				addEdge(edge);
+		}
 	}
 
 	/**
