@@ -49,10 +49,6 @@ public abstract class DAGObject implements UniqueID, Serializable,
 
 	protected int id_;
 
-	public DAGObject() {
-		this(null);
-	}
-
 	protected DAGObject(Node creator) {
 		int index = 0;
 		if (creator != null) {
@@ -66,12 +62,16 @@ public abstract class DAGObject implements UniqueID, Serializable,
 		id_ = requestID();
 	}
 
-	protected int requestID() {
-		return -1;
+	public DAGObject() {
+		this(null);
 	}
 
 	protected abstract void readFullObject(ObjectInput in) throws IOException,
 			ClassNotFoundException;
+
+	protected int requestID() {
+		return -1;
+	}
 
 	protected abstract void writeFullObject(ObjectOutput out)
 			throws IOException;
@@ -137,6 +137,11 @@ public abstract class DAGObject implements UniqueID, Serializable,
 	}
 
 	@Override
+	public int getID() {
+		return id_;
+	}
+
+	@Override
 	public String getIdentifier() {
 		return "" + id_;
 	}
@@ -161,11 +166,6 @@ public abstract class DAGObject implements UniqueID, Serializable,
 		return result;
 	}
 
-	@Override
-	public String toString() {
-		return id_ + "";
-	}
-
 	/**
 	 * Only use this method if you're absolutely sure of the object's ID, and
 	 * the object represents a skeleton reference.
@@ -178,7 +178,7 @@ public abstract class DAGObject implements UniqueID, Serializable,
 	}
 
 	@Override
-	public int getID() {
-		return id_;
+	public String toString() {
+		return id_ + "";
 	}
 }

@@ -55,6 +55,7 @@ public class DAGCommandLineInterface extends Main {
 		CommandParser.addCommand("addProp", AddPropertyCommand.class);
 		CommandParser.addCommand("getProp", GetPropertyCommand.class);
 		CommandParser.addCommand("removeProp", RemovePropertyCommand.class);
+		CommandParser.addCommand("wipeProp", WipePropertyCommand.class);
 		CommandParser.addCommand("listProps", ListPropertiesCommand.class);
 		CommandParser.addCommand("shutdown", ShutdownCommand.class);
 		CommandParser.addCommand("stats", DAGStatsCommand.class);

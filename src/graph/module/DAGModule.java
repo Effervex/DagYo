@@ -47,7 +47,7 @@ public abstract class DAGModule<T> implements Serializable {
 				addNode(node);
 		}
 		if (iterateEdges) {
-			DAGEdge[] edgeArray = edges.toArray(new DAGEdge[nodes.size()]);
+			DAGEdge[] edgeArray = edges.toArray(new DAGEdge[edges.size()]);
 			for (DAGEdge edge : edgeArray)
 				addEdge(edge);
 		}
