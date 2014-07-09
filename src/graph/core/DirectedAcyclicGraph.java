@@ -571,7 +571,7 @@ public class DirectedAcyclicGraph {
 	public Edge getRandomEdge() {
 		while (DAGEdge.idCounter_ > 0) {
 			int maxID = DAGEdge.idCounter_ + 1;
-			int id = (int) (random_.nextDouble() * maxID);
+			int id = random_.nextInt(maxID);
 			Edge e = getEdgeByID(id);
 			if (e != null)
 				return e;
@@ -582,7 +582,7 @@ public class DirectedAcyclicGraph {
 	public Node getRandomNode() {
 		while (DAGNode.idCounter_ > 0) {
 			int maxID = DAGNode.idCounter_ + 1;
-			int id = (int) (random_.nextDouble() * maxID);
+			int id = random_.nextInt(maxID);
 			Node n = getNodeByID(id);
 			if (n != null)
 				return n;
