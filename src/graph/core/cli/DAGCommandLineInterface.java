@@ -43,6 +43,7 @@ public class DAGCommandLineInterface extends Main {
 		// Adding core commands
 		CommandParser.addCommand("node", NodeCommand.class);
 		CommandParser.addCommand("edge", EdgeCommand.class);
+		CommandParser.addCommand("edgeNodes", EdgeNodesCommand.class);
 		CommandParser.addCommand("addNode", AddNodeCommand.class);
 		CommandParser.addCommand("addEdge", AddEdgeCommand.class);
 		CommandParser.addCommand("removeNode", RemoveNodeCommand.class);
