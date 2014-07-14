@@ -313,9 +313,12 @@ public class SubDAGExtractorModule extends DAGModule<Boolean> {
 		String[] coreAndNonCore = { TAG_PREFIX + tag, NON_CORE_PREFIX + tag };
 		for (String alterTag : coreAndNonCore) {
 			dag_.removeProperty(dagObj, alterTag);
-			taggedNodes_.get(alterTag).remove(dagObj);
-			if (taggedNodes_.isValueEmpty(alterTag))
-				taggedNodes_.remove(alterTag);
+			Collection<DAGNode> tagged = taggedNodes_.get(alterTag);
+			if (tagged != null) {
+				taggedNodes_.get(alterTag).remove(dagObj);
+				if (taggedNodes_.isValueEmpty(alterTag))
+					taggedNodes_.remove(alterTag);
+			}
 		}
 	}
 

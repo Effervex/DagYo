@@ -65,6 +65,8 @@ public class DAGCommandLineInterface extends Main {
 				GroundEphemeralCommand.class);
 		CommandParser.addCommand("nextNode", NextNodeCommand.class);
 		CommandParser.addCommand("nextEdge", NextEdgeCommand.class);
+		CommandParser.addCommand("prevNode", PrevNodeCommand.class);
+		CommandParser.addCommand("prevEdge", PrevEdgeCommand.class);
 		CommandParser.addCommand("lastNode", LastNodeCommand.class);
 		CommandParser.addCommand("lastEdge", LastEdgeCommand.class);
 		CommandParser.addCommand("varHelp", DAGVarHelpCommand.class);
