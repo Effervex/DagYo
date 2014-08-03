@@ -13,15 +13,15 @@ package graph.core.cli;
 import java.io.BufferedReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
+import util.UtilityMethods;
+
 import commands.MapCommand;
 
-import util.UtilityMethods;
 import core.Command;
 import core.CommandParser;
 
@@ -29,13 +29,15 @@ public class SortableMapCommand extends MapCommand {
 
 	@Override
 	public String helpText() {
-		return "{0} function funcArgs delimiter [mapSort] \\n "
+		return "{0} function funcArgs delimiter [showInput] [mapSort] \\n "
 				+ "collection collectionArgs \\n captureRegExp : "
 				+ "Applies function with args (using $1, $2,... "
 				+ "syntax for regexp) to every item in the output of "
 				+ "collection using collectionArgs. Every output is "
-				+ "separated by delimiter. Optional sorting by the "
-				+ "output of map command rather than collection command. "
+				+ "separated by delimiter. Optional showing of the "
+				+ "input to the map function. Optional sorting by the "
+				+ "output of map command rather than collection command "
+				+ "(cannot show inputs if this is selected). "
 				+ "Multiline commands are not explicitly supported "
 				+ "by should work.";
 	}
@@ -58,10 +60,20 @@ public class SortableMapCommand extends MapCommand {
 		BufferedReader in = getPortHandler().getReader();
 		int funcExtent = split.length - 1;
 		String delimiter = split[funcExtent];
+		boolean showInputs = false;
+		if (delimiter.equalsIgnoreCase("T") || delimiter.equalsIgnoreCase("F")) {
+			if (delimiter.equalsIgnoreCase("T"))
+				showInputs = true;
+			funcExtent--;
+			delimiter = split[funcExtent];
+		}
+
 		boolean sortByMap = false;
 		if (delimiter.equalsIgnoreCase("T") || delimiter.equalsIgnoreCase("F")) {
 			if (delimiter.equalsIgnoreCase("T"))
 				sortByMap = true;
+			if (sortByMap)
+				showInputs = false;
 			funcExtent--;
 			delimiter = split[funcExtent];
 		}
@@ -106,8 +118,10 @@ public class SortableMapCommand extends MapCommand {
 
 			// Map function to it
 			Matcher m = regex.matcher(output);
-			Collection<String> mappedResults = new ArrayList<>();
+			ArrayList<String> inputs = new ArrayList<>();
+			ArrayList<String> outputs = new ArrayList<>();
 			while (m.find()) {
+				inputs.add(m.group());
 				String[] groups = new String[m.groupCount() + 1];
 				for (int i = 0; i < groups.length; i++)
 					groups[i] = m.group(i);
@@ -116,18 +130,19 @@ public class SortableMapCommand extends MapCommand {
 						+ UtilityMethods.replaceToken(funcArgsStr, groups));
 				funcCommand.setPortHandler(handler);
 				funcCommand.execute();
-				mappedResults.add(funcCommand.getResult());
+				outputs.add(funcCommand.getResult());
 			}
 
 			// Re-enable sort-order and sort mapped results.
 			if (sortByMap) {
 				dagHandler.set(DAGPortHandler.SORT_ORDER, sortOrder);
-				mappedResults = dagHandler.postProcess(mappedResults, 0,
-						mappedResults.size());
+				outputs = (ArrayList<String>) dagHandler.postProcess(outputs,
+						0, outputs.size());
 			}
-			for (String result : mappedResults) {
-				print(result + "\n");
-				print(delimiter + "\n");
+			for (int i = 0; i < outputs.size(); i++) {
+				if (showInputs)
+					print(inputs.get(i) + delimiter + "\n");
+				print(outputs.get(i) + delimiter + "\n");
 			}
 		} catch (Exception e) {
 			print("" + e);
