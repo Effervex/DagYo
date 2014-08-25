@@ -56,9 +56,9 @@ public class NextEdgeCommand extends Command {
 				else
 					print(nextEdge.getID()
 							+ "|"
-							+ nextEdge.toString(!dagHandler.get(
+							+ nextEdge.toString(dagHandler.get(
 									DAGPortHandler.PRETTY_RESULTS).equals(
-									"true")) + "|" + nextEdge.getCreator()
+									"false")) + "|" + nextEdge.getCreator()
 							+ "|" + nextEdge.getCreationDate() + "\n");
 				return;
 			}

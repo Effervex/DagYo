@@ -79,7 +79,7 @@ public class SubDAGExtractorModule extends DAGModule<Boolean> {
 	}
 
 	protected DirectedAcyclicGraph createNewDAG(File folder) {
-		DirectedAcyclicGraph dag = new DirectedAcyclicGraph(folder);
+		DirectedAcyclicGraph dag = new DirectedAcyclicGraph(folder, null, null);
 		return dag;
 	}
 
@@ -110,6 +110,7 @@ public class SubDAGExtractorModule extends DAGModule<Boolean> {
 		tag = TAG_PREFIX + tag;
 
 		// Create new DAG
+		// TODO This seems like it would create a whole new DAG!
 		logger.debug("Creating SubDAG");
 		DirectedAcyclicGraph subDAG = createNewDAG(folder);
 		subDAG.initialise();

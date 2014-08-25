@@ -46,7 +46,7 @@ public class DirectedAcyclicGraphTest {
 	 */
 	@Before
 	public void setUp() throws Exception {
-		sut_ = new DirectedAcyclicGraph(new File("test"));
+		sut_ = new DirectedAcyclicGraph(new File("test"), null, null);
 		sut_.clear();
 	}
 
@@ -157,5 +157,24 @@ public class DirectedAcyclicGraphTest {
 		assertTrue(sut_.removeEdge(edge));
 		assertEquals(sut_.getNumNodes(), 2);
 		assertNull(sut_.getEdgeByID(edge.getID()));
+	}
+
+	@Test
+	public void testReadPlainTextFiles() {
+		File nodeFile = new File("testNodeFile.txt");
+		File edgeFile = new File("testEdgeFile.txt");
+		sut_ = new DirectedAcyclicGraph(new File("test"), nodeFile, edgeFile);
+		assertEquals(sut_.getNodes().size(), 11);
+		assertEquals(sut_.getEdges().size(), 8);
+		DAGNode n = (DAGNode) sut_.findOrCreateNode("Dog", null, false);
+		assertNotNull(n);
+		assertEquals(n.getProperty("A"), "Arf!");
+		assertEquals(n.getProperty("B"), null);
+
+		DAGEdge e = sut_.getEdgeByID(3);
+		assertNotNull(e);
+		assertEquals(e.toString(false), "(genls Dog CanisGenus)");
+		assertEquals(e.getProperty("Mt"), null);
+		assertEquals(e.getProperty("provenance"), "Dogs are canines");
 	}
 }

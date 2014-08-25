@@ -40,6 +40,10 @@ public class DAGCommandLineInterface extends Main {
 		super(aPort);
 		dag_ = dag;
 
+		initialiseCoreCommands();
+	}
+
+	protected void initialiseCoreCommands() {
 		// Adding core commands
 		CommandParser.addCommand("node", NodeCommand.class);
 		CommandParser.addCommand("edge", EdgeCommand.class);
@@ -83,13 +87,23 @@ public class DAGCommandLineInterface extends Main {
 	public static void main(String[] args) {
 		try {
 			DirectedAcyclicGraph dag = new DirectedAcyclicGraph(
-					getRootDir(args));
+					getRootDir(args), getArgFile(args, "n"), getArgFile(args, "e"));
 			new DAGCommandLineInterface(getPort(args), dag).start();
 
 			dag.initialise();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	public static File getArgFile(String[] args, String option) {
+		if (arguments_ == null)
+			parseArgs(args);
+
+		File f = null;
+		if (arguments_.hasOption(option))
+			f = new File(arguments_.getOptionValue(option));
+		return f;
 	}
 
 	public static int getPort(String[] args) {
@@ -116,8 +130,8 @@ public class DAGCommandLineInterface extends Main {
 		Options options = new Options();
 		options.addOption("r", true, "The root directory of the DAG.");
 		options.addOption("p", true, "The port number to use.");
-		options.addOption("n", true, "The initial hashmap size for the nodes.");
-		options.addOption("e", true, "The initial hashmap size for the edges.");
+		options.addOption("n", true, "The extracted nodes file to read in.");
+		options.addOption("e", true, "The extracted edges file to read in.");
 
 		CommandLineParser parser = new BasicParser();
 		try {

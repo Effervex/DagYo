@@ -34,7 +34,7 @@ public class RelatedEdgeModuleTest {
 
 	@Before
 	public void setUp() throws Exception {
-		dag_ = new DirectedAcyclicGraph(new File("test"));
+		dag_ = new DirectedAcyclicGraph(new File("test"), null, null);
 		sut_ = (RelatedEdgeModule) dag_.getModule(RelatedEdgeModule.class);
 		sut_.clear();
 	}

@@ -37,7 +37,7 @@ public class NodeAliasModuleTest {
 	 */
 	@Before
 	public void setUp() throws Exception {
-		dag_ = new DirectedAcyclicGraph(new File("test"));
+		dag_ = new DirectedAcyclicGraph(new File("test"), null, null);
 		sut_ = (NodeAliasModule) dag_.getModule(NodeAliasModule.class);
 		sut_.clear();
 	}

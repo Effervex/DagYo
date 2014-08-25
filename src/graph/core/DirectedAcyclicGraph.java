@@ -17,9 +17,11 @@ import graph.module.RelatedEdgeModule;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -34,6 +36,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.activity.InvalidActivityException;
+
+import org.apache.commons.lang3.StringUtils;
 
 import util.BooleanFlags;
 import util.FSTDAGObjectSerialiser;
@@ -54,11 +58,15 @@ public class DirectedAcyclicGraph {
 
 	private static final String EDGE_FILE = "edges.dat";
 
+	private static final String EDGE_TXT_FILE = "edges.txt";
+
 	private static final String EDGE_ID_FIELD = "edgeID";
 
 	private static final int MAX_OBJ_SERIALISATION = 5000000;
 
 	private static final String NODE_FILE = "nodes.dat";
+
+	private static final String NODE_TXT_FILE = "nodes.txt";
 
 	private static final String NODE_ID_FIELD = "nodeID";
 
@@ -94,9 +102,13 @@ public class DirectedAcyclicGraph {
 
 	protected IndexedCollection<DAGEdge> edges_;
 
+	protected File edgeFile_;
+
 	protected final Lock nodeLock_;
 
 	protected IndexedCollection<DAGNode> nodes_;
+
+	protected File nodeFile_;
 
 	protected final Random random_;
 
@@ -105,11 +117,11 @@ public class DirectedAcyclicGraph {
 	public final long startTime_;
 
 	public DirectedAcyclicGraph() {
-		this(DEFAULT_ROOT);
+		this(DEFAULT_ROOT, null, null);
 	}
 
 	@SuppressWarnings("unchecked")
-	public DirectedAcyclicGraph(File rootDir) {
+	public DirectedAcyclicGraph(File rootDir, File nodeFile, File edgeFile) {
 		startTime_ = System.currentTimeMillis();
 		System.out.print("Initialising... ");
 
@@ -129,10 +141,20 @@ public class DirectedAcyclicGraph {
 		}
 
 		random_ = new Random();
-		nodes_ = (IndexedCollection<DAGNode>) readDAGFile(rootDir, NODE_FILE);
+		if (nodeFile == null)
+			nodes_ = (IndexedCollection<DAGNode>) readDAGFile(rootDir,
+					NODE_FILE);
+		else
+			nodes_ = new HashIndexedCollection<DAGNode>(MAX_OBJ_SERIALISATION);
 		nodeLock_ = new ReentrantLock();
-		edges_ = (IndexedCollection<DAGEdge>) readDAGFile(rootDir, EDGE_FILE);
+		if (edgeFile == null)
+			edges_ = (IndexedCollection<DAGEdge>) readDAGFile(rootDir,
+					EDGE_FILE);
+		else
+			edges_ = new HashIndexedCollection<DAGEdge>(MAX_OBJ_SERIALISATION);
 		edgeLock_ = new ReentrantLock();
+		nodeFile_ = nodeFile;
+		edgeFile_ = edgeFile;
 
 		// Load the modules in
 		modules_ = new ArrayList<>();
@@ -221,6 +243,92 @@ public class DirectedAcyclicGraph {
 		return indexedCollection;
 	}
 
+	/**
+	 * Reads a plain text file of nodes/edges and creates new nodes/edges for
+	 * every item (including triggering module-based operations).
+	 * 
+	 * @param filename
+	 *            The file being read in.
+	 * @param isEdge
+	 *            If reading edges (otherwise nodes).
+	 * @throws IOException
+	 */
+	private void readPlainTextFile(File filename, boolean isEdge)
+			throws IOException {
+		System.out.println("Reading in " + ((isEdge) ? "edges" : "nodes")
+				+ "...");
+		// Total lines
+		LineNumberReader lnr = new LineNumberReader(new FileReader(filename));
+		lnr.skip(Long.MAX_VALUE);
+		int numLines = lnr.getLineNumber();
+		float onePercent = numLines * 0.01f;
+		int percent = 1;
+		lnr.close();
+
+		BufferedReader reader = new BufferedReader(new FileReader(filename));
+
+		String columnProps = reader.readLine();
+		String[] props = columnProps.split("\\t");
+		int lineNum = 1;
+		// Read every line
+		String input = null;
+		while ((input = reader.readLine()) != null) {
+			try {
+				lineNum++;
+				String[] split = input.split("\\t");
+
+				// Parse DAGObject
+				String dagStr = split[0];
+				// Replace primitives
+				dagStr = dagStr.replaceAll(" (-?[\\d][\\d.+\\-E]*)(?= |\\))",
+						" '$1");
+				DAGObject dagObj = null;
+				if (isEdge) {
+					Node[] nodes = parseNodes(dagStr, null, false, false);
+					if (nodes != null) {
+						Edge e = findOrCreateEdge(nodes, null, true);
+						if (e instanceof ErrorEdge) {
+							System.out.println(lineNum + "(ErrorEdge): "
+									+ input);
+							continue;
+						} else
+							dagObj = (DAGObject) e;
+					}
+				} else {
+					Node n = findOrCreateNode(dagStr, null, true);
+					if (n == null) {
+						System.out.println(lineNum + "(nullnode): " + input);
+						continue;
+					}
+					dagObj = (DAGObject) n;
+				}
+
+				// Adding props
+				for (int i = 1; i < split.length; i++) {
+					if (!split[i].isEmpty()) {
+						addProperty(dagObj, props[i], split[i]);
+					}
+				}
+
+				// Status update
+				if (lineNum >= percent * onePercent) {
+					if ((percent % 10) == 0)
+						System.out.print(percent + "%");
+					else
+						System.out.print(".");
+					percent++;
+				}
+			} catch (Exception e) {
+				System.err.println(lineNum + "(ERROR): " + input);
+				e.printStackTrace();
+				System.exit(1);
+			}
+		}
+
+		System.out.println();
+		reader.close();
+	}
+
 	private void readModules(File rootDir) {
 		try {
 			if (!MODULE_FILE.exists()) {
@@ -260,41 +368,104 @@ public class DirectedAcyclicGraph {
 	}
 
 	private void saveDAGFile(IndexedCollection<? extends DAGObject> collection,
-			File rootDir, String collectionFile, int maxNumObjects) {
-		try {
-			byte serialisationType = (collectionFile.equals(EDGE_FILE)) ? FSTDAGObjectSerialiser.NODES
-					: DefaultSerialisationMechanism.NORMAL;
+			File rootDir, String collectionFile, int maxNumObjects)
+			throws IOException {
+		byte serialisationType = (collectionFile.equals(EDGE_FILE)) ? FSTDAGObjectSerialiser.NODES
+				: DefaultSerialisationMechanism.NORMAL;
 
-			// Splitting the file if necessary
-			int size = collection.size();
-			boolean isSplitting = size > maxNumObjects;
-			DAGObject[] array = collection.toArray(new DAGObject[size]);
-			for (int i = 0; i < size; i += maxNumObjects) {
-				DAGObject[] subarray = null;
-				File serFile = null;
-				if (isSplitting) {
-					int arraySize = Math.min(maxNumObjects, size - i);
-					subarray = new DAGObject[arraySize];
-					System.arraycopy(array, i, subarray, 0, arraySize);
-					serFile = new File(rootDir, collectionFile
-							+ (i / maxNumObjects));
-				} else {
-					subarray = array;
-					serFile = new File(rootDir, collectionFile);
-				}
-
-				// Write the subarray
-				serFile.getParentFile().mkdirs();
-				serFile.createNewFile();
-				SerialisationMechanism.FST.getSerialiser().serialize(subarray,
-						serFile, serialisationType);
+		// Splitting the file if necessary
+		int size = collection.size();
+		boolean isSplitting = size > maxNumObjects;
+		DAGObject[] array = collection.toArray(new DAGObject[size]);
+		for (int i = 0; i < size; i += maxNumObjects) {
+			DAGObject[] subarray = null;
+			File serFile = null;
+			if (isSplitting) {
+				int arraySize = Math.min(maxNumObjects, size - i);
+				subarray = new DAGObject[arraySize];
+				System.arraycopy(array, i, subarray, 0, arraySize);
+				serFile = new File(rootDir, collectionFile
+						+ (i / maxNumObjects));
+			} else {
+				subarray = array;
+				serFile = new File(rootDir, collectionFile);
 			}
 
-			if (isSplitting)
-				new File(rootDir, collectionFile).delete();
-		} catch (IOException e) {
-			System.err.println("Error serialising '" + collectionFile + "'.");
+			// Write the subarray
+			serFile.getParentFile().mkdirs();
+			serFile.createNewFile();
+			SerialisationMechanism.FST.getSerialiser().serialize(subarray,
+					serFile, serialisationType);
 		}
+
+		if (isSplitting)
+			new File(rootDir, collectionFile).delete();
+	}
+
+	/**
+	 * Saves the DAG data to a human-readable and re-parsable file.
+	 * 
+	 * @param collection
+	 *            The collection of DAG objects to save.
+	 * @param rootDir
+	 *            The root directory to save into.
+	 * @param collectionFile
+	 *            The file to save under.
+	 * @param maxNumObjects
+	 *            The maximum number of objects per file.
+	 * @throws IOException
+	 *             Should something go awry...
+	 */
+	private void savePlainTextDAGFile(
+			IndexedCollection<? extends DAGObject> collection, File rootDir,
+			String collectionFile, int maxNumObjects) throws IOException {
+		// Objects used throughout per file.
+		ArrayList<String> propIndex = null;
+		StringBuilder fileContents = null;
+		File txtFile = null;
+
+		// Write the subarray
+		txtFile = new File(rootDir, collectionFile);
+		txtFile.getParentFile().mkdirs();
+		txtFile.createNewFile();
+
+		// Write the object to file with props
+		fileContents = new StringBuilder();
+		propIndex = new ArrayList<>();
+		propIndex.add("DAGObject");
+
+		// For every item
+		for (DAGObject dagObj : collection) {
+			StringBuilder builder = new StringBuilder(
+					dagObj.getIdentifier(true));
+			int propCount = 0;
+			for (int j = 1; j < propIndex.size(); j++) {
+				String val = dagObj.getProperty(propIndex.get(j));
+				builder.append("\t");
+				if (val != null) {
+					builder.append(val);
+					propCount++;
+				}
+			}
+
+			// Add unknown props
+			String[] props = dagObj.getProperties();
+			if (propCount < props.length / 2) {
+				for (int j = 0; j < props.length; j += 2) {
+					if (!propIndex.contains(props[j])) {
+						propIndex.add(props[j]);
+						builder.append("\t" + props[j + 1]);
+					}
+				}
+			}
+			fileContents.append(builder + "\n");
+		}
+
+		// Final write
+		FileWriter writer = new FileWriter(txtFile);
+		writer.write(StringUtils.join(propIndex, '\t') + "\n"
+				+ fileContents.toString());
+		writer.close();
 	}
 
 	private void writeDAGDetails(BufferedWriter out) throws IOException {
@@ -313,8 +484,23 @@ public class DirectedAcyclicGraph {
 	}
 
 	protected void initialiseInternal() {
-		// Read in the global index file
-		readDAGDetails(rootDir_);
+		if (nodeFile_ != null && edgeFile_ != null) {
+			// Read in node/edge file
+			noChecks_ = true;
+			try {
+				if (nodeFile_ != null)
+					readPlainTextFile(nodeFile_, false);
+				if (edgeFile_ != null)
+					readPlainTextFile(edgeFile_, true);
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+			noChecks_ = false;
+		} else {
+			// Read in the global index file
+			readDAGDetails(rootDir_);
+		}
 	}
 
 	protected SortedSet<DAGEdge> orderedReassertables() {
@@ -478,7 +664,7 @@ public class DirectedAcyclicGraph {
 				return new StringNode(nodeStr);
 			} else if (nodeStr.matches("\\d+")) {
 				node = getNodeByID(Integer.parseInt(nodeStr));
-			} else if (nodeStr.matches("\\d+\\.[\\dE+-]+")) {
+			} else if (nodeStr.matches("-?\\d+\\.[\\dE+-]+")) {
 				return PrimitiveNode.parseNode(nodeStr);
 			} else if (!dagNodeOnly && nodeStr.startsWith("'")) {
 				return PrimitiveNode.parseNode(nodeStr.substring(1));
@@ -816,8 +1002,16 @@ public class DirectedAcyclicGraph {
 		}
 
 		// Save node and edge collections
-		saveDAGFile(nodes_, rootDir_, NODE_FILE, MAX_OBJ_SERIALISATION);
-		saveDAGFile(edges_, rootDir_, EDGE_FILE, MAX_OBJ_SERIALISATION);
+		try {
+			saveDAGFile(nodes_, rootDir_, NODE_FILE, MAX_OBJ_SERIALISATION);
+			savePlainTextDAGFile(nodes_, rootDir_, NODE_TXT_FILE,
+					MAX_OBJ_SERIALISATION);
+			saveDAGFile(edges_, rootDir_, EDGE_FILE, MAX_OBJ_SERIALISATION);
+			savePlainTextDAGFile(edges_, rootDir_, EDGE_TXT_FILE,
+					MAX_OBJ_SERIALISATION);
+		} catch (IOException e) {
+			System.err.println("Error serialising DAG.");
+		}
 
 		// Save modules
 		Set<DAGModule<?>> saved = new HashSet<>();

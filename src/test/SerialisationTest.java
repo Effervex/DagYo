@@ -24,7 +24,7 @@ public class SerialisationTest {
 	public static void main(String[] args) {
 		File file = new File("test");
 		file.mkdir();
-		DirectedAcyclicGraph dag = new DirectedAcyclicGraph(file);
+		DirectedAcyclicGraph dag = new DirectedAcyclicGraph(file, null, null);
 		int numNodes = 2200000;
 		Random random = new Random();
 

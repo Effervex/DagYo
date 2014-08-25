@@ -40,7 +40,7 @@ public class SubDAGExtractorModuleTest {
 	 */
 	@Before
 	public void setUp() throws Exception {
-		dag_ = new DirectedAcyclicGraph(new File("test"));
+		dag_ = new DirectedAcyclicGraph(new File("test"), null, null);
 		sut_ = (SubDAGExtractorModule) dag_
 				.getModule(SubDAGExtractorModule.class);
 		sut_.clear();
@@ -72,7 +72,7 @@ public class SubDAGExtractorModuleTest {
 			FileUtils.deleteDirectory(folder);
 		folder.mkdir();
 		assertTrue(sut_.extractSubDAG(folder, tag, 0));
-		DirectedAcyclicGraph subDAG = new DirectedAcyclicGraph(folder);
+		DirectedAcyclicGraph subDAG = new DirectedAcyclicGraph(folder, null, null);
 		assertEquals(subDAG.getNodes().size(), 1);
 		assertTrue(subDAG.findOrCreateNode("Dog", null, false) != null);
 		assertEquals(subDAG.getEdges().size(), 0);
@@ -81,7 +81,7 @@ public class SubDAGExtractorModuleTest {
 			FileUtils.deleteDirectory(folder);
 		folder.mkdir();
 		assertTrue(sut_.extractSubDAG(folder, tag, 1));
-		subDAG = new DirectedAcyclicGraph(folder);
+		subDAG = new DirectedAcyclicGraph(folder, null, null);
 		assertEquals(subDAG.getNodes().size(), 5);
 		assertTrue(subDAG.findOrCreateNode("Dog", null, false) != null);
 		assertTrue(subDAG.findOrCreateNode("CanisGenus", null, false) != null);
@@ -94,7 +94,7 @@ public class SubDAGExtractorModuleTest {
 			FileUtils.deleteDirectory(folder);
 		folder.mkdir();
 		assertTrue(sut_.extractSubDAG(folder, tag, 2));
-		subDAG = new DirectedAcyclicGraph(folder);
+		subDAG = new DirectedAcyclicGraph(folder, null, null);
 		assertEquals(subDAG.getNodes().size(), 6);
 		assertTrue(subDAG.findOrCreateNode("Dog", null, false) != null);
 		assertTrue(subDAG.findOrCreateNode("CanisGenus", null, false) != null);
@@ -109,7 +109,7 @@ public class SubDAGExtractorModuleTest {
 			FileUtils.deleteDirectory(folder);
 		folder.mkdir();
 		assertTrue(sut_.extractSubDAG(folder, tag, 0));
-		subDAG = new DirectedAcyclicGraph(folder);
+		subDAG = new DirectedAcyclicGraph(folder, null, null);
 		assertEquals(subDAG.getNodes().size(), 2);
 		assertTrue(subDAG.findOrCreateNode("Dog", null, false) != null);
 		assertTrue(subDAG.findOrCreateNode("Pet", null, false) != null);
@@ -120,7 +120,7 @@ public class SubDAGExtractorModuleTest {
 			FileUtils.deleteDirectory(folder);
 		folder.mkdir();
 		assertTrue(sut_.extractSubDAG(folder, tag, 1));
-		subDAG = new DirectedAcyclicGraph(folder);
+		subDAG = new DirectedAcyclicGraph(folder, null, null);
 		assertEquals(subDAG.getNodes().size(), 6);
 		assertTrue(subDAG.findOrCreateNode("Dog", null, false) != null);
 		assertTrue(subDAG.findOrCreateNode("CanisGenus", null, false) != null);

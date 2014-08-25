@@ -39,8 +39,8 @@ public class EdgeCommand extends Command {
 			if (edge != null) {
 				print(id
 						+ "|"
-						+ edge.toString(!dagHandler.get(
-								DAGPortHandler.PRETTY_RESULTS).equals("true"))
+						+ edge.toString(dagHandler.get(
+								DAGPortHandler.PRETTY_RESULTS).equals("false"))
 						+ "|" + edge.getCreator() + "|" + edge.getCreationDate()
 						+ "\n");
 				return;
