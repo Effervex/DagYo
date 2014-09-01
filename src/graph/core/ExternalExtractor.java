@@ -111,15 +111,17 @@ public class ExternalExtractor {
 			out.println(nextCommand + " " + index);
 			String result = in.readLine();
 			in.readLine();
-			ArrayList<String> split = UtilityMethods.split(result, '|');
+			ArrayList<String> split = UtilityMethods.split(result, '|',
+					UtilityMethods.JUST_QUOTE);
 
 			// Index
 			index = Integer.parseInt(split.get(0));
 			if (index == -1)
 				break;
 
-			// Nodename
+			// DAG Name
 			String nodeName = split.get(1);
+			nodeName = nodeName.replaceAll("\\t", " ");
 			fileOut.write(nodeName);
 
 			// Props
@@ -143,7 +145,7 @@ public class ExternalExtractor {
 			for (int i = 0; i <= lastIndex; i++) {
 				fileOut.write("\t");
 				if (propMap[i] != null)
-					fileOut.write(propMap[i]);
+					fileOut.write(propMap[i].replaceAll("\\t", " "));
 			}
 			fileOut.write("\n");
 		}
@@ -158,7 +160,7 @@ public class ExternalExtractor {
 		for (String prop : propIndexMap)
 			tempOut.write("\t" + prop);
 		tempOut.write("\n");
-		
+
 		String input = null;
 		while ((input = reader.readLine()) != null)
 			tempOut.write(input + "\n");

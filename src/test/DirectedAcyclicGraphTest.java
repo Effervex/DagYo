@@ -19,6 +19,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import graph.core.DAGEdge;
 import graph.core.DAGNode;
+import graph.core.DAGObject;
 import graph.core.DirectedAcyclicGraph;
 import graph.core.Edge;
 import graph.core.Node;
@@ -176,5 +177,61 @@ public class DirectedAcyclicGraphTest {
 		assertEquals(e.toString(false), "(genls Dog CanisGenus)");
 		assertEquals(e.getProperty("Mt"), null);
 		assertEquals(e.getProperty("provenance"), "Dogs are canines");
+	}
+
+	@Test
+	public void testParseDAGObject() {
+		// Basic node
+		String dagStr = "Dog";
+		DAGObject dagObj = sut_.parseDAGObject(dagStr, false);
+		assertNotNull(dagObj);
+		assertTrue(dagObj instanceof DAGNode);
+		assertEquals(((DAGNode) dagObj).getName(), dagStr);
+
+		// Basic Edge - no nodes
+		dagStr = "(genls Dog Mammal)";
+		dagObj = sut_.parseDAGObject(dagStr, true);
+		assertNull(dagObj);
+		sut_.findOrCreateNode("Mammal", null, true);
+		sut_.findOrCreateNode("genls", null, true);
+		dagStr = "(genls Dog Mammal)";
+		dagObj = sut_.parseDAGObject(dagStr, true);
+		assertNotNull(dagObj);
+		assertTrue(dagObj instanceof DAGEdge);
+		assertEquals(((DAGEdge) dagObj).toString(false), dagStr);
+
+		// String
+		sut_.findOrCreateNode("comment", null, true);
+		dagStr = "(comment Dog \" A complex comment, including tabs	single c h a racters, and \\\"numbers\\\" 432 431\")";
+		dagObj = sut_.parseDAGObject(dagStr, true);
+		assertNotNull(dagObj);
+		assertTrue(dagObj instanceof DAGEdge);
+		assertEquals(((DAGEdge) dagObj).toString(false),
+				"(comment Dog \" A complex comment, including tabs single "
+						+ "c h a racters, and \\\"numbers\\\" 432 431\")");
+
+		// Primitive nodes
+		sut_.findOrCreateNode("arity", null, true);
+		dagStr = "(arity Dog 1)";
+		dagObj = sut_.parseDAGObject(dagStr, true);
+		assertNotNull(dagObj);
+		assertTrue(dagObj instanceof DAGEdge);
+		assertEquals(((DAGEdge) dagObj).toString(false), dagStr);
+		assertTrue(((DAGEdge) dagObj).getNodes()[2] instanceof PrimitiveNode);
+
+		dagStr = "(arity Dog ?)";
+		dagObj = sut_.parseDAGObject(dagStr, true);
+		assertNotNull(dagObj);
+		assertTrue(dagObj instanceof DAGEdge);
+		assertEquals(((DAGEdge) dagObj).toString(false), dagStr);
+		assertTrue(((DAGEdge) dagObj).getNodes()[2] instanceof PrimitiveNode);
+
+		// Problem edge
+		sut_.findOrCreateNode("successfulForTaskMt", null, true);
+		dagStr = "(comment successfulForTaskMt \"([[successfulForTaskMt]] TASK MT1 MT2 means that MT1 is a context in which TASK, as specified in the course of action MT2, is assumed to be successfully carried out.\")";
+		dagObj = sut_.parseDAGObject(dagStr, true);
+		assertNotNull(dagObj);
+		assertTrue(dagObj instanceof DAGEdge);
+		assertEquals(((DAGEdge) dagObj).toString(false), dagStr);
 	}
 }

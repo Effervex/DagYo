@@ -17,7 +17,6 @@ import graph.module.RelatedEdgeModule;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -34,8 +33,8 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import javax.activity.InvalidActivityException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -58,17 +57,17 @@ public class DirectedAcyclicGraph {
 
 	private static final String EDGE_FILE = "edges.dat";
 
-	private static final String EDGE_TXT_FILE = "edges.txt";
-
 	private static final String EDGE_ID_FIELD = "edgeID";
+
+	private static final String EDGE_TXT_FILE = "edges.txt";
 
 	private static final int MAX_OBJ_SERIALISATION = 5000000;
 
 	private static final String NODE_FILE = "nodes.dat";
 
-	private static final String NODE_TXT_FILE = "nodes.txt";
-
 	private static final String NODE_ID_FIELD = "nodeID";
+
+	private static final String NODE_TXT_FILE = "nodes.txt";
 
 	private static final String NUM_EDGES_FIELD = "numEdges";
 
@@ -86,6 +85,9 @@ public class DirectedAcyclicGraph {
 
 	public static final BooleanFlags nodeFlags_;
 
+	public static final Pattern PRIMITIVE_PATTERN = Pattern
+			.compile("((?:-?[\\d][\\d.E]*)|\\S)\\)*");
+
 	public static DirectedAcyclicGraph selfRef_;
 
 	private boolean changedState_ = false;
@@ -96,23 +98,23 @@ public class DirectedAcyclicGraph {
 
 	private ArrayList<DAGModule<?>> modules_;
 
-	public File rootDir_;
+	protected File edgeFile_;
 
 	protected final Lock edgeLock_;
 
 	protected IndexedCollection<DAGEdge> edges_;
 
-	protected File edgeFile_;
+	protected File nodeFile_;
 
 	protected final Lock nodeLock_;
 
 	protected IndexedCollection<DAGNode> nodes_;
 
-	protected File nodeFile_;
-
 	protected final Random random_;
 
 	public boolean noChecks_ = false;
+
+	public File rootDir_;
 
 	public final long startTime_;
 
@@ -141,17 +143,9 @@ public class DirectedAcyclicGraph {
 		}
 
 		random_ = new Random();
-		if (nodeFile == null)
-			nodes_ = (IndexedCollection<DAGNode>) readDAGFile(rootDir,
-					NODE_FILE);
-		else
-			nodes_ = new HashIndexedCollection<DAGNode>(MAX_OBJ_SERIALISATION);
+		nodes_ = (IndexedCollection<DAGNode>) readDAGFile(rootDir, NODE_FILE);
 		nodeLock_ = new ReentrantLock();
-		if (edgeFile == null)
-			edges_ = (IndexedCollection<DAGEdge>) readDAGFile(rootDir,
-					EDGE_FILE);
-		else
-			edges_ = new HashIndexedCollection<DAGEdge>(MAX_OBJ_SERIALISATION);
+		edges_ = (IndexedCollection<DAGEdge>) readDAGFile(rootDir, EDGE_FILE);
 		edgeLock_ = new ReentrantLock();
 		nodeFile_ = nodeFile;
 		edgeFile_ = edgeFile;
@@ -163,6 +157,15 @@ public class DirectedAcyclicGraph {
 		readModules(rootDir);
 
 		System.out.println("Done!");
+	}
+
+	private Collection<String> compilePertinentProperties() {
+		Collection<String> props = new ArrayList<>();
+		for (DAGModule<?> module : modules_) {
+			props.addAll(module.getPertinentProperties());
+			module.disableCached();
+		}
+		return props;
 	}
 
 	private void readDAGDetails(File rootDir) {
@@ -236,97 +239,11 @@ public class DirectedAcyclicGraph {
 					indexedCollection = new HashIndexedCollection<DAGObject>(
 							MAX_OBJ_SERIALISATION);
 			}
-		} catch (InvalidActivityException e) {
+		} catch (Exception e) {
 			System.err.println("Exception while deserialising '"
 					+ collectionFile + "'. Creating new collection.");
 		}
 		return indexedCollection;
-	}
-
-	/**
-	 * Reads a plain text file of nodes/edges and creates new nodes/edges for
-	 * every item (including triggering module-based operations).
-	 * 
-	 * @param filename
-	 *            The file being read in.
-	 * @param isEdge
-	 *            If reading edges (otherwise nodes).
-	 * @throws IOException
-	 */
-	private void readPlainTextFile(File filename, boolean isEdge)
-			throws IOException {
-		System.out.println("Reading in " + ((isEdge) ? "edges" : "nodes")
-				+ "...");
-		// Total lines
-		LineNumberReader lnr = new LineNumberReader(new FileReader(filename));
-		lnr.skip(Long.MAX_VALUE);
-		int numLines = lnr.getLineNumber();
-		float onePercent = numLines * 0.01f;
-		int percent = 1;
-		lnr.close();
-
-		BufferedReader reader = new BufferedReader(new FileReader(filename));
-
-		String columnProps = reader.readLine();
-		String[] props = columnProps.split("\\t");
-		int lineNum = 1;
-		// Read every line
-		String input = null;
-		while ((input = reader.readLine()) != null) {
-			try {
-				lineNum++;
-				String[] split = input.split("\\t");
-
-				// Parse DAGObject
-				String dagStr = split[0];
-				// Replace primitives
-				dagStr = dagStr.replaceAll(" (-?[\\d][\\d.+\\-E]*)(?= |\\))",
-						" '$1");
-				DAGObject dagObj = null;
-				if (isEdge) {
-					Node[] nodes = parseNodes(dagStr, null, false, false);
-					if (nodes != null) {
-						Edge e = findOrCreateEdge(nodes, null, true);
-						if (e instanceof ErrorEdge) {
-							System.out.println(lineNum + "(ErrorEdge): "
-									+ input);
-							continue;
-						} else
-							dagObj = (DAGObject) e;
-					}
-				} else {
-					Node n = findOrCreateNode(dagStr, null, true);
-					if (n == null) {
-						System.out.println(lineNum + "(nullnode): " + input);
-						continue;
-					}
-					dagObj = (DAGObject) n;
-				}
-
-				// Adding props
-				for (int i = 1; i < split.length; i++) {
-					if (!split[i].isEmpty()) {
-						addProperty(dagObj, props[i], split[i]);
-					}
-				}
-
-				// Status update
-				if (lineNum >= percent * onePercent) {
-					if ((percent % 10) == 0)
-						System.out.print(percent + "%");
-					else
-						System.out.print(".");
-					percent++;
-				}
-			} catch (Exception e) {
-				System.err.println(lineNum + "(ERROR): " + input);
-				e.printStackTrace();
-				System.exit(1);
-			}
-		}
-
-		System.out.println();
-		reader.close();
 	}
 
 	private void readModules(File rootDir) {
@@ -367,6 +284,77 @@ public class DirectedAcyclicGraph {
 		}
 	}
 
+	/**
+	 * Reads a plain text file of nodes/edges and creates new nodes/edges for
+	 * every item (including triggering module-based operations).
+	 * 
+	 * @param filename
+	 *            The file being read in.
+	 * @param isEdge
+	 *            If reading edges (otherwise nodes).
+	 * @throws IOException
+	 */
+	private void readPlainTextFile(File filename, boolean isEdge)
+			throws IOException {
+		System.out.println("Reading in " + ((isEdge) ? "edges" : "nodes")
+				+ "...");
+		// Total lines
+		LineNumberReader lnr = new LineNumberReader(new FileReader(filename));
+		lnr.skip(Long.MAX_VALUE);
+		int numLines = lnr.getLineNumber();
+		float onePercent = numLines * 0.01f;
+		int percent = 1;
+		lnr.close();
+
+		BufferedReader reader = new BufferedReader(new FileReader(filename));
+
+		String columnProps = reader.readLine();
+		String[] props = columnProps.split("\\t");
+		int lineNum = 1;
+		// Read every line
+		String input = null;
+		while ((input = reader.readLine()) != null) {
+			try {
+				lineNum++;
+				String[] split = UtilityMethods.splitToArray(input, '\t');
+				if (split.length <= 1) {
+					System.err.println("Error splitting input (" + lineNum
+							+ ") " + input);
+					continue;
+				}
+
+				DAGObject dagObj = parseDAGObject(split[0], isEdge);
+				if (dagObj == null) {
+					System.err.println("(" + lineNum + ") " + input);
+					continue;
+				}
+
+				// Adding props
+				for (int i = 1; i < split.length; i++) {
+					if (!split[i].isEmpty()) {
+						addProperty(dagObj, props[i], split[i]);
+					}
+				}
+
+				// Status update
+				if (lineNum >= percent * onePercent) {
+					if ((percent % 10) == 0)
+						System.out.print(percent + "%");
+					else
+						System.out.print(".");
+					percent++;
+				}
+			} catch (Exception e) {
+				System.err.println(lineNum + "(ERROR): " + input);
+				e.printStackTrace();
+				System.exit(1);
+			}
+		}
+
+		System.out.println();
+		reader.close();
+	}
+
 	private void saveDAGFile(IndexedCollection<? extends DAGObject> collection,
 			File rootDir, String collectionFile, int maxNumObjects)
 			throws IOException {
@@ -394,8 +382,12 @@ public class DirectedAcyclicGraph {
 			// Write the subarray
 			serFile.getParentFile().mkdirs();
 			serFile.createNewFile();
-			SerialisationMechanism.FST.getSerialiser().serialize(subarray,
-					serFile, serialisationType);
+			try {
+				SerialisationMechanism.FST.getSerialiser().serialize(subarray,
+						serFile, serialisationType);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 
 		if (isSplitting)
@@ -421,7 +413,6 @@ public class DirectedAcyclicGraph {
 			String collectionFile, int maxNumObjects) throws IOException {
 		// Objects used throughout per file.
 		ArrayList<String> propIndex = null;
-		StringBuilder fileContents = null;
 		File txtFile = null;
 
 		// Write the subarray
@@ -430,11 +421,11 @@ public class DirectedAcyclicGraph {
 		txtFile.createNewFile();
 
 		// Write the object to file with props
-		fileContents = new StringBuilder();
 		propIndex = new ArrayList<>();
 		propIndex.add("DAGObject");
 
 		// For every item
+		BufferedWriter writer = new BufferedWriter(new FileWriter(txtFile));
 		for (DAGObject dagObj : collection) {
 			StringBuilder builder = new StringBuilder(
 					dagObj.getIdentifier(true));
@@ -458,14 +449,23 @@ public class DirectedAcyclicGraph {
 					}
 				}
 			}
-			fileContents.append(builder + "\n");
+			writer.write(builder + "\n");
 		}
-
-		// Final write
-		FileWriter writer = new FileWriter(txtFile);
-		writer.write(StringUtils.join(propIndex, '\t') + "\n"
-				+ fileContents.toString());
 		writer.close();
+
+		// Write props at top of file
+		File tempFile = new File("temp.txt");
+		BufferedWriter tempOut = new BufferedWriter(new FileWriter(tempFile));
+		BufferedReader reader = new BufferedReader(new FileReader(txtFile));
+		tempOut.write(StringUtils.join(propIndex, '\t') + "\n");
+
+		String input = null;
+		while ((input = reader.readLine()) != null)
+			tempOut.write(input + "\n");
+		reader.close();
+		tempOut.close();
+		txtFile.delete();
+		tempFile.renameTo(txtFile);
 	}
 
 	private void writeDAGDetails(BufferedWriter out) throws IOException {
@@ -483,13 +483,68 @@ public class DirectedAcyclicGraph {
 				modules_.indexOf(module));
 	}
 
+	protected void exportAsEdges(BufferedWriter out) throws IOException {
+		for (DAGEdge e : edges_)
+			out.write(e.getIdentifier(true) + "\n");
+	}
+
+	protected void exportToCSV(BufferedWriter out, DAGExportFormat format)
+			throws IOException {
+		for (DAGEdge e : edges_) {
+			Node[] nodes = e.getNodes();
+			for (Node n : nodes) {
+				String name = n.getIdentifier(true);
+				out.write(name + ",");
+			}
+			out.write("\n");
+		}
+	}
+
+	protected void exportToDAG(BufferedWriter out) throws IOException {
+		Collection<String> pertinentProperties = compilePertinentProperties();
+
+		for (DAGNode n : nodes_) {
+			out.write("$0$=addnode " + n.getIdentifier(true) + "\n");
+			String[] props = n.getProperties();
+			for (int i = 0; i < props.length; i += 2) {
+				if (!pertinentProperties.contains(props[i]))
+					out.write("addprop N $0$ \"" + props[i] + "\" |\\n"
+							+ props[i + 1] + "\\n|\n");
+			}
+		}
+		for (DAGEdge e : edges_) {
+			out.write("$0$=addedge " + e.getIdentifier(true) + "\n");
+			String[] props = e.getProperties();
+			for (int i = 0; i < props.length; i += 2) {
+				if (!pertinentProperties.contains(props[i]))
+					out.write("addprop E $0$ \"" + props[i] + "\" |\\n"
+							+ props[i + 1] + "\\n|\n");
+			}
+		}
+	}
+
 	protected void initialiseInternal() {
-		if (nodeFile_ != null && edgeFile_ != null) {
+		if (nodeFile_ == null && edgeFile_ == null) {
+			// Read in the global index file
+			readDAGDetails(rootDir_);
+			return;
+		}
+		if (nodeFile_ != null) {
 			// Read in node/edge file
 			noChecks_ = true;
 			try {
 				if (nodeFile_ != null)
 					readPlainTextFile(nodeFile_, false);
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+			noChecks_ = false;
+		}
+		if (edgeFile_ != null) {
+			// Read in node/edge file
+			noChecks_ = true;
+			try {
 				if (edgeFile_ != null)
 					readPlainTextFile(edgeFile_, true);
 			} catch (Exception e) {
@@ -497,9 +552,6 @@ public class DirectedAcyclicGraph {
 				System.exit(1);
 			}
 			noChecks_ = false;
-		} else {
-			// Read in the global index file
-			readDAGDetails(rootDir_);
 		}
 	}
 
@@ -533,6 +585,25 @@ public class DirectedAcyclicGraph {
 		// Trigger modules
 		for (DAGModule<?> module : modules_)
 			module.clear();
+	}
+
+	public void export(File file, DAGExportFormat format) throws IOException {
+		BufferedWriter out = new BufferedWriter(new FileWriter(file));
+
+		switch (format) {
+		case DAG_COMMANDS:
+			exportToDAG(out);
+			break;
+		case CSV_ALL:
+		case CSV_TAXONOMIC:
+			exportToCSV(out, format);
+			break;
+		case EDGES:
+			exportAsEdges(out);
+			break;
+		}
+
+		out.close();
 	}
 
 	public DAGNode findDAGNode(String nodeName) {
@@ -571,13 +642,11 @@ public class DirectedAcyclicGraph {
 	 * @param edgeNodes
 	 *            The nodes of the edge.
 	 * @param creator
-	 *            The creator of the edge.
+	 *            The creator of the edge (can be null).
 	 * @param flags
 	 *            The boolean flags to use during edge creation: createNew
-	 *            (false), ephemeral (false), forceConstraints (false).
-	 * 
-	 * @return True if the edge was not already in the graph.
-	 * @throws DAGException
+	 *            (false), ephemeral (false).
+	 * @return The created edge or an ErrorEdge if there was an error.
 	 */
 	public synchronized Edge findOrCreateEdge(Node[] edgeNodes, Node creator,
 			boolean... flags) {
@@ -626,6 +695,25 @@ public class DirectedAcyclicGraph {
 	}
 
 	/**
+	 * Convenience method for identifying the boolean args.
+	 * 
+	 * @param edgeNodes
+	 *            The nodes of the edge.
+	 * @param creator
+	 *            The creator of the edge (can be null).
+	 * @param createNew
+	 *            If the edge can be created if not found (default false).
+	 * @param ephemeral
+	 *            If the edge should be created as ephemeral (default false).
+	 * @return The created edge or an ErrorEdge if there was an error.
+	 */
+	public Edge findOrCreateEdge(Node[] edgeNodes, Node creator,
+			boolean createNew, boolean ephemeral) {
+		return findOrCreateEdge(edgeNodes, creator, new boolean[] { createNew,
+				ephemeral });
+	}
+
+	/**
 	 * Finds or creates a node by parsing the string and searching for a node.
 	 * String and Primitive nodes can always be found/created. A node is only
 	 * created if a creator is specified. If no node is found, a new node is
@@ -637,8 +725,7 @@ public class DirectedAcyclicGraph {
 	 *            If creating new nodes, a creator must be given.
 	 * @param flags
 	 *            The boolean flags to use during node creation: createNew
-	 *            (false), dagNodeOnly (false), allowVariables (false),
-	 *            ephemeral (false).
+	 *            (false), ephemeral (false), dagNodeOnly (false).
 	 * @return Either a found node, a created node, or null if impossible to
 	 *         parse.
 	 */
@@ -692,6 +779,27 @@ public class DirectedAcyclicGraph {
 		} finally {
 			nodeLock_.unlock();
 		}
+	}
+
+	/**
+	 * Convenience node find/creation method with identified boolean args.
+	 * 
+	 * @param nodeStr
+	 *            The name of the node to find/create.
+	 * @param creator
+	 *            The optional creator.
+	 * @param createNew
+	 *            If a new node should be created if not found.
+	 * @param ephemeral
+	 *            If the created node should be ephemeral.
+	 * @param dagNodeOnly
+	 *            If only DAG nodes can be found/created.
+	 * @return The found/created node, or null.
+	 */
+	public Node findOrCreateNode(String nodeStr, Node creator,
+			boolean createNew, boolean ephemeral, boolean dagNodeOnly) {
+		return findOrCreateNode(nodeStr, creator, new boolean[] { createNew,
+				ephemeral, dagNodeOnly });
 	}
 
 	public BufferedWriter getCommandOut() {
@@ -816,28 +924,11 @@ public class DirectedAcyclicGraph {
 		reloadModules(true);
 	}
 
-	private Collection<String> compilePertinentProperties() {
-		Collection<String> props = new ArrayList<>();
-		for (DAGModule<?> module : modules_) {
-			props.addAll(module.getPertinentProperties());
-			module.disableCached();
-		}
-		return props;
-	}
-
 	public final void initialise() {
 		initialiseInternal();
 		boolean saveState = reloadModules(false);
 		if (saveState)
 			saveState();
-	}
-
-	public boolean reloadModules(boolean forceRebuild) {
-		boolean saveState = false;
-		for (DAGModule<?> module : modules_)
-			saveState |= module.initialisationComplete(nodes_, edges_,
-					forceRebuild);
-		return saveState;
 	}
 
 	/**
@@ -855,6 +946,61 @@ public class DirectedAcyclicGraph {
 		changedState_ = true;
 	}
 
+	/**
+	 * Parses a DAG Object from a string. This method is used with
+	 * readPlainTextFile.
+	 * 
+	 * @param dagStr
+	 *            The string to parse
+	 * @param isEdge
+	 *            If the object should be an edge.
+	 * @param lineNum
+	 *            The current line number in the input file
+	 * @param input
+	 *            The input ine being read.
+	 * @return The DAGObject or null if an erroneous parse.
+	 */
+	public DAGObject parseDAGObject(String dagStr, boolean isEdge) {
+		// Parse DAGObject
+		dagStr = dagStr.replaceAll("\\t", " ");
+		// Replace primitives
+		ArrayList<String> split = UtilityMethods.split(dagStr, ' ',
+				UtilityMethods.JUST_QUOTE);
+		if (split.size() > 1) {
+			for (int i = 0; i < split.size(); i++) {
+				Matcher m = PRIMITIVE_PATTERN.matcher(split.get(i));
+				if (m.matches())
+					split.set(i, "'" + split.get(i));
+			}
+			dagStr = StringUtils.join(split, ' ');
+		}
+
+		DAGObject dagObj = null;
+		if (isEdge) {
+			Node[] nodes = parseNodes(dagStr, null, true, false);
+			if (nodes != null) {
+				Edge e = findOrCreateEdge(nodes, null, true);
+				if (e instanceof ErrorEdge) {
+					System.err.println("ErrorEdge: ");
+					return null;
+				} else
+					dagObj = (DAGObject) e;
+			}
+			if (dagObj == null) {
+				System.err.print("NullNodes: ");
+				return null;
+			}
+		} else {
+			Node n = findOrCreateNode(dagStr, null, true);
+			if (n == null) {
+				System.err.print("NullNode: ");
+				return null;
+			}
+			dagObj = (DAGObject) n;
+		}
+		return dagObj;
+	}
+
 	public Node[] parseNodes(String strNodes, Node creator,
 			boolean createNodes, boolean dagNodeOnly) {
 		if (strNodes.startsWith("("))
@@ -867,11 +1013,20 @@ public class DirectedAcyclicGraph {
 			nodes[i] = findOrCreateNode(arg, creator, createNodes, false,
 					dagNodeOnly);
 
-			if (nodes[i] == null)
+			if (nodes[i] == null) {
 				return null;
+			}
 			i++;
 		}
 		return nodes;
+	}
+
+	public boolean reloadModules(boolean forceRebuild) {
+		boolean saveState = false;
+		for (DAGModule<?> module : modules_)
+			saveState |= module.initialisationComplete(nodes_, edges_,
+					forceRebuild);
+		return saveState;
 	}
 
 	/**
@@ -1052,64 +1207,5 @@ public class DirectedAcyclicGraph {
 		edgeFlags_ = new BooleanFlags();
 		edgeFlags_.addFlag("createNew", false);
 		edgeFlags_.addFlag("ephemeral", false);
-	}
-
-	public void export(File file, DAGExportFormat format) throws IOException {
-		BufferedWriter out = new BufferedWriter(new FileWriter(file));
-
-		switch (format) {
-		case DAG_COMMANDS:
-			exportToDAG(out);
-			break;
-		case CSV_ALL:
-		case CSV_TAXONOMIC:
-			exportToCSV(out, format);
-			break;
-		case EDGES:
-			exportAsEdges(out);
-			break;
-		}
-
-		out.close();
-	}
-
-	protected void exportAsEdges(BufferedWriter out) throws IOException {
-		for (DAGEdge e : edges_)
-			out.write(e.getIdentifier(true) + "\n");
-	}
-
-	protected void exportToCSV(BufferedWriter out, DAGExportFormat format)
-			throws IOException {
-		for (DAGEdge e : edges_) {
-			Node[] nodes = e.getNodes();
-			for (Node n : nodes) {
-				String name = n.getIdentifier(true);
-				out.write(name + ",");
-			}
-			out.write("\n");
-		}
-	}
-
-	protected void exportToDAG(BufferedWriter out) throws IOException {
-		Collection<String> pertinentProperties = compilePertinentProperties();
-
-		for (DAGNode n : nodes_) {
-			out.write("$0$=addnode " + n.getIdentifier(true) + "\n");
-			String[] props = n.getProperties();
-			for (int i = 0; i < props.length; i += 2) {
-				if (!pertinentProperties.contains(props[i]))
-					out.write("addprop N $0$ \"" + props[i] + "\" |\\n"
-							+ props[i + 1] + "\\n|\n");
-			}
-		}
-		for (DAGEdge e : edges_) {
-			out.write("$0$=addedge " + e.getIdentifier(true) + "\n");
-			String[] props = e.getProperties();
-			for (int i = 0; i < props.length; i += 2) {
-				if (!pertinentProperties.contains(props[i]))
-					out.write("addprop E $0$ \"" + props[i] + "\" |\\n"
-							+ props[i + 1] + "\\n|\n");
-			}
-		}
 	}
 }

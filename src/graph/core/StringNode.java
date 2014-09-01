@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-import util.UtilityMethods;
 import de.ruedigermoeller.serialization.annotations.Compress;
 
 public class StringNode implements Node {
@@ -23,9 +22,13 @@ public class StringNode implements Node {
 	private String str_;
 
 	public StringNode(String string) {
-		while (string.startsWith("\"") && string.endsWith("\""))
-			string = UtilityMethods.shrinkString(string, 1);
-		str_ = string;
+		// Trim the front
+		while (string.startsWith("\""))
+			string = string.substring(1);
+		// Trim the back
+		str_ = string.replaceFirst("([^\\\\](\\\\{2})*)\"$", "$1");
+		// Remove tabs
+		str_ = str_.replaceAll("\\t", " ");
 	}
 
 	@Override
