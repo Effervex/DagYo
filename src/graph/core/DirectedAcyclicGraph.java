@@ -524,11 +524,7 @@ public class DirectedAcyclicGraph {
 	}
 
 	protected void initialiseInternal() {
-		if (nodeFile_ == null && edgeFile_ == null) {
-			// Read in the global index file
-			readDAGDetails(rootDir_);
-			return;
-		}
+		readDAGDetails(rootDir_);
 		if (nodeFile_ != null) {
 			// Read in node/edge file
 			noChecks_ = true;
