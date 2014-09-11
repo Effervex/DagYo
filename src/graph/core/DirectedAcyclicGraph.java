@@ -527,7 +527,6 @@ public class DirectedAcyclicGraph {
 		readDAGDetails(rootDir_);
 		if (nodeFile_ != null) {
 			// Read in node/edge file
-			noChecks_ = true;
 			try {
 				if (nodeFile_ != null)
 					readPlainTextFile(nodeFile_, false);
@@ -535,11 +534,9 @@ public class DirectedAcyclicGraph {
 				e.printStackTrace();
 				System.exit(1);
 			}
-			noChecks_ = false;
 		}
 		if (edgeFile_ != null) {
 			// Read in node/edge file
-			noChecks_ = true;
 			try {
 				if (edgeFile_ != null)
 					readPlainTextFile(edgeFile_, true);
@@ -547,7 +544,6 @@ public class DirectedAcyclicGraph {
 				e.printStackTrace();
 				System.exit(1);
 			}
-			noChecks_ = false;
 		}
 	}
 

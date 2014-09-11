@@ -218,6 +218,13 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> implements
 		return true;
 	}
 
+	public boolean removeAlias(DAGNode node, String alias) {
+		if (alias.isEmpty())
+			return false;
+		aliasTrie_.remove(processAlias(alias), node);
+		return true;
+	}
+
 	@Override
 	public boolean removeEdge(DAGEdge edge) {
 		if (edge.getProperty(ALIAS_PROP) != null) {

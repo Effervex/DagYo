@@ -85,12 +85,16 @@ public class FindNodeByAliasCommand extends CollectionCommand {
 			if (objectIndicator == DAG_NODE)
 				print(dagHandler.textIDObject((DAGNode) n) + "|");
 			else if (objectIndicator == ALIASED_OBJECT) {
-				AliasedObject<Character, DAGNode> ao = (AliasedObject<Character, DAGNode>) n;
-				print(dagHandler.textIDObject(ao.object_) + ",\""
-						+ new String(ArrayUtils.toPrimitive(ao.alias_)) + "\"|");
+				printAliased((AliasedObject<Character, DAGNode>) n, dagHandler);
 			}
 		}
 		print("\n");
+	}
+
+	protected void printAliased(AliasedObject<Character, DAGNode> ao,
+			DAGPortHandler dagHandler) {
+		String alias = new String(ArrayUtils.toPrimitive(ao.alias_));
+		print(dagHandler.textIDObject(ao.object_) + ",\"" + alias + "\"|");
 	}
 
 	protected Collection<Object> findNodes(DAGPortHandler dagHandler) {
