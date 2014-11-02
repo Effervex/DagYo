@@ -247,6 +247,7 @@ public class DirectedAcyclicGraph {
 	}
 
 	private void readModules(File rootDir) {
+		Collection<String> modules = new ArrayList<>();
 		try {
 			if (!MODULE_FILE.exists()) {
 				MODULE_FILE.createNewFile();
@@ -262,26 +263,29 @@ public class DirectedAcyclicGraph {
 			BufferedReader reader = new BufferedReader(new FileReader(
 					MODULE_FILE));
 			String input = null;
-			Collection<String> modules = new ArrayList<>();
 			while ((input = reader.readLine()) != null) {
 				if (input.startsWith("%"))
 					continue;
 				modules.add(input);
 			}
+			reader.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
-			for (String module : modules) {
-				System.out.println("Loading " + module + " module...");
+		for (String module : modules) {
+			System.out.println("Loading " + module + " module...");
+			try {
 				DAGModule<?> dagModule = DAGModule.loadCreateModule(rootDir_,
 						Class.forName(module));
 				addModule(dagModule);
+			} catch (Exception e) {
+				System.err.println("Error loading " + module);
+				e.printStackTrace();
 			}
-			for (DAGModule<?> module : modules_)
-				module.setDAG(this);
-
-			reader.close();
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
+		for (DAGModule<?> module : modules_)
+			module.setDAG(this);
 	}
 
 	/**
