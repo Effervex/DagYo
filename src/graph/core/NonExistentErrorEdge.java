@@ -12,14 +12,14 @@ package graph.core;
 
 public class NonExistentErrorEdge extends DAGErrorEdge {
 	private static final long serialVersionUID = 1L;
-	private Node node_;
+	private DAGNode node_;
 
-	public NonExistentErrorEdge(Node n) {
+	public NonExistentErrorEdge(DAGNode n) {
 		node_ = n;
 	}
 
 	@Override
-	public String getError() {
+	public String getError(boolean isPretty) {
 		return "The node " + node_ + " does not exist.";
 	}
 

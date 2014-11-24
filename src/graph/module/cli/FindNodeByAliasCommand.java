@@ -13,12 +13,16 @@ package graph.module.cli;
 import graph.core.DAGNode;
 import graph.core.cli.CollectionCommand;
 import graph.core.cli.DAGPortHandler;
+import graph.core.cli.comparator.AliasedNodesComparator;
 import graph.module.AliasModule;
 import graph.module.ModuleException;
 import graph.module.NodeAliasModule;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.TreeSet;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -70,7 +74,15 @@ public class FindNodeByAliasCommand extends CollectionCommand {
 
 		// TODO See if the results can be sorted categorically (identical node
 		// name, then identical alias name, then non-exact names)
-		nodes = dagHandler.postProcess(nodes, rangeStart_, rangeEnd_);
+		Comparator<Object> comparator = dagHandler.getComparator();
+		boolean aliasSort = comparator != null && comparator instanceof AliasedNodesComparator;
+		if (aliasSort) {
+			List<Object> listNodes = new ArrayList<>(nodes);
+			ArrayList<String> split = UtilityMethods.split(data, ' ');
+			Collections.sort(listNodes, new AliasedNodesComparator(dagHandler, split.get(0)));
+			nodes = listNodes;
+		}
+		nodes = dagHandler.postProcess(nodes, rangeStart_, rangeEnd_, !aliasSort);
 
 		print(nodes.size() + "|");
 		int objectIndicator = 0;

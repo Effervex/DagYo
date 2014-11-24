@@ -62,7 +62,7 @@ public class RelatedEdgeCommand extends CollectionCommand {
 		}
 
 		Collection<Edge> edges = relatedModule.execute(args);
-		edges = dagHandler.postProcess(edges, rangeStart_, rangeEnd_);
+		edges = dagHandler.postProcess(edges, rangeStart_, rangeEnd_, true);
 
 		print(edges.size() + "|");
 		for (Edge edge : edges) {

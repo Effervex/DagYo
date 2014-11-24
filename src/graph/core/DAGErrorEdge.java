@@ -20,21 +20,21 @@ public abstract class DAGErrorEdge implements ErrorEdge {
 
 	@Override
 	public final String toString(boolean useIDs) {
-		return getError();
+		return getError(!useIDs);
 	}
 
 	public final String toString() {
-		return getError();
+		return getError(false);
 	}
 
 	@Override
 	public final String getIdentifier() {
-		return getError();
+		return getError(false);
 	}
 
 	@Override
 	public final String getIdentifier(boolean useName) {
-		return getError();
+		return getError(useName);
 	}
 
 	@Override

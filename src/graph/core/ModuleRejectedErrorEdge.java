@@ -15,16 +15,17 @@ import graph.module.DAGModule;
 public class ModuleRejectedErrorEdge extends DAGErrorEdge {
 	private static final long serialVersionUID = 1L;
 	private DAGModule<?> module_;
-	private Edge edge_;
+	private DAGEdge edge_;
 
-	public ModuleRejectedErrorEdge(Edge edge, DAGModule<?> module) {
+	public ModuleRejectedErrorEdge(DAGEdge edge, DAGModule<?> module) {
 		module_ = module;
 		edge_ = edge;
 	}
 
 	@Override
-	public String getError() {
-		return "Edge " + edge_ + " was rejected by module '" + module_ + "'.";
+	public String getError(boolean isPretty) {
+		return "Edge " + edge_.toString(!isPretty)
+				+ " was rejected by module '" + module_ + "'.";
 	}
 
 	@Override

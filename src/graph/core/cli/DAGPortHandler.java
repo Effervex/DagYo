@@ -13,7 +13,7 @@ package graph.core.cli;
 import graph.core.DAGObject;
 import graph.core.DirectedAcyclicGraph;
 import graph.core.Identifiable;
-import graph.core.cli.comparator.DefaultComparator;
+import graph.core.cli.comparator.AliasedNodesComparator;
 import graph.core.cli.comparator.IDComparator;
 import graph.core.cli.comparator.StringCaseInsComparator;
 import graph.core.cli.comparator.StringComparator;
@@ -23,6 +23,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.apache.commons.collections4.Predicate;
@@ -71,11 +72,17 @@ public class DAGPortHandler extends PortHandler {
 	 * 
 	 * @param items
 	 *            The collection to be sorted.
+	 * @param start
+	 *            The start index to return (inclusive).
+	 * @param end
+	 *            The end index to keep (exclusive).
+	 * @param sort
+	 *            If the items should be sorted.
 	 * @return A sorted collection, or the same collection if no sorter
 	 *         defined/defined as default.
 	 */
 	public final <T> Collection<T> postProcess(Collection<T> items, int start,
-			int end) {
+			int end, boolean sort) {
 		if (items == null || items.isEmpty())
 			return items;
 		Collection<Predicate<Object>> filters = getFilters();
@@ -96,9 +103,11 @@ public class DAGPortHandler extends PortHandler {
 		}
 
 		// Sort
-		DefaultComparator comparator = getComparator();
-		if (comparator != null)
-			Collections.sort(output, comparator);
+		if (sort) {
+			Comparator<Object> comparator = getComparator();
+			if (comparator != null)
+				Collections.sort(output, comparator);
+		}
 
 		// Trim
 		start = Math.max(0, start);
@@ -122,14 +131,16 @@ public class DAGPortHandler extends PortHandler {
 	 * 
 	 * @return The comparator based on the sorter.
 	 */
-	protected DefaultComparator getComparator() {
-		DefaultComparator comparator = null;
+	public Comparator<Object> getComparator() {
+		Comparator<Object> comparator = null;
 		if (get(SORT_ORDER).equals("id"))
 			comparator = new IDComparator(this);
 		else if (get(SORT_ORDER).equals("alpha"))
 			comparator = new StringComparator(this);
 		else if (get(SORT_ORDER).equals("alphaNoCase"))
 			comparator = new StringCaseInsComparator(this);
+		else if (get(SORT_ORDER).equals("alias"))
+			comparator = new AliasedNodesComparator(this, null);
 		return comparator;
 	}
 

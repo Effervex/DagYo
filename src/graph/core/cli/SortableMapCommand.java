@@ -137,7 +137,7 @@ public class SortableMapCommand extends MapCommand {
 			if (sortByMap) {
 				dagHandler.set(DAGPortHandler.SORT_ORDER, sortOrder);
 				outputs = (ArrayList<String>) dagHandler.postProcess(outputs,
-						0, outputs.size());
+						0, outputs.size(), true);
 			}
 			for (int i = 0; i < outputs.size(); i++) {
 				if (showInputs)

@@ -658,7 +658,7 @@ public class DirectedAcyclicGraph {
 						if (n instanceof DAGNode
 								&& ((DAGNode) n).getID() != -1
 								&& !n.equals(getNodeByID(((DAGNode) n).getID())))
-							return new NonExistentErrorEdge(n);
+							return new NonExistentErrorEdge((DAGNode) n);
 				}
 
 				edge = new DAGEdge(creator, true, edgeNodes);
@@ -677,7 +677,7 @@ public class DirectedAcyclicGraph {
 						}
 						if (rejectedModule != null) {
 							removeEdge(edge);
-							return new ModuleRejectedErrorEdge(edge,
+							return new ModuleRejectedErrorEdge((DAGEdge) edge,
 									rejectedModule);
 						}
 					}

@@ -11,5 +11,14 @@
 package graph.core;
 
 public interface ErrorEdge extends Edge {
-	public String getError();
+	/**
+	 * Gets the error message, in either pretty form (for humans) or syntactic
+	 * form.
+	 *
+	 * @param isPretty
+	 *            If true, returns a human-readable error. Otherwise, any format
+	 *            is acceptable.
+	 * @return A description of the error.
+	 */
+	public String getError(boolean isPretty);
 }
