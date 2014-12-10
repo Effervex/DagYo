@@ -14,11 +14,8 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-import de.ruedigermoeller.serialization.annotations.Compress;
-
 public class StringNode implements Node {
 	private static final long serialVersionUID = 2912475401266723942L;
-	@Compress
 	private String str_;
 
 	public StringNode(String string) {

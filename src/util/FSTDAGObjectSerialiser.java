@@ -17,12 +17,13 @@ import graph.core.DirectedAcyclicGraph;
 
 import java.io.IOException;
 
+import org.nustaq.serialization.FSTBasicObjectSerializer;
+import org.nustaq.serialization.FSTClazzInfo;
+import org.nustaq.serialization.FSTClazzInfo.FSTFieldInfo;
+import org.nustaq.serialization.FSTObjectInput;
+import org.nustaq.serialization.FSTObjectOutput;
+
 import util.serialisation.DefaultSerialisationMechanism;
-import de.ruedigermoeller.serialization.FSTBasicObjectSerializer;
-import de.ruedigermoeller.serialization.FSTClazzInfo;
-import de.ruedigermoeller.serialization.FSTClazzInfo.FSTFieldInfo;
-import de.ruedigermoeller.serialization.FSTObjectInput;
-import de.ruedigermoeller.serialization.FSTObjectOutput;
 
 public class FSTDAGObjectSerialiser extends FSTBasicObjectSerializer {
 	public static final byte NODES = 2;
@@ -42,7 +43,7 @@ public class FSTDAGObjectSerialiser extends FSTBasicObjectSerializer {
 
 		out.writeBoolean(idOnly);
 		if (idOnly)
-			out.writeFInt(dagObj.getID());
+			out.writeInt(dagObj.getID());
 		else
 			out.defaultWriteObject(toWrite, clzInfo);
 	}
@@ -63,7 +64,7 @@ public class FSTDAGObjectSerialiser extends FSTBasicObjectSerializer {
 		DAGObject obj = null;
 		boolean idOnly = in.readBoolean();
 		if (idOnly) {
-			int id = in.readFInt();
+			int id = in.readInt();
 
 			if (DAGNode.class.isAssignableFrom(objectClass))
 				obj = DirectedAcyclicGraph.selfRef_.getNodeByID(id);

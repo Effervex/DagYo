@@ -127,8 +127,8 @@ public class DirectedAcyclicGraph {
 		startTime_ = System.currentTimeMillis();
 		System.out.print("Initialising... ");
 
-		FSTSerialisationMechanism.conf.registerSerializer(DAGObject.class,
-				new FSTDAGObjectSerialiser(), true);
+		FSTSerialisationMechanism.conf.get().registerSerializer(
+				DAGObject.class, new FSTDAGObjectSerialiser(), true);
 		selfRef_ = this;
 
 		try {
