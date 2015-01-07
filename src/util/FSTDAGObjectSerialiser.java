@@ -38,7 +38,7 @@ public class FSTDAGObjectSerialiser extends FSTBasicObjectSerializer {
 		if (serialisationState == DefaultSerialisationMechanism.ID
 				|| (serialisationState == NODES && dagObj instanceof DAGNode))
 			idOnly = true;
-		if (dagObj.getID() == -1)
+		if (dagObj.getID() < 0)
 			idOnly = false;
 
 		out.writeBoolean(idOnly);

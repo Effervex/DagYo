@@ -1138,6 +1138,10 @@ public class DirectedAcyclicGraph {
 		// Save 'global' values
 		System.out.print("Please wait while saving state... ");
 		try {
+			((FSTSerialisationMechanism) SerialisationMechanism.FST
+					.getSerialiser()).reset();
+			FSTSerialisationMechanism.conf.get().registerSerializer(
+					DAGObject.class, new FSTDAGObjectSerialiser(), true);
 			dagOut_.flush();
 		} catch (IOException e1) {
 			e1.printStackTrace();
