@@ -44,10 +44,14 @@ public class DAGPortHandler extends PortHandler {
 	public DAGPortHandler(Socket aSocket, CommandQueue aQueue,
 			DirectedAcyclicGraph dag) {
 		super(aSocket, aQueue);
-		set(SORT_ORDER, "default");
-		set(EDGE_FLAGS, "");
-		set(NODE_FLAGS, "");
-		set(SUBDAG_FILTERING, "");
+		if (get(SORT_ORDER) == null || get(SORT_ORDER).isEmpty())
+			set(SORT_ORDER, "default");
+		if (get(EDGE_FLAGS) == null || get(EDGE_FLAGS).isEmpty())
+			set(EDGE_FLAGS, "");
+		if (get(NODE_FLAGS) == null || get(NODE_FLAGS).isEmpty())
+			set(NODE_FLAGS, "");
+		if (get(SUBDAG_FILTERING) == null || get(SUBDAG_FILTERING).isEmpty())
+			set(SUBDAG_FILTERING, "");
 		dag_ = dag;
 	}
 
