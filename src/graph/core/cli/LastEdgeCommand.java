@@ -10,15 +10,23 @@
  ******************************************************************************/
 package graph.core.cli;
 
+import org.apache.commons.lang3.StringUtils;
+
 import graph.core.DAGEdge;
 import graph.core.DirectedAcyclicGraph;
 import core.Command;
 
 public class LastEdgeCommand extends Command {
+	@Override
+	public String helpText() {
+		return "{0} [#] : No arguments necessary, but if an optional "
+				+ "number is provided, returns the last # of edges, "
+				+ "rather than 1.";
+	}
 
 	@Override
 	public String shortDescription() {
-		return "Returns the latest edge created.";
+		return "Returns the latest edge(s) created.";
 	}
 
 	@Override
@@ -26,7 +34,16 @@ public class LastEdgeCommand extends Command {
 		DAGPortHandler dagHandler = (DAGPortHandler) handler;
 		DirectedAcyclicGraph dag = dagHandler.getDAG();
 
+		int numEdges = 1;
+		if (!data.isEmpty() && StringUtils.isNumeric(data)) {
+			try {
+				numEdges = Integer.parseInt(data);
+			} catch (Exception e) {
+			}
+		}
+
 		int id = DAGEdge.idCounter_;
+		int numFound = 0;
 		do {
 			id--;
 			DAGEdge edge = dag.getEdgeByID(id);
@@ -37,7 +54,9 @@ public class LastEdgeCommand extends Command {
 								DAGPortHandler.PRETTY_RESULTS).equals("true"))
 						+ "|" + edge.getCreator() + "|"
 						+ edge.getCreationDate() + "\n");
-				return;
+				numFound++;
+				if (numFound >= numEdges)
+					return;
 			}
 		} while (id > 0);
 		print("-1|No edges exist.\n");
