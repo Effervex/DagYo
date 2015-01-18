@@ -11,6 +11,7 @@
 package graph.core.cli;
 
 import graph.core.DAGEdge;
+import graph.core.Node;
 import core.Command;
 
 public class EdgeCommand extends Command {
@@ -34,20 +35,30 @@ public class EdgeCommand extends Command {
 		}
 
 		try {
-			int id = Integer.parseInt(data);
-			DAGEdge edge = dagHandler.getDAG().getEdgeByID(id);
+			int id = -1;
+			DAGEdge edge = null;
+			if (data.matches("\\d+")) {
+				id = Integer.parseInt(data);
+				edge = dagHandler.getDAG().getEdgeByID(id);
+			} else {
+				Node[] nodes = dagHandler.getDAG().parseNodes(data, null,
+						false, false);
+				if (nodes != null) {
+					edge = (DAGEdge) dagHandler.getDAG().findEdge(nodes);
+					id = edge.getID();
+				}
+			}
 			if (edge != null) {
 				print(id
 						+ "|"
 						+ edge.toString(dagHandler.get(
 								DAGPortHandler.PRETTY_RESULTS).equals("false"))
-						+ "|" + edge.getCreator() + "|" + edge.getCreationDate()
-						+ "\n");
+						+ "|" + edge.getCreator() + "|"
+						+ edge.getCreationDate() + "\n");
 				return;
 			}
 		} catch (Exception e) {
 		}
 		print("-1|Could not parse edge from arguments.\n");
 	}
-
 }
