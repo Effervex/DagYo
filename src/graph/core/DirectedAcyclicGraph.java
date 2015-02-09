@@ -83,6 +83,8 @@ public class DirectedAcyclicGraph {
 
 	public static final File MODULE_FILE = new File("activeModules.config");
 
+	public static final File DAG_CONFIG_FILE = new File("DAGconfig.config");
+
 	public static final BooleanFlags nodeFlags_;
 
 	public static final Pattern PRIMITIVE_PATTERN = Pattern
@@ -127,8 +129,23 @@ public class DirectedAcyclicGraph {
 		startTime_ = System.currentTimeMillis();
 		System.out.print("Initialising... ");
 
-		FSTSerialisationMechanism.conf.registerSerializer(
-				DAGObject.class, new FSTDAGObjectSerialiser(), true);
+		// Read the config in
+		try {
+			DAG_CONFIG_FILE.createNewFile();
+			BufferedReader reader = new BufferedReader(new FileReader(
+					DAG_CONFIG_FILE));
+			String line = null;
+			while ((line = reader.readLine()) != null) {
+				String[] split = line.split("=");
+				readConfigLine(split[0].trim(), split[1].trim());
+			}
+			reader.close();
+		} catch (IOException ioe) {
+			ioe.printStackTrace();
+		}
+
+		FSTSerialisationMechanism.conf.registerSerializer(DAGObject.class,
+				new FSTDAGObjectSerialiser(), true);
 		selfRef_ = this;
 
 		try {
@@ -157,6 +174,17 @@ public class DirectedAcyclicGraph {
 		readModules(rootDir);
 
 		System.out.println("Done!");
+	}
+
+	/**
+	 * Reads the config file in to set up DAG settings before any processing.
+	 *
+	 * @param line
+	 *            A line of the config file.
+	 */
+	protected void readConfigLine(String variable, String value) {
+		if (variable.equalsIgnoreCase("noChecks"))
+			noChecks_ = value.equalsIgnoreCase("TRUE");
 	}
 
 	private Collection<String> compilePertinentProperties() {
@@ -569,8 +597,13 @@ public class DirectedAcyclicGraph {
 		else if (dagObj instanceof DAGEdge)
 			edges_.update((DAGEdge) dagObj);
 
-		for (DAGModule<?> module : modules_)
-			module.addProperty(dagObj, key, value);
+		for (DAGModule<?> module : modules_) {
+			if ((dagObj instanceof DAGEdge && module
+					.supportsEdge((DAGEdge) dagObj))
+					|| (dagObj instanceof DAGNode && module
+							.supportsNode((DAGNode) dagObj)))
+				module.addProperty(dagObj, key, value);
+		}
 	}
 
 	public void clear() {
@@ -670,6 +703,8 @@ public class DirectedAcyclicGraph {
 						// Trigger modules
 						DAGModule<?> rejectedModule = null;
 						for (DAGModule<?> module : modules_) {
+							if (!module.supportsEdge((DAGEdge) edge))
+								continue;
 							if (!module.addEdge((DAGEdge) edge)) {
 								rejectedModule = module;
 								break;
@@ -756,6 +791,9 @@ public class DirectedAcyclicGraph {
 			if (node != null)
 				return node;
 
+			// Reject invalid nodeStrings
+			if (!DAGNode.VALID_NAME.matcher(nodeStr).matches())
+				return null;
 			node = findDAGNode(nodeStr);
 			if (node == null && createNew && DAGNode.isValidName(nodeStr)) {
 				// Create a new node
@@ -765,8 +803,10 @@ public class DirectedAcyclicGraph {
 					if (bFlags.getFlag("ephemeral"))
 						addProperty(node, EPHEMERAL_MARK, "t");
 					// Trigger modules
-					for (DAGModule<?> module : modules_)
-						module.addNode(node);
+					for (DAGModule<?> module : modules_) {
+						if (module.supportsNode(node))
+							module.addNode(node);
+					}
 					changedState_ = true;
 				} else
 					return null;
@@ -1043,8 +1083,10 @@ public class DirectedAcyclicGraph {
 
 			if (result && ((DAGEdge) edge).getProperty(EPHEMERAL_MARK) == null) {
 				// Trigger modules
-				for (DAGModule<?> module : modules_)
-					module.removeEdge((DAGEdge) edge);
+				for (DAGModule<?> module : modules_) {
+					if (module.supportsEdge((DAGEdge) edge))
+						module.removeEdge((DAGEdge) edge);
+				}
 				changedState_ = true;
 			}
 			return result;
@@ -1102,8 +1144,10 @@ public class DirectedAcyclicGraph {
 				}
 
 				// Trigger modules
-				for (DAGModule<?> module : modules_)
-					module.removeNode(node);
+				for (DAGModule<?> module : modules_) {
+					if (module.supportsNode(node))
+						module.removeNode(node);
+				}
 				changedState_ = true;
 			}
 			return result;
@@ -1127,8 +1171,13 @@ public class DirectedAcyclicGraph {
 	public synchronized void removeProperty(DAGObject dagObj, String key) {
 		dagObj.remove(key);
 
-		for (DAGModule<?> module : modules_)
-			module.removeProperty(dagObj, key);
+		for (DAGModule<?> module : modules_) {
+			if ((dagObj instanceof DAGEdge && module
+					.supportsEdge((DAGEdge) dagObj))
+					|| (dagObj instanceof DAGNode && module
+							.supportsNode((DAGNode) dagObj)))
+				module.removeProperty(dagObj, key);
+		}
 		changedState_ = true;
 	}
 
@@ -1140,8 +1189,8 @@ public class DirectedAcyclicGraph {
 		try {
 			((FSTSerialisationMechanism) SerialisationMechanism.FST
 					.getSerialiser()).reset();
-			FSTSerialisationMechanism.conf.registerSerializer(
-					DAGObject.class, new FSTDAGObjectSerialiser(), true);
+			FSTSerialisationMechanism.conf.registerSerializer(DAGObject.class,
+					new FSTDAGObjectSerialiser(), true);
 			dagOut_.flush();
 		} catch (IOException e1) {
 			e1.printStackTrace();
@@ -1207,5 +1256,18 @@ public class DirectedAcyclicGraph {
 		edgeFlags_ = new BooleanFlags();
 		edgeFlags_.addFlag("createNew", false);
 		edgeFlags_.addFlag("ephemeral", false);
+	}
+
+	/**
+	 * Copies all properties from the source object to the target object.
+	 * @param sourceObj
+	 *            The object to copy properties from.
+	 * @param targetObj
+	 *            The object to copy properties to.
+	 */
+	public void copyProperties(DAGObject sourceObj, DAGObject targetObj) {
+		String[] properties = ((DAGEdge) sourceObj).getProperties();
+		for (int i = 0; i < properties.length; i += 2)
+			addProperty((DAGEdge) targetObj, properties[i], properties[i + 1]);
 	}
 }

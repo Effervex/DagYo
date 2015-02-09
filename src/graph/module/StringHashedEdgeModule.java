@@ -10,6 +10,8 @@
  ******************************************************************************/
 package graph.module;
 
+import graph.core.DAGEdge;
+import graph.core.DAGNode;
 import graph.core.Edge;
 
 import java.util.Collection;
@@ -26,16 +28,23 @@ import java.util.HashSet;
 public class StringHashedEdgeModule extends DAGModule<Collection<Edge>> {
 	private static final long serialVersionUID = 1L;
 	public static final int DEFAULT_CAPACITY = 65536;
-	protected Collection<Edge>[] stringHashArray_;
 	private boolean requiresRebuild_ = true;
+	protected Collection<Edge>[] stringHashArray_;
+
+	public StringHashedEdgeModule() {
+		this(DEFAULT_CAPACITY);
+	}
 
 	@SuppressWarnings("unchecked")
 	public StringHashedEdgeModule(int capacity) {
 		stringHashArray_ = new Collection[capacity];
 	}
 
-	public StringHashedEdgeModule() {
-		this(DEFAULT_CAPACITY);
+	private int getHash(Object o) {
+		int hash = o.toString().hashCode() % stringHashArray_.length;
+		if (hash < 0)
+			hash *= -1;
+		return hash;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -59,10 +68,13 @@ public class StringHashedEdgeModule extends DAGModule<Collection<Edge>> {
 		return edges;
 	}
 
-	private int getHash(Object o) {
-		int hash = o.toString().hashCode() % stringHashArray_.length;
-		if (hash < 0)
-			hash *= -1;
-		return hash;
+	@Override
+	public boolean supportsEdge(DAGEdge edge) {
+		return true;
+	}
+
+	@Override
+	public boolean supportsNode(DAGNode node) {
+		return false;
 	}
 }

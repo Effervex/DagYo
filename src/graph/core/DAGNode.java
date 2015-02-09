@@ -34,7 +34,8 @@ public class DAGNode extends DAGObject implements Node {
 	public static final Pattern QUOTED_NAME = Pattern
 			.compile("\"[^\"\\\\]*(?:\\\\.[^\"\\\\]*)*\"");
 
-	public static final Pattern UNSPACED_NAME = Pattern.compile("[^\\s()'?].+");
+	public static final Pattern UNSPACED_NAME = Pattern
+			.compile("[a-zA-Z0-9][^\\s?()']+");
 
 	public static final Pattern NAME_OR_ID = Pattern.compile("(?:'?\\d+)|"
 			+ "(?:" + QUOTED_NAME.pattern() + ")|(?:" + UNSPACED_NAME.pattern()

@@ -33,23 +33,23 @@ import java.util.Set;
  * @author Sam Sarjant
  */
 public class StringStorageModule extends DAGModule<Boolean> {
-	private static final long serialVersionUID = 1L;
-
 	private static final int COMPRESSION_THRESHOLD = 8;
 
 	private static final int MAX_FILE_SIZE = (int) Math.pow(2, 27);
 
+	private static final long serialVersionUID = 1L;
+
 	public static final String FILE_LOC = DirectedAcyclicGraph.selfRef_.rootDir_
 			+ "/strings.dat";
 
-	/** The set of predicates to be compressed. */
-	private Set<String> registeredPreds_;
+	private int fileNum_;
 
 	private transient BufferedWriter out_;
 
 	private int outSize_;
 
-	private int fileNum_;
+	/** The set of predicates to be compressed. */
+	private Set<String> registeredPreds_;
 
 	/**
 	 * Compresses an edge by replacing all StringNode arguments with pointers to
@@ -161,6 +161,14 @@ public class StringStorageModule extends DAGModule<Boolean> {
 		return false;
 	}
 
+	public void flush() {
+		try {
+			out_.flush();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	@Override
 	public boolean initialisationComplete(Collection<DAGNode> nodes,
 			Collection<DAGEdge> edges, boolean forceRebuild) {
@@ -180,11 +188,13 @@ public class StringStorageModule extends DAGModule<Boolean> {
 		registeredPreds_.add(predicateName);
 	}
 
-	public void flush() {
-		try {
-			out_.flush();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	@Override
+	public boolean supportsEdge(DAGEdge edge) {
+		return true;
+	}
+
+	@Override
+	public boolean supportsNode(DAGNode node) {
+		return false;
 	}
 }

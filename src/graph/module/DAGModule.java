@@ -43,13 +43,17 @@ public abstract class DAGModule<T> implements Serializable {
 			boolean iterateEdges) {
 		if (iterateNodes) {
 			DAGNode[] nodeArray = nodes.toArray(new DAGNode[nodes.size()]);
-			for (DAGNode node : nodeArray)
-				addNode(node);
+			for (DAGNode node : nodeArray) {
+				if (supportsNode(node))
+					addNode(node);
+			}
 		}
 		if (iterateEdges) {
 			DAGEdge[] edgeArray = edges.toArray(new DAGEdge[edges.size()]);
-			for (DAGEdge edge : edgeArray)
-				addEdge(edge);
+			for (DAGEdge edge : edgeArray) {
+				if (supportsEdge(edge))
+					addEdge(edge);
+			}
 		}
 	}
 
@@ -173,6 +177,28 @@ public abstract class DAGModule<T> implements Serializable {
 	public void setDAG(DirectedAcyclicGraph directedAcyclicGraph) {
 		dag_ = directedAcyclicGraph;
 	}
+
+	/**
+	 * If this module supports add/remove operations with the given edge. Some
+	 * edges may use special modifiers that make them incompatible with the
+	 * module. This is separate from execution, which does not use this method.
+	 *
+	 * @param edge
+	 *            The edge to be added/removed to/from the module.
+	 * @return True if the edge is supported, false otherwise.
+	 */
+	public abstract boolean supportsEdge(DAGEdge edge);
+
+	/**
+	 * If this module supports add/remove operations with the given node. Some
+	 * nodes may use special modifiers that make them incompatible with the
+	 * module. This is separate from execution, which does not use this method.
+	 *
+	 * @param node
+	 *            The node to be added/removed to/from the module.
+	 * @return True if the node is supported, false otherwise.
+	 */
+	public abstract boolean supportsNode(DAGNode node);
 
 	private static File moduleFile(File rootDir, String moduleName) {
 		File file = new File(rootDir, MODULE_DIR + File.separatorChar

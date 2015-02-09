@@ -19,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import util.collection.MultiMap;
-
 import graph.core.DAGEdge;
 import graph.core.DAGNode;
 import graph.core.DirectedAcyclicGraph;
@@ -36,10 +35,10 @@ public class SubDAGExtractorModule extends DAGModule<Boolean> {
 	private static Logger logger = LoggerFactory
 			.getLogger(SubDAGExtractorModule.class);
 	private static final long serialVersionUID = 1L;
-	/** The prefix used for user-tagged concepts. */
-	public static final String TAG_PREFIX = "subDAG";
 	/** The prefix used for grown tags. */
 	public static final String NON_CORE_PREFIX = "subDAGNC";
+	/** The prefix used for user-tagged concepts. */
+	public static final String TAG_PREFIX = "subDAG";
 	private transient MultiMap<String, DAGNode> taggedNodes_;
 
 	public SubDAGExtractorModule() {
@@ -321,6 +320,16 @@ public class SubDAGExtractorModule extends DAGModule<Boolean> {
 					taggedNodes_.remove(alterTag);
 			}
 		}
+	}
+
+	@Override
+	public boolean supportsEdge(DAGEdge edge) {
+		return false;
+	}
+
+	@Override
+	public boolean supportsNode(DAGNode node) {
+		return false;
 	}
 
 	public synchronized void tagDAGObject(DAGNode dagObj, String tag,

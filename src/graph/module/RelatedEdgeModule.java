@@ -63,6 +63,25 @@ public class RelatedEdgeModule extends DAGModule<Collection<Edge>> {
 		return indexedNodes;
 	}
 
+	/**
+	 * If the string hash index should be used for string searching.
+	 * 
+	 * @param predicate
+	 *            The predicate of the edge to search. If not-null, checks with
+	 *            string storage to see if the predicate is registered.
+	 * @param stringNode
+	 *            The node to search for (only returns true if a string node).
+	 * @return True if the string hash module should be used.
+	 */
+	protected boolean canSearchHashedModule(Node predicate, Node stringNode) {
+		if (stringHashedModule_ == null || !(stringNode instanceof StringNode))
+			return false;
+		if (predicate != null && stringStorageModule_ != null
+				&& stringStorageModule_.isCompressedEdge(predicate))
+			return false;
+		return true;
+	}
+
 	protected Object defaultKey() {
 		return -1;
 	}
@@ -179,25 +198,6 @@ public class RelatedEdgeModule extends DAGModule<Collection<Edge>> {
 		return edgeCols;
 	}
 
-	/**
-	 * If the string hash index should be used for string searching.
-	 * 
-	 * @param predicate
-	 *            The predicate of the edge to search. If not-null, checks with
-	 *            string storage to see if the predicate is registered.
-	 * @param stringNode
-	 *            The node to search for (only returns true if a string node).
-	 * @return True if the string hash module should be used.
-	 */
-	protected boolean canSearchHashedModule(Node predicate, Node stringNode) {
-		if (stringHashedModule_ == null || !(stringNode instanceof StringNode))
-			return false;
-		if (predicate != null && stringStorageModule_ != null
-				&& stringStorageModule_.isCompressedEdge(predicate))
-			return false;
-		return true;
-	}
-
 	protected boolean matchingNonDAG(Pair<Node, Object> nonDAG, Node[] edgeNodes) {
 		return edgeNodes[(Integer) nonDAG.objB_].toString().equals(
 				nonDAG.objA_.toString());
@@ -284,6 +284,16 @@ public class RelatedEdgeModule extends DAGModule<Collection<Edge>> {
 				.getModule(StringHashedEdgeModule.class);
 		stringStorageModule_ = (StringStorageModule) directedAcyclicGraph
 				.getModule(StringStorageModule.class);
+	}
+
+	@Override
+	public boolean supportsEdge(DAGEdge edge) {
+		return true;
+	}
+
+	@Override
+	public boolean supportsNode(DAGNode node) {
+		return false;
 	}
 
 	@Override

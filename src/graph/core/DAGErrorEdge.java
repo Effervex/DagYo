@@ -10,8 +10,18 @@
  ******************************************************************************/
 package graph.core;
 
-public abstract class DAGErrorEdge implements ErrorEdge {
+
+public class DAGErrorEdge implements ErrorEdge {
 	private static final long serialVersionUID = 1L;
+	private Node[] nodes_;
+
+	public DAGErrorEdge() {
+		nodes_ = null;
+	}
+
+	public DAGErrorEdge(Node[] nodes) {
+		nodes_ = nodes;
+	}
 
 	@Override
 	public final boolean containsNode(Node node) {
@@ -40,5 +50,23 @@ public abstract class DAGErrorEdge implements ErrorEdge {
 	@Override
 	public final int getID() {
 		return -1;
+	}
+
+	@Override
+	public Node[] getNodes() {
+		return nodes_;
+	}
+
+	@Override
+	public String getError(boolean isPretty) {
+		StringBuilder builder = new StringBuilder("Edge '");
+		boolean useSpace = false;
+		for (Node n : nodes_) {
+			if (useSpace)
+				builder.append(" ");
+			builder.append(n.getIdentifier(isPretty));
+			useSpace = true;
+		}
+		return "Edge '" + builder.toString() + "' is invalid.";
 	}
 }

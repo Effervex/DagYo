@@ -248,6 +248,16 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> implements
 	}
 
 	@Override
+	public boolean supportsEdge(DAGEdge edge) {
+		return true;
+	}
+
+	@Override
+	public boolean supportsNode(DAGNode node) {
+		return true;
+	}
+
+	@Override
 	public String toString() {
 		return "Node Alias Module: " + aliasTrie_.toString();
 	}
