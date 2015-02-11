@@ -459,6 +459,7 @@ public class DirectedAcyclicGraph {
 		// For every item
 		BufferedWriter writer = new BufferedWriter(new FileWriter(txtFile));
 		for (DAGObject dagObj : collection) {
+			try {
 			StringBuilder builder = new StringBuilder(
 					dagObj.getIdentifier(true));
 			int propCount = 0;
@@ -482,6 +483,10 @@ public class DirectedAcyclicGraph {
 				}
 			}
 			writer.write(builder + "\n");
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.err.println("ERROR WITH " + dagObj.toString());
+			}
 		}
 		writer.close();
 

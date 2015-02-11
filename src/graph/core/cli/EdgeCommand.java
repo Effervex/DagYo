@@ -17,7 +17,7 @@ import core.Command;
 public class EdgeCommand extends Command {
 	@Override
 	public String helpText() {
-		return "{0} ID : Returns information about an edge by ID.";
+		return "{0} ID/edge : Returns information about an edge by ID.";
 	}
 
 	@Override

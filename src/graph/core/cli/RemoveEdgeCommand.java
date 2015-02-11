@@ -10,6 +10,8 @@
  ******************************************************************************/
 package graph.core.cli;
 
+import graph.core.DAGEdge;
+import graph.core.Node;
 import core.Command;
 
 public class RemoveEdgeCommand extends Command {
@@ -31,16 +33,22 @@ public class RemoveEdgeCommand extends Command {
 			return;
 		}
 
-		Integer edgeID;
-		try {
-			edgeID = Integer.parseInt(data);
-		} catch (NumberFormatException e) {
-			print("-1|Please enter edge ID.\n");
-			return;
+		int id = -1;
+		DAGEdge edge = null;
+		if (data.matches("\\d+")) {
+			id = Integer.parseInt(data);
+			edge = dagHandler.getDAG().getEdgeByID(id);
+		} else {
+			Node[] nodes = dagHandler.getDAG().parseNodes(data, null,
+					false, false);
+			if (nodes != null) {
+				edge = (DAGEdge) dagHandler.getDAG().findEdge(nodes);
+				id = edge.getID();
+			}
 		}
-
+		
 		dagHandler.getDAG().writeCommand("removeedge " + data);
-		if (dagHandler.getDAG().removeEdge(edgeID))
+		if (dagHandler.getDAG().removeEdge(id) && id > 0)
 			print("1|Edge successfully removed.\n");
 		else
 			print("-1|Could not remove edge.\n");
