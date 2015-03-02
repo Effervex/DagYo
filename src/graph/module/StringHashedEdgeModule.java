@@ -15,7 +15,8 @@ import graph.core.DAGNode;
 import graph.core.Edge;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * This class should be used in conjunction with RelatedEdgeModule as a faster
@@ -28,7 +29,6 @@ import java.util.HashSet;
 public class StringHashedEdgeModule extends DAGModule<Collection<Edge>> {
 	private static final long serialVersionUID = 1L;
 	public static final int DEFAULT_CAPACITY = 65536;
-	private boolean requiresRebuild_ = true;
 	protected Collection<Edge>[] stringHashArray_;
 
 	public StringHashedEdgeModule() {
@@ -62,7 +62,8 @@ public class StringHashedEdgeModule extends DAGModule<Collection<Edge>> {
 		int hash = getHash(args[0]);
 		Collection<Edge> edges = stringHashArray_[hash];
 		if (edges == null) {
-			edges = new HashSet<>();
+			edges = Collections
+					.newSetFromMap(new ConcurrentHashMap<Edge, Boolean>());
 			stringHashArray_[hash] = edges;
 		}
 		return edges;
