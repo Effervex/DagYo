@@ -666,7 +666,10 @@ public class DirectedAcyclicGraph {
 		if (edges.size() > 1)
 			System.err.println("WARNING: More than one edge found with nodes: "
 					+ Arrays.toString(edgeNodes));
-		return edges.iterator().next();
+		Edge e = edges.iterator().next();
+		if (Arrays.equals(edgeNodes, e.getNodes()))
+			return e;
+		return null;
 	}
 
 	/**

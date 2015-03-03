@@ -28,7 +28,6 @@ import java.util.HashSet;
 public class StringHashedEdgeModule extends DAGModule<Collection<Edge>> {
 	private static final long serialVersionUID = 1L;
 	public static final int DEFAULT_CAPACITY = 65536;
-	private boolean requiresRebuild_ = true;
 	protected Collection<Edge>[] stringHashArray_;
 
 	public StringHashedEdgeModule() {
