@@ -10,8 +10,6 @@
  ******************************************************************************/
 package graph.core.cli;
 
-import java.io.BufferedReader;
-
 import core.Command;
 
 public class ShutdownCommand extends Command {
@@ -29,7 +27,6 @@ public class ShutdownCommand extends Command {
 		if (!data.isEmpty() && data.equalsIgnoreCase("F"))
 			sync_ = false;
 
-		BufferedReader in = getPortHandler().getReader();
 		print("Syncing and shutting DAG down.\n");
 		new Thread(new Runnable() {
 			@Override
