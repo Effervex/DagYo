@@ -33,22 +33,24 @@ public class RemoveEdgeCommand extends Command {
 			return;
 		}
 
-		int id = -1;
 		DAGEdge edge = null;
 		if (data.matches("\\d+")) {
-			id = Integer.parseInt(data);
+			int id = Integer.parseInt(data);
 			edge = dagHandler.getDAG().getEdgeByID(id);
 		} else {
 			Node[] nodes = dagHandler.getDAG().parseNodes(data, null,
 					false, false);
-			if (nodes != null) {
+			if (nodes != null)
 				edge = (DAGEdge) dagHandler.getDAG().findEdge(nodes);
-				id = edge.getID();
-			}
+		}
+		
+		if (edge == null) {
+			print("-1|Could not parse edge.\n");
+			return;
 		}
 		
 		dagHandler.getDAG().writeCommand("removeedge " + data);
-		if (dagHandler.getDAG().removeEdge(id) && id > 0)
+		if (dagHandler.getDAG().removeEdge(edge))
 			print("1|Edge successfully removed.\n");
 		else
 			print("-1|Could not remove edge.\n");

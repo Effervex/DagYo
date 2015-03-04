@@ -1104,17 +1104,6 @@ public class DirectedAcyclicGraph {
 	}
 
 	/**
-	 * Removes an edge from the DAG.
-	 * 
-	 * @param edgeID
-	 *            The ID of the edge to be removed.
-	 * @return True if the edge was removed.
-	 */
-	public synchronized boolean removeEdge(int edgeID) {
-		return removeEdge(getEdgeByID(edgeID));
-	}
-
-	/**
 	 * Removes a node from the DAG, and also removes all information associated
 	 * with the node.
 	 * 
