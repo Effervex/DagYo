@@ -16,7 +16,7 @@ import graph.core.DAGNode;
 import graph.core.DirectedAcyclicGraph;
 import core.Command;
 
-public class LastNodeCommand extends Command {
+public class LastNodeCommand extends DAGCommand {
 	@Override
 	public String helpText() {
 		return "{0} [#] : No arguments necessary, but if an optional "

@@ -13,7 +13,7 @@ package graph.core.cli;
 import graph.core.DAGNode;
 import core.Command;
 
-public class NodeCommand extends Command {
+public class NodeCommand extends DAGCommand {
 	@Override
 	public String helpText() {
 		return "{0} ID : Returns information about a node by ID.";

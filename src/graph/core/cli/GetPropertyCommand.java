@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import util.UtilityMethods;
 import core.Command;
 
-public class GetPropertyCommand extends Command {
+public class GetPropertyCommand extends DAGCommand {
 	@Override
 	public String helpText() {
 		return "{0} N/E nodeID/edgeID propertyKey : "

@@ -39,6 +39,7 @@ public class DAGPortHandler extends PortHandler {
 	public static final String EDGE_FLAGS = "/env/edgeFlags";
 	public static final String NODE_FLAGS = "/env/nodeFlags";
 	public static final String SUBDAG_FILTERING = "/env/subDAGFilter";
+	public static final String HUMAN = "/human";
 	protected DirectedAcyclicGraph dag_;
 
 	public DAGPortHandler(Socket aSocket, CommandQueue aQueue,
@@ -52,6 +53,8 @@ public class DAGPortHandler extends PortHandler {
 			set(NODE_FLAGS, "");
 		if (get(SUBDAG_FILTERING) == null || get(SUBDAG_FILTERING).isEmpty())
 			set(SUBDAG_FILTERING, "");
+		if (get(HUMAN) == null || get(HUMAN).isEmpty())
+			set(HUMAN, "false");
 		dag_ = dag;
 	}
 

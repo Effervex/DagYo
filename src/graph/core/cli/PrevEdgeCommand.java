@@ -5,7 +5,7 @@ import graph.core.DirectedAcyclicGraph;
 import graph.core.Node;
 import core.Command;
 
-public class PrevEdgeCommand extends Command {
+public class PrevEdgeCommand extends DAGCommand {
 	@Override
 	public String helpText() {
 		return "{0} edge : Returns the previous edge before 'edge', in ID order.";

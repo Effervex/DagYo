@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 
 import core.Command;
 
-public abstract class CollectionCommand extends Command {
+public abstract class CollectionCommand extends DAGCommand {
 	private static final Pattern RANGE_PATTERN = Pattern
 			.compile("(.+?) \\[(\\d+), *(\\d+)\\)");
 	protected int rangeStart_ = 0;

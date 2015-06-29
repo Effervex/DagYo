@@ -13,7 +13,7 @@ package graph.core.cli;
 import graph.core.DAGNode;
 import core.Command;
 
-public class NextNodeCommand extends Command {
+public class NextNodeCommand extends DAGCommand {
 	@Override
 	public String helpText() {
 		return "{0} node : Returns the next node after 'node', in ID order.";

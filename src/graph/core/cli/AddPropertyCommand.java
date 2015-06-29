@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 
 import core.Command;
 
-public class AddPropertyCommand extends Command {
+public class AddPropertyCommand extends DAGCommand {
 	private static final Pattern ARG_PATTERN = Pattern
 			.compile("^([NE])\\s(.+?)\\s\"([^\"]+?)\"\\s(\\S+?)$");
 

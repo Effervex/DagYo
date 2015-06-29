@@ -15,7 +15,7 @@ import graph.core.DirectedAcyclicGraph;
 import graph.core.Node;
 import core.Command;
 
-public class NextEdgeCommand extends Command {
+public class NextEdgeCommand extends DAGCommand {
 	@Override
 	public String helpText() {
 		return "{0} edge : Returns the next edge after 'edge', in ID order.";

@@ -3,7 +3,7 @@ package graph.core.cli;
 import graph.core.DAGNode;
 import core.Command;
 
-public class PrevNodeCommand extends Command {
+public class PrevNodeCommand extends DAGCommand {
 	@Override
 	public String helpText() {
 		return "{0} node : Returns the previous node before 'node', in ID order.";

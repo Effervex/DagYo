@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import util.UtilityMethods;
 import core.Command;
 
-public class EdgeNodesCommand extends Command {
+public class EdgeNodesCommand extends DAGCommand {
 
 	@Override
 	protected void executeImpl() {

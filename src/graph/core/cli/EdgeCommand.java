@@ -14,7 +14,7 @@ import graph.core.DAGEdge;
 import graph.core.Node;
 import core.Command;
 
-public class EdgeCommand extends Command {
+public class EdgeCommand extends DAGCommand {
 	@Override
 	public String helpText() {
 		return "{0} ID/edge : Returns information about an edge by ID.";

@@ -19,7 +19,7 @@ import java.util.Arrays;
 import util.UtilityMethods;
 import core.Command;
 
-public class AddNodeCommand extends Command {
+public class AddNodeCommand extends DAGCommand {
 	@Override
 	public String helpText() {
 		return "{0} name [(creator)] : Adds a new named "

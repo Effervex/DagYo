@@ -18,7 +18,7 @@ import graph.core.Identifiable;
 import graph.module.SubDAGExtractorModule;
 import core.Command;
 
-public class RandomNodeCommand extends Command {
+public class RandomNodeCommand extends DAGCommand {
 
 	@Override
 	public String shortDescription() {

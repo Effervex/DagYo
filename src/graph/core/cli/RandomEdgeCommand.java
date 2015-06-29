@@ -13,7 +13,7 @@ package graph.core.cli;
 import graph.core.Identifiable;
 import core.Command;
 
-public class RandomEdgeCommand extends Command {
+public class RandomEdgeCommand extends DAGCommand {
 
 	@Override
 	public String shortDescription() {

@@ -41,6 +41,7 @@ import org.apache.commons.lang3.StringUtils;
 import util.BooleanFlags;
 import util.FSTDAGObjectSerialiser;
 import util.UtilityMethods;
+import util.collection.ConcurrentHashIndexedCollection;
 import util.collection.HashIndexedCollection;
 import util.collection.IndexedCollection;
 import util.serialisation.DefaultSerialisationMechanism;
@@ -229,7 +230,7 @@ public class DirectedAcyclicGraph {
 		try {
 			File serFile = new File(rootDir, collectionFile);
 			if (serFile.exists()) {
-				indexedCollection = new HashIndexedCollection<DAGObject>(
+				indexedCollection = new ConcurrentHashIndexedCollection<DAGObject>(
 						MAX_OBJ_SERIALISATION);
 				// Read it in
 				System.out.println("Loading " + collectionFile + "...");
@@ -239,8 +240,15 @@ public class DirectedAcyclicGraph {
 					DAGObject[] array = (DAGObject[]) deserialised;
 					for (DAGObject obj : array)
 						indexedCollection.add(obj);
-				} else
+				} else {
 					indexedCollection = (IndexedCollection<DAGObject>) deserialised;
+					// Convert to ConcurrentHashIndexed.
+					if (!(indexedCollection instanceof ConcurrentHashIndexedCollection)) {
+						ConcurrentHashIndexedCollection<DAGObject> concurrentIndexedCollection = new ConcurrentHashIndexedCollection<DAGObject>(
+								MAX_OBJ_SERIALISATION);
+						concurrentIndexedCollection.addAll(indexedCollection);
+					}
+				}
 			} else {
 				serFile = new File(rootDir, collectionFile + "0");
 				if (serFile.exists()) {
@@ -248,7 +256,7 @@ public class DirectedAcyclicGraph {
 					int n = 1;
 					while (new File(rootDir, collectionFile + n).exists())
 						n++;
-					indexedCollection = new HashIndexedCollection<DAGObject>(
+					indexedCollection = new ConcurrentHashIndexedCollection<DAGObject>(
 							MAX_OBJ_SERIALISATION * n);
 					// Load and deserialise the files
 					System.out.println("Loading the " + n + " split "
@@ -264,7 +272,7 @@ public class DirectedAcyclicGraph {
 				} else
 					// TODO Might be able to squeeze memory here by swapping
 					// hashmap for array
-					indexedCollection = new HashIndexedCollection<DAGObject>(
+					indexedCollection = new ConcurrentHashIndexedCollection<DAGObject>(
 							MAX_OBJ_SERIALISATION);
 			}
 		} catch (Exception e) {
@@ -460,29 +468,29 @@ public class DirectedAcyclicGraph {
 		BufferedWriter writer = new BufferedWriter(new FileWriter(txtFile));
 		for (DAGObject dagObj : collection) {
 			try {
-			StringBuilder builder = new StringBuilder(
-					dagObj.getIdentifier(true));
-			int propCount = 0;
-			for (int j = 1; j < propIndex.size(); j++) {
-				String val = dagObj.getProperty(propIndex.get(j));
-				builder.append("\t");
-				if (val != null) {
-					builder.append(val);
-					propCount++;
-				}
-			}
-
-			// Add unknown props
-			String[] props = dagObj.getProperties();
-			if (propCount < props.length / 2) {
-				for (int j = 0; j < props.length; j += 2) {
-					if (!propIndex.contains(props[j])) {
-						propIndex.add(props[j]);
-						builder.append("\t" + props[j + 1]);
+				StringBuilder builder = new StringBuilder(
+						dagObj.getIdentifier(true));
+				int propCount = 0;
+				for (int j = 1; j < propIndex.size(); j++) {
+					String val = dagObj.getProperty(propIndex.get(j));
+					builder.append("\t");
+					if (val != null) {
+						builder.append(val);
+						propCount++;
 					}
 				}
-			}
-			writer.write(builder + "\n");
+
+				// Add unknown props
+				String[] props = dagObj.getProperties();
+				if (propCount < props.length / 2) {
+					for (int j = 0; j < props.length; j += 2) {
+						if (!propIndex.contains(props[j])) {
+							propIndex.add(props[j]);
+							builder.append("\t" + props[j + 1]);
+						}
+					}
+				}
+				writer.write(builder + "\n");
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.err.println("ERROR WITH " + dagObj.toString());
@@ -1257,6 +1265,7 @@ public class DirectedAcyclicGraph {
 
 	/**
 	 * Copies all properties from the source object to the target object.
+	 * 
 	 * @param sourceObj
 	 *            The object to copy properties from.
 	 * @param targetObj

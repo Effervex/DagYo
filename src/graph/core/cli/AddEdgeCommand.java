@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import util.UtilityMethods;
 import core.Command;
 
-public class AddEdgeCommand extends Command {
+public class AddEdgeCommand extends DAGCommand {
 	@Override
 	public String helpText() {
 		return "{0} (node node ...) [(creator)] : Creates an edge "
