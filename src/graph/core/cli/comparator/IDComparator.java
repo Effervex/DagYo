@@ -25,6 +25,6 @@ public class IDComparator extends DefaultComparator {
 			return Integer.compare(((UniqueID) o1).getID(),
 					((UniqueID) o2).getID());
 
-		return 0;
+		return o1.toString().compareTo(o2.toString());
 	}
 }
