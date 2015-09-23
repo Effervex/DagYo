@@ -30,7 +30,9 @@ public class DAGVarHelpCommand extends VarHelpCommand {
 					+ "outputs (using DAGPortHandler's 'sort'). The "
 					+ "different sort orders include: alpha, for "
 					+ "alphabetical; alphaNoCase, for alphabetical "
-					+ "(caseless); id, for ID ordered results.";
+					+ "(caseless); id, for ID ordered results; "
+					+ "alias, for sort by alias; "
+					+ "numedge, for sort by descending number of edges.";
 		if (variable.equals(DAGPortHandler.EDGE_FLAGS)
 				|| variable.equals(DAGPortHandler.NODE_FLAGS)) {
 			String dagObj = "edge";

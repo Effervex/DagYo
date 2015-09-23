@@ -15,6 +15,7 @@ import graph.core.DirectedAcyclicGraph;
 import graph.core.Identifiable;
 import graph.core.cli.comparator.AliasedNodesComparator;
 import graph.core.cli.comparator.IDComparator;
+import graph.core.cli.comparator.NumEdgesComparator;
 import graph.core.cli.comparator.StringCaseInsComparator;
 import graph.core.cli.comparator.StringComparator;
 import graph.core.cli.filters.SubDAGFilter;
@@ -148,6 +149,8 @@ public class DAGPortHandler extends PortHandler {
 			comparator = new StringCaseInsComparator(this);
 		else if (get(SORT_ORDER).equals("alias"))
 			comparator = new AliasedNodesComparator(this, null);
+		else if (get(SORT_ORDER).equals("numedge"))
+			comparator = new NumEdgesComparator(this);
 		return comparator;
 	}
 

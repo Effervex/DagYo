@@ -14,10 +14,11 @@ public abstract class DAGCommand extends Command {
 	@Override
 	public void print(String message) {
 		if (dagHandler.get(DAGPortHandler.HUMAN).equalsIgnoreCase("true")) {
-			message = message.replaceAll("((?:\\||^)\\d+):", "$1:\t");
+			message = message.replaceAll(
+					"((?:\\||^)(\\?\\S+?/)?(\\S+?|\"[^\"]*?\")):", "$1:\t");
 			message = message.replaceAll("(\\S)\\|((?:\\S|$))", "$1\n$2");
 		}
 		super.print(message);
 	}
-	
+
 }
