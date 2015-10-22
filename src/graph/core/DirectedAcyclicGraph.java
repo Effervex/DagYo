@@ -42,7 +42,6 @@ import util.BooleanFlags;
 import util.FSTDAGObjectSerialiser;
 import util.UtilityMethods;
 import util.collection.ConcurrentHashIndexedCollection;
-import util.collection.HashIndexedCollection;
 import util.collection.IndexedCollection;
 import util.serialisation.DefaultSerialisationMechanism;
 import util.serialisation.FSTSerialisationMechanism;
@@ -60,15 +59,11 @@ public class DirectedAcyclicGraph {
 
 	private static final String EDGE_ID_FIELD = "edgeID";
 
-	private static final String EDGE_TXT_FILE = "edges.txt";
-
 	private static final int MAX_OBJ_SERIALISATION = 5000000;
 
 	private static final String NODE_FILE = "nodes.dat";
 
 	private static final String NODE_ID_FIELD = "nodeID";
-
-	private static final String NODE_TXT_FILE = "nodes.txt";
 
 	private static final String NUM_EDGES_FIELD = "numEdges";
 
@@ -1213,11 +1208,7 @@ public class DirectedAcyclicGraph {
 		// Save node and edge collections
 		try {
 			saveDAGFile(nodes_, rootDir_, NODE_FILE, MAX_OBJ_SERIALISATION);
-			savePlainTextDAGFile(nodes_, rootDir_, NODE_TXT_FILE,
-					MAX_OBJ_SERIALISATION);
 			saveDAGFile(edges_, rootDir_, EDGE_FILE, MAX_OBJ_SERIALISATION);
-			savePlainTextDAGFile(edges_, rootDir_, EDGE_TXT_FILE,
-					MAX_OBJ_SERIALISATION);
 		} catch (IOException e) {
 			System.err.println("Error serialising DAG.");
 		}

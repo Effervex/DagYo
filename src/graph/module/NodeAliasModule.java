@@ -227,6 +227,7 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> implements
 
 	@Override
 	public boolean removeEdge(DAGEdge edge) {
+		// TODO (nameString X X) results in a lost entry
 		if (edge.getProperty(ALIAS_PROP) != null) {
 			Node[] edgeNodes = edge.getNodes();
 			boolean changed = false;
