@@ -84,7 +84,6 @@ public class AddEdgeCommand extends DAGCommand {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println("Error with args: " + data);
 			print("-1|Problem parsing nodes.\n");
 			return;
 		}

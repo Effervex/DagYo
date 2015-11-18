@@ -11,6 +11,7 @@
 package graph.core.cli;
 
 import graph.core.DAGNode;
+import core.Command;
 
 public class NodeCommand extends DAGCommand {
 	@Override
@@ -42,7 +43,6 @@ public class NodeCommand extends DAGCommand {
 				return;
 			}
 		} catch (Exception e) {
-			System.err.println("Error with args: " + data);
 			e.printStackTrace();
 		}
 		print("-1|Could not parse node from arguments.\n");
