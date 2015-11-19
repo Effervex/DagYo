@@ -37,6 +37,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
+import org.neo4j.graphdb.DynamicRelationshipType;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Label;
+import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.RelationshipType;
+import org.neo4j.graphdb.Transaction;
+import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+import org.neo4j.graphdb.index.UniqueFactory;
+import org.neo4j.graphdb.index.UniqueFactory.UniqueNodeFactory;
 
 import util.BooleanFlags;
 import util.FSTDAGObjectSerialiser;
@@ -102,6 +111,8 @@ public class DirectedAcyclicGraph {
 
 	protected IndexedCollection<DAGEdge> edges_;
 
+	protected GraphDatabaseService graphDB_;
+
 	protected File nodeFile_;
 
 	protected final Lock nodeLock_;
@@ -115,6 +126,8 @@ public class DirectedAcyclicGraph {
 	public File rootDir_;
 
 	public final long startTime_;
+
+	protected UniqueNodeFactory nodeCreator_;
 
 	public DirectedAcyclicGraph() {
 		this(DEFAULT_ROOT, null, null);
@@ -156,6 +169,25 @@ public class DirectedAcyclicGraph {
 		}
 
 		random_ = new Random();
+		graphDB_ = new GraphDatabaseFactory().newEmbeddedDatabase(rootDir);
+		registerShutdownHook(graphDB_);
+		// Creating a unique node factory
+		try (Transaction tx = graphDB_.beginTx()) {
+			nodeCreator_ = new UniqueFactory.UniqueNodeFactory(graphDB_,
+					"nodes") {
+				@Override
+				protected void initialize(org.neo4j.graphdb.Node created,
+						Map<String, Object> properties) {
+//					created.addLabel(DAGLabel.DEFAULT);
+					if (properties.containsKey("name"))
+						created.setProperty("name", properties.get("name"));
+					if (properties.containsKey("str"))
+						created.setProperty("str", properties.get("str"));
+				}
+			};
+			tx.success();
+		}
+
 		nodes_ = (IndexedCollection<DAGNode>) readDAGFile(rootDir, NODE_FILE);
 		nodeLock_ = new ReentrantLock();
 		edges_ = (IndexedCollection<DAGEdge>) readDAGFile(rootDir, EDGE_FILE);
@@ -170,6 +202,18 @@ public class DirectedAcyclicGraph {
 		readModules(rootDir);
 
 		System.out.println("Done!");
+	}
+
+	private static void registerShutdownHook(final GraphDatabaseService graphDb) {
+		// Registers a shutdown hook for the Neo4j instance so that it
+		// shuts down nicely when the VM exits (even if you "Ctrl-C" the
+		// running application).
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+			public void run() {
+				graphDb.shutdown();
+			}
+		});
 	}
 
 	/**
@@ -729,10 +773,67 @@ public class DirectedAcyclicGraph {
 					}
 					changedState_ = true;
 				}
+
+				findOrCreateNeo4jEdge(edgeNodes);
 			}
 			return edge;
 		} finally {
 			edgeLock_.unlock();
+		}
+	}
+
+	private void findOrCreateNeo4jEdge(Node[] edgeNodes) {
+		if (edgeNodes.length == 3) {
+			try (Transaction tx = graphDB_.beginTx()) {
+				// Neo4j
+				// String subject = "(x {name:'" + edgeNodes[1].getName() +
+				// "'})";
+				org.neo4j.graphdb.Node subject = nodeCreator_.getOrCreate(
+						"name", edgeNodes[1].getName());
+				// String object = "(y {name:'" + edgeNodes[2].getName() +
+				// "'})";
+				// String find = "MATCH " + subject + ", " + object;
+				org.neo4j.graphdb.Node object = null;
+				if (edgeNodes[2] instanceof DAGNode)
+					object = nodeCreator_.getOrCreate("name",
+							edgeNodes[2].getName());
+				else if (edgeNodes[2] instanceof StringNode) {
+					// Find the string object
+					// object = "(y:String {str:"
+					// + ((StringNode) edgeNodes[2]).toString() + "})";
+					// find = "MATCH " + subject + " MERGE " + object;
+					object = nodeCreator_.getOrCreate("str",
+							edgeNodes[2].getName());
+				} else if (edgeNodes[2] instanceof PrimitiveNode) {
+					// Create a primitive property
+					// PrimitiveNode primitive = ((PrimitiveNode) edgeNodes[2]);
+					// graphDB_.execute("MATCH " + subject + " SET x."
+					// + edgeNodes[0].getName() + " = {"
+					// + primitive.getPrimitive() + "}");
+					return;
+				}
+				// String create = "MERGE (x)-[:`" + edgeNodes[0].getName()
+				// + "`]->(y)";
+				// Result res = graphDB_.execute(find + " " + create);
+				RelationshipType relType = DynamicRelationshipType
+						.withName(edgeNodes[0].getName());
+
+				// Need to find and if not exist, create
+				tx.acquireWriteLock(subject);
+				tx.acquireWriteLock(object);
+				Boolean created = false;
+				for (Relationship r : subject.getRelationships(relType)) {
+					if (r.getOtherNode(subject).equals(object)) {
+						created = true;
+						break;
+					}
+				}
+				if (!created) {
+					subject.createRelationshipTo(object, relType);
+				}
+
+				tx.success();
+			}
 		}
 	}
 
@@ -788,6 +889,7 @@ public class DirectedAcyclicGraph {
 				if (bFlags.getFlag("ephemeral"))
 					addProperty(node, EPHEMERAL_MARK, "T");
 				changedState_ = true;
+
 				return node;
 			} else if (!dagNodeOnly && nodeStr.startsWith("\"")) {
 				return new StringNode(nodeStr);
@@ -805,6 +907,16 @@ public class DirectedAcyclicGraph {
 			// Reject invalid nodeStrings
 			if (!DAGNode.VALID_NAME.matcher(nodeStr).matches())
 				return null;
+
+			// Neo4j
+			// Result res = graphDB_.execute("MERGE (x {name:'" + nodeStr +
+			// "'})");
+
+			try (Transaction tx = graphDB_.beginTx()) {
+				nodeCreator_.getOrCreate("name", nodeStr);
+				tx.success();
+			}
+
 			node = findDAGNode(nodeStr);
 			if (node == null && createNew && DAGNode.isValidName(nodeStr)) {
 				// Create a new node
@@ -826,6 +938,10 @@ public class DirectedAcyclicGraph {
 		} finally {
 			nodeLock_.unlock();
 		}
+	}
+
+	protected enum DAGLabel implements Label {
+		DEFAULT;
 	}
 
 	/**
