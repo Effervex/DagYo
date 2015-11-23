@@ -21,6 +21,11 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.util.Version;
 
 import util.AliasedObject;
 import util.collection.MergeSet;
