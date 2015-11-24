@@ -29,7 +29,7 @@ import util.serialisation.SerialisationMechanism;
  * @author Sam Sarjant
  */
 public abstract class DAGModule<T> implements Serializable {
-	private static final String MODULE_DIR = "modules";
+	protected static final String MODULE_DIR = "modules";
 	private static final long serialVersionUID = -1752235659675219252L;
 	protected transient DirectedAcyclicGraph dag_;
 
@@ -200,7 +200,7 @@ public abstract class DAGModule<T> implements Serializable {
 	 */
 	public abstract boolean supportsNode(DAGNode node);
 
-	private static File moduleFile(File rootDir, String moduleName) {
+	protected static File moduleFile(File rootDir, String moduleName) {
 		File file = new File(rootDir, MODULE_DIR + File.separatorChar
 				+ moduleName);
 		file.getParentFile().mkdirs();

@@ -12,6 +12,7 @@ package graph.core;
 
 import graph.module.DAGModule;
 import graph.module.NodeAliasModule;
+import graph.module.NodeAliasModule;
 import graph.module.RelatedEdgeModule;
 
 import java.io.BufferedReader;

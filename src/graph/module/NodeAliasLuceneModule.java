@@ -50,7 +50,7 @@ import util.AliasedObject;
  * 
  * @author Sam Sarjant
  */
-public class NodeAliasModule extends DAGModule<Collection<DAGNode>> implements
+public class NodeAliasLuceneModule extends DAGModule<Collection<DAGNode>> implements
 		AliasModule {
 	private static final String INDEX_FOLDER = "NodeAliasLuceneIndex";
 	private static final long serialVersionUID = 7451861373081932549L;
