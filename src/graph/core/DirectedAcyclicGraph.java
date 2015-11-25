@@ -13,6 +13,7 @@ package graph.core;
 import gnu.trove.iterator.TIntObjectIterator;
 import graph.module.DAGModule;
 import graph.module.NodeAliasModule;
+import graph.module.NodeAliasModule;
 import graph.module.RelatedEdgeModule;
 
 import java.io.BufferedReader;
