@@ -43,6 +43,6 @@ public interface AliasModule {
 	 *            If the alias must be an exact string.
 	 * @return All DAGNodes with the given alias and the alias for each node.
 	 */
-	public Collection<AliasedObject<Character, DAGNode>> findAliasedNodes(
+	public Collection<AliasedObject<DAGNode>> findAliasedNodes(
 			String alias, boolean caseSensitive, boolean exactString);
 }

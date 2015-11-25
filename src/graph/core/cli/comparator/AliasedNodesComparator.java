@@ -30,8 +30,8 @@ public class AliasedNodesComparator implements Comparator<Object> {
 	public int compare(Object o1, Object o2) {
 		try {
 			if (alias_ != null) {
-				AliasedObject<Character, DAGNode> ao1 = (AliasedObject<Character, DAGNode>) o1;
-				AliasedObject<Character, DAGNode> ao2 = (AliasedObject<Character, DAGNode>) o2;
+				AliasedObject<DAGNode> ao1 = (AliasedObject<DAGNode>) o1;
+				AliasedObject<DAGNode> ao2 = (AliasedObject<DAGNode>) o2;
 
 				// Check same node
 				String alias1 = ao1.getAliasString();

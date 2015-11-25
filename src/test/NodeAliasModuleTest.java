@@ -118,7 +118,7 @@ public class NodeAliasModuleTest {
 	@Test
 	public void testFindNode() {
 		dag_.findOrCreateNode("Test", new StringNode("TestCreator"), true);
-		Collection<AliasedObject<Character, DAGNode>> aliased = sut_
+		Collection<AliasedObject<DAGNode>> aliased = sut_
 				.findAliasedNodes("Test", true, true);
 		assertEquals(aliased.size(), 1);
 	}

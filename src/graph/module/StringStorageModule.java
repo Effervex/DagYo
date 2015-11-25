@@ -10,6 +10,7 @@
  ******************************************************************************/
 package graph.module;
 
+import gnu.trove.set.hash.THashSet;
 import graph.core.DAGEdge;
 import graph.core.DAGNode;
 import graph.core.DirectedAcyclicGraph;
@@ -20,9 +21,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+
+import util.collection.trove.TIndexedCollection;
 
 /**
  * The string storage module is a memory-conservation module for moving the
@@ -170,8 +172,8 @@ public class StringStorageModule extends DAGModule<Boolean> {
 	}
 
 	@Override
-	public boolean initialisationComplete(Collection<DAGNode> nodes,
-			Collection<DAGEdge> edges, boolean forceRebuild) {
+	public boolean initialisationComplete(TIndexedCollection<DAGNode> nodes,
+			TIndexedCollection<DAGEdge> edges, boolean forceRebuild) {
 		// Initialise the I/O locations
 		return super.initialisationComplete(nodes, edges, forceRebuild);
 	}
@@ -184,7 +186,7 @@ public class StringStorageModule extends DAGModule<Boolean> {
 	 */
 	public void registerCompressableNode(String predicateName) {
 		if (registeredPreds_ == null)
-			registeredPreds_ = new HashSet<>();
+			registeredPreds_ = new THashSet<>();
 		registeredPreds_.add(predicateName);
 	}
 

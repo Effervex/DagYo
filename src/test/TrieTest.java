@@ -10,18 +10,17 @@
  ******************************************************************************/
 package test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.Collection;
+import java.util.Random;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import util.collection.StringTrie;
+import util.collection.TStringTrie;
 import util.collection.Trie;
 
 public class TrieTest {
@@ -96,7 +95,7 @@ public class TrieTest {
 
 	@Test
 	public void testStringTrie() {
-		StringTrie<String> strTrie = new StringTrie<>();
+		TStringTrie<String> strTrie = new TStringTrie<>();
 		assertTrue(strTrie.put("cat", "Cat"));
 		Collection<String> values = strTrie.getValue("cat", true, true);
 		assertTrue(values.size() == 1);
@@ -104,7 +103,8 @@ public class TrieTest {
 		assertEquals(strTrie.calcDepth(), 0);
 
 		values = strTrie.getValue("CAT", true, true);
-		assertNull(values);
+		assertNotNull(values);
+		assertTrue(values.isEmpty());
 
 		values = strTrie.getValue("cat", false, true);
 		assertTrue(values.size() == 1);
@@ -134,7 +134,8 @@ public class TrieTest {
 		assertEquals(strTrie.calcDepth(), 4);
 
 		values = strTrie.getValue("catc", false, true);
-		assertNull(values);
+		assertNotNull(values);
+		assertTrue(values.isEmpty());
 
 		values = strTrie.getValue("catc", true, true);
 		assertTrue(values.size() == 1);
@@ -168,6 +169,36 @@ public class TrieTest {
 		assertEquals(values.size(), 1);
 		assertTrue(values.contains("Fruit"));
 		assertEquals(strTrie.calcDepth(), 6);
+	}
+
+	@Test
+	public void testStress() {
+		Random r = new Random(0);
+		int numSamples = 100000;
+		int sampleSize = 80;
+		TStringTrie<String> st = new TStringTrie<>();
+		long startTime = System.currentTimeMillis();
+		for (int i = 0; i < numSamples; i++) {
+			StringBuilder str = new StringBuilder();
+			for (int j = 0; j < sampleSize; j++)
+				str.append((char) ('A' + r.nextInt(58)));
+			st.put(str.toString(), str.toString());
+		}
+		System.out.println("Time index: "
+				+ String.format("%.2f",
+						(System.currentTimeMillis() - startTime) / 1000f));
+
+		startTime = System.currentTimeMillis();
+		st.getValue("ac", true, false);
+		System.out.println("Time search: "
+				+ String.format("%.2f",
+						(System.currentTimeMillis() - startTime) / 1000f));
+
+		System.out.println("Mem: "
+				+ String.format("%.2f",
+						(Runtime.getRuntime().maxMemory() - Runtime
+								.getRuntime().freeMemory()) / (1024 * 1024f))
+				+ "MB");
 	}
 
 	private Integer[] toArray(String string) {

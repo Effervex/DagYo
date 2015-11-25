@@ -20,16 +20,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.util.Version;
-
 import util.AliasedObject;
 import util.collection.MergeSet;
-import util.collection.StringTrie;
+import util.collection.TStringTrie;
+import util.collection.trove.TIndexedCollection;
 
 /**
  * The node alias module encodes the aliases for a node (be they from node name
@@ -41,7 +35,7 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> implements
 		AliasModule {
 	private static final long serialVersionUID = 7451861373081932549L;
 	public static final String ALIAS_PROP = "alias";
-	private StringTrie<DAGNode> aliasTrie_ = new StringTrie<>();
+	private TStringTrie<DAGNode> aliasTrie_ = new TStringTrie<>();
 
 	private String processAlias(String name) {
 		name = name.replaceAll("\\s{2,}", " ");
@@ -130,11 +124,11 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> implements
 	}
 
 	@Override
-	public Collection<AliasedObject<Character, DAGNode>> findAliasedNodes(
-			String alias, boolean caseSensitive, boolean exactString) {
-		Collection<AliasedObject<Character, DAGNode>> aliased = new MergeSet<>();
-		aliasTrie_.getValue(ArrayUtils.toObject(alias.toCharArray()), 0,
-				aliased, !exactString, caseSensitive);
+	public Collection<AliasedObject<DAGNode>> findAliasedNodes(String alias,
+			boolean caseSensitive, boolean exactString) {
+		Collection<AliasedObject<DAGNode>> aliased = new MergeSet<>();
+		aliasTrie_.getValue(alias.toCharArray(), 0, aliased, !exactString,
+				caseSensitive);
 		return aliased;
 	}
 
@@ -210,8 +204,8 @@ public class NodeAliasModule extends DAGModule<Collection<DAGNode>> implements
 	}
 
 	@Override
-	public boolean initialisationComplete(Collection<DAGNode> nodes,
-			Collection<DAGEdge> edges, boolean forceRebuild) {
+	public boolean initialisationComplete(TIndexedCollection<DAGNode> nodes,
+			TIndexedCollection<DAGEdge> edges, boolean forceRebuild) {
 		if (!aliasTrie_.isEmpty() && !forceRebuild)
 			return false;
 

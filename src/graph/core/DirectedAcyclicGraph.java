@@ -10,6 +10,7 @@
  ******************************************************************************/
 package graph.core;
 
+import gnu.trove.iterator.TIntObjectIterator;
 import graph.module.DAGModule;
 import graph.module.NodeAliasModule;
 import graph.module.RelatedEdgeModule;
@@ -36,13 +37,15 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.SerializationException;
 import org.apache.commons.lang3.StringUtils;
 
 import util.BooleanFlags;
 import util.FSTDAGObjectSerialiser;
 import util.UtilityMethods;
-import util.collection.ConcurrentHashIndexedCollection;
 import util.collection.IndexedCollection;
+import util.collection.trove.TIndexedCollection;
+import util.collection.trove.TLockHashMapIndexedCollection;
 import util.serialisation.DefaultSerialisationMechanism;
 import util.serialisation.FSTSerialisationMechanism;
 import util.serialisation.SerialisationMechanism;
@@ -100,13 +103,13 @@ public class DirectedAcyclicGraph {
 
 	protected final Lock edgeLock_;
 
-	protected IndexedCollection<DAGEdge> edges_;
+	protected TIndexedCollection<DAGEdge> edges_;
 
 	protected File nodeFile_;
 
 	protected final Lock nodeLock_;
 
-	protected IndexedCollection<DAGNode> nodes_;
+	protected TIndexedCollection<DAGNode> nodes_;
 
 	protected final Random random_;
 
@@ -156,9 +159,9 @@ public class DirectedAcyclicGraph {
 		}
 
 		random_ = new Random();
-		nodes_ = (IndexedCollection<DAGNode>) readDAGFile(rootDir, NODE_FILE);
+		nodes_ = (TIndexedCollection<DAGNode>) readDAGFile(rootDir, NODE_FILE);
 		nodeLock_ = new ReentrantLock();
-		edges_ = (IndexedCollection<DAGEdge>) readDAGFile(rootDir, EDGE_FILE);
+		edges_ = (TIndexedCollection<DAGEdge>) readDAGFile(rootDir, EDGE_FILE);
 		edgeLock_ = new ReentrantLock();
 		nodeFile_ = nodeFile;
 		edgeFile_ = edgeFile;
@@ -201,12 +204,8 @@ public class DirectedAcyclicGraph {
 				while ((input = in.readLine()) != null) {
 					if (!input.startsWith("%")) {
 						String[] split = input.split("=");
-						if (split[0].equals(NUM_NODES_FIELD))
-							nodes_.setSize(Integer.parseInt(split[1]));
-						else if (split[0].equals(NODE_ID_FIELD))
+						if (split[0].equals(NODE_ID_FIELD))
 							DAGNode.idCounter_ = Integer.parseInt(split[1]);
-						else if (split[0].equals(NUM_EDGES_FIELD))
-							edges_.setSize(Integer.parseInt(split[1]));
 						else if (split[0].equals(EDGE_ID_FIELD))
 							DAGEdge.idCounter_ = Integer.parseInt(split[1]);
 					}
@@ -218,14 +217,13 @@ public class DirectedAcyclicGraph {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	private IndexedCollection<? extends DAGObject> readDAGFile(File rootDir,
+	private TIndexedCollection<? extends DAGObject> readDAGFile(File rootDir,
 			String collectionFile) {
-		IndexedCollection<DAGObject> indexedCollection = null;
+		TIndexedCollection<DAGObject> indexedCollection = null;
 		try {
 			File serFile = new File(rootDir, collectionFile);
 			if (serFile.exists()) {
-				indexedCollection = new ConcurrentHashIndexedCollection<DAGObject>(
+				indexedCollection = new TLockHashMapIndexedCollection<DAGObject>(
 						MAX_OBJ_SERIALISATION);
 				// Read it in
 				System.out.println("Loading " + collectionFile + "...");
@@ -236,13 +234,8 @@ public class DirectedAcyclicGraph {
 					for (DAGObject obj : array)
 						indexedCollection.add(obj);
 				} else {
-					indexedCollection = (IndexedCollection<DAGObject>) deserialised;
-					// Convert to ConcurrentHashIndexed.
-					if (!(indexedCollection instanceof ConcurrentHashIndexedCollection)) {
-						ConcurrentHashIndexedCollection<DAGObject> concurrentIndexedCollection = new ConcurrentHashIndexedCollection<DAGObject>(
-								MAX_OBJ_SERIALISATION);
-						concurrentIndexedCollection.addAll(indexedCollection);
-					}
+					throw new SerializationException(
+							"Serialised object is not an array!");
 				}
 			} else {
 				serFile = new File(rootDir, collectionFile + "0");
@@ -251,7 +244,7 @@ public class DirectedAcyclicGraph {
 					int n = 1;
 					while (new File(rootDir, collectionFile + n).exists())
 						n++;
-					indexedCollection = new ConcurrentHashIndexedCollection<DAGObject>(
+					indexedCollection = new TLockHashMapIndexedCollection<DAGObject>(
 							MAX_OBJ_SERIALISATION * n);
 					// Load and deserialise the files
 					System.out.println("Loading the " + n + " split "
@@ -267,7 +260,7 @@ public class DirectedAcyclicGraph {
 				} else
 					// TODO Might be able to squeeze memory here by swapping
 					// hashmap for array
-					indexedCollection = new ConcurrentHashIndexedCollection<DAGObject>(
+					indexedCollection = new TLockHashMapIndexedCollection<DAGObject>(
 							MAX_OBJ_SERIALISATION);
 			}
 		} catch (Exception e) {
@@ -390,18 +383,20 @@ public class DirectedAcyclicGraph {
 		reader.close();
 	}
 
-	private void saveDAGFile(IndexedCollection<? extends DAGObject> collection,
-			File rootDir, String collectionFile, int maxNumObjects)
-			throws IOException {
+	private void saveDAGFile(
+			TIndexedCollection<? extends DAGObject> collection, File rootDir,
+			String collectionFile, int maxNumObjects) throws IOException {
 		byte serialisationType = (collectionFile.equals(EDGE_FILE)) ? FSTDAGObjectSerialiser.NODES
 				: DefaultSerialisationMechanism.NORMAL;
 
 		// Splitting the file if necessary
 		int size = collection.size();
 		boolean isSplitting = size > maxNumObjects;
-		DAGObject[] array = collection.toArray(new DAGObject[size]);
+		// TODO Alter this to an iterative solution - less memory usage.
+		DAGObject[] array = Arrays.copyOf(collection.toArray(), size,
+				DAGObject[].class);
 		for (int i = 0; i < size; i += maxNumObjects) {
-			DAGObject[] subarray = null;
+			Object[] subarray = null;
 			File serFile = null;
 			if (isSplitting) {
 				int arraySize = Math.min(maxNumObjects, size - i);
@@ -524,14 +519,19 @@ public class DirectedAcyclicGraph {
 	}
 
 	protected void exportAsEdges(BufferedWriter out) throws IOException {
-		for (DAGEdge e : edges_)
-			out.write(e.getIdentifier(true) + "\n");
+		TIntObjectIterator<DAGEdge> iter = edges_.iterator();
+		for (int i = edges_.size(); i-- > 0;) {
+			iter.advance();
+			out.write(iter.value().getIdentifier(true) + "\n");
+		}
 	}
 
 	protected void exportToCSV(BufferedWriter out, DAGExportFormat format)
 			throws IOException {
-		for (DAGEdge e : edges_) {
-			Node[] nodes = e.getNodes();
+		TIntObjectIterator<DAGEdge> iter = edges_.iterator();
+		for (int i = edges_.size(); i-- > 0;) {
+			iter.advance();
+			Node[] nodes = iter.value().getNodes();
 			for (Node n : nodes) {
 				String name = n.getIdentifier(true);
 				out.write(name + ",");
@@ -543,7 +543,10 @@ public class DirectedAcyclicGraph {
 	protected void exportToDAG(BufferedWriter out) throws IOException {
 		Collection<String> pertinentProperties = compilePertinentProperties();
 
-		for (DAGNode n : nodes_) {
+		TIntObjectIterator<DAGNode> nodeIter = nodes_.iterator();
+		for (int j = nodes_.size(); j-- > 0;) {
+			nodeIter.advance();
+			DAGNode n = nodeIter.value();
 			out.write("$0$=addnode " + n.getIdentifier(true) + "\n");
 			String[] props = n.getProperties();
 			for (int i = 0; i < props.length; i += 2) {
@@ -552,7 +555,10 @@ public class DirectedAcyclicGraph {
 							+ props[i + 1] + "\\n|\n");
 			}
 		}
-		for (DAGEdge e : edges_) {
+		TIntObjectIterator<DAGEdge> edgeIter = edges_.iterator();
+		for (int j = edges_.size(); j-- > 0;) {
+			edgeIter.advance();
+			DAGEdge e = edgeIter.value();
 			out.write("$0$=addedge " + e.getIdentifier(true) + "\n");
 			String[] props = e.getProperties();
 			for (int i = 0; i < props.length; i += 2) {
@@ -601,9 +607,9 @@ public class DirectedAcyclicGraph {
 		changedState_ = true;
 		dagObj.put(key, value);
 		if (dagObj instanceof DAGNode)
-			nodes_.update((DAGNode) dagObj);
+			nodes_.add((DAGNode) dagObj);
 		else if (dagObj instanceof DAGEdge)
-			edges_.update((DAGEdge) dagObj);
+			edges_.add((DAGEdge) dagObj);
 
 		for (DAGModule<?> module : modules_) {
 			if ((dagObj instanceof DAGEdge && module
@@ -864,7 +870,7 @@ public class DirectedAcyclicGraph {
 		return edges_.get(id);
 	}
 
-	public Collection<DAGEdge> getEdges() {
+	public TIndexedCollection<DAGEdge> getEdges() {
 		return edges_;
 	}
 
@@ -897,7 +903,7 @@ public class DirectedAcyclicGraph {
 		return nodes_.get(id);
 	}
 
-	public Collection<DAGNode> getNodes() {
+	public TIndexedCollection<DAGNode> getNodes() {
 		return nodes_;
 	}
 
@@ -940,7 +946,11 @@ public class DirectedAcyclicGraph {
 		System.out.print("Grounding ephemeral nodes and edges... ");
 		// Run through the edges, reasserting them as non-ephemeral
 		SortedSet<DAGEdge> reassertables = orderedReassertables();
-		for (DAGEdge e : edges_) {
+		// TODO Could be achieved concurrently DO TOMORROW
+		TIntObjectIterator<DAGEdge> edgeIter = edges_.iterator();
+		for (int i = edges_.size(); i-- > 0;) {
+			edgeIter.advance();
+			DAGEdge e = edgeIter.value();
 			if (e.getProperty(EPHEMERAL_MARK) != null) {
 				reassertables.add(e);
 			}
@@ -961,9 +971,11 @@ public class DirectedAcyclicGraph {
 			}
 		}
 
-		for (DAGNode n : nodes_) {
+		TIntObjectIterator<DAGNode> nodeIter = nodes_.iterator();
+		for (int i = nodes_.size(); i-- > 0;) {
+			nodeIter.advance();
 			for (String prop : props)
-				n.remove(prop);
+				nodeIter.value().remove(prop);
 		}
 		System.out.println("Done!");
 
@@ -1090,7 +1102,7 @@ public class DirectedAcyclicGraph {
 		// Remove the edge
 		edgeLock_.lock();
 		try {
-			boolean result = edges_.remove(edge);
+			boolean result = edges_.remove((DAGEdge) edge);
 
 			if (result && ((DAGEdge) edge).getProperty(EPHEMERAL_MARK) == null) {
 				// Trigger modules
@@ -1134,7 +1146,10 @@ public class DirectedAcyclicGraph {
 						removeEdge(edge);
 				} else {
 					Collection<DAGEdge> removed = new ArrayList<>();
-					for (DAGEdge edge : edges_) {
+					TIntObjectIterator<DAGEdge> iter = edges_.iterator();
+					for (int i = edges_.size(); i-- > 0;) {
+						iter.advance();
+						DAGEdge edge = iter.value();
 						if (edge.containsNode(node))
 							removed.add(edge);
 					}

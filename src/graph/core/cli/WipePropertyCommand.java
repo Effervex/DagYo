@@ -1,11 +1,13 @@
 package graph.core.cli;
 
+import gnu.trove.iterator.TIntObjectIterator;
 import graph.core.DAGObject;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
 import util.UtilityMethods;
+import util.collection.trove.TIndexedCollection;
 import core.Command;
 
 public class WipePropertyCommand extends Command {
@@ -32,8 +34,8 @@ public class WipePropertyCommand extends Command {
 			print("-1|Please enter two arguments: N/E and property.\n");
 			return;
 		}
-		
-		Collection<? extends DAGObject> dagObjs = null;
+
+		TIndexedCollection<? extends DAGObject> dagObjs = null;
 		if (split.get(0).equals("N"))
 			dagObjs = dagHandler.getDAG().getNodes();
 		else if (split.get(0).equals("E"))
@@ -45,8 +47,11 @@ public class WipePropertyCommand extends Command {
 
 		// For every DAG object
 		String property = split.get(1);
-		for (DAGObject dagObj : dagObjs)
-			dagHandler.getDAG().removeProperty(dagObj, property);
+		TIntObjectIterator<? extends DAGObject> iter = dagObjs.iterator();
+		for (int i = dagObjs.size(); i-- > 0;) {
+			iter.advance();
+			dagHandler.getDAG().removeProperty(iter.value(), property);
+		}
 		print(property + " successfully wiped.\n");
 	}
 

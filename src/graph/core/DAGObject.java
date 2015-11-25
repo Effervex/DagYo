@@ -47,6 +47,10 @@ public abstract class DAGObject implements UniqueID, Serializable,
 			"MT", SubDAGExtractorModule.TAG_PREFIX, "provenance" })
 	private String[] properties_;
 
+	public void clearProps() {
+		properties_ = new String[0];
+	}
+
 	protected int id_;
 
 	protected DAGObject(Node creator) {

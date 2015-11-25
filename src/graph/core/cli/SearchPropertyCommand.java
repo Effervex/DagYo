@@ -1,5 +1,6 @@
 package graph.core.cli;
 
+import gnu.trove.iterator.TIntObjectIterator;
 import graph.core.DAGNode;
 import graph.core.DAGObject;
 
@@ -10,6 +11,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import util.UtilityMethods;
+import util.collection.trove.TIndexedCollection;
 
 public class SearchPropertyCommand extends CollectionCommand {
 	@Override
@@ -43,7 +45,7 @@ public class SearchPropertyCommand extends CollectionCommand {
 		}
 
 		// Nodes or Edges?
-		Collection<? extends DAGObject> dagObjs = null;
+		TIndexedCollection<? extends DAGObject> dagObjs = null;
 		if (split.get(0).equalsIgnoreCase("N"))
 			dagObjs = dagHandler.getDAG().getNodes();
 		else if (split.get(0).equalsIgnoreCase("E"))
@@ -69,7 +71,11 @@ public class SearchPropertyCommand extends CollectionCommand {
 
 			// Run through DAG objects, searching for property
 			Collection<DAGObject> matches = new ArrayList<>();
-			for (DAGObject dagObj : dagObjs) {
+			TIntObjectIterator<? extends DAGObject> iter = dagObjs
+					.iterator();
+			for (int i = dagObjs.size(); i-- > 0;) {
+				iter.advance();
+				DAGObject dagObj = iter.value();
 				String value = dagObj.getProperty(key);
 				if (value != null) {
 					Matcher m = regex.matcher(value);

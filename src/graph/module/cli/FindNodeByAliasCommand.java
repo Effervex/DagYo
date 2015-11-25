@@ -75,14 +75,17 @@ public class FindNodeByAliasCommand extends CollectionCommand {
 		// TODO See if the results can be sorted categorically (identical node
 		// name, then identical alias name, then non-exact names)
 		Comparator<Object> comparator = dagHandler.getComparator();
-		boolean aliasSort = comparator != null && comparator instanceof AliasedNodesComparator;
+		boolean aliasSort = comparator != null
+				&& comparator instanceof AliasedNodesComparator;
 		if (aliasSort) {
 			List<Object> listNodes = new ArrayList<>(nodes);
 			ArrayList<String> split = UtilityMethods.split(data, ' ');
-			Collections.sort(listNodes, new AliasedNodesComparator(dagHandler, split.get(0)));
+			Collections.sort(listNodes, new AliasedNodesComparator(dagHandler,
+					split.get(0)));
 			nodes = listNodes;
 		}
-		nodes = dagHandler.postProcess(nodes, rangeStart_, rangeEnd_, !aliasSort);
+		nodes = dagHandler.postProcess(nodes, rangeStart_, rangeEnd_,
+				!aliasSort);
 
 		print(nodes.size() + "|");
 		int objectIndicator = 0;
@@ -97,16 +100,16 @@ public class FindNodeByAliasCommand extends CollectionCommand {
 			if (objectIndicator == DAG_NODE)
 				print(dagHandler.textIDObject((DAGNode) n) + "|");
 			else if (objectIndicator == ALIASED_OBJECT) {
-				printAliased((AliasedObject<Character, DAGNode>) n, dagHandler);
+				printAliased((AliasedObject<DAGNode>) n, dagHandler);
 			}
 		}
 		print("\n");
 	}
 
-	protected void printAliased(AliasedObject<Character, DAGNode> ao,
+	protected void printAliased(AliasedObject<DAGNode> ao,
 			DAGPortHandler dagHandler) {
-		String alias = new String(ArrayUtils.toPrimitive(ao.alias_));
-		print(dagHandler.textIDObject(ao.object_) + ",\"" + alias + "\"|");
+		print(dagHandler.textIDObject(ao.object_) + ",\"" + ao.getAliasString()
+				+ "\"|");
 	}
 
 	protected Collection<Object> findNodes(DAGPortHandler dagHandler) {

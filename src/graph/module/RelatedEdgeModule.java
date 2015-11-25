@@ -33,6 +33,7 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import util.Pair;
 import util.collection.MultiMap;
+import util.collection.trove.TIndexedCollection;
 
 /**
  * The related edge module indexes sets of edges related to a node. The execute
@@ -190,7 +191,7 @@ public class RelatedEdgeModule extends DAGModule<Collection<Edge>> {
 			if (n instanceof DAGNode)
 				edgeCol = getEdges(n, index, createNew);
 			else if (canSearchHashedModule(pred, n))
-				edgeCol = stringHashedModule_.execute(n.getName());
+				edgeCol = stringHashedModule_.execute(createNew, n.getName());
 
 			if (edgeCol != null)
 				edgeCols.add(new EdgeCol(additive, edgeCol));
@@ -253,8 +254,8 @@ public class RelatedEdgeModule extends DAGModule<Collection<Edge>> {
 	}
 
 	@Override
-	public boolean initialisationComplete(Collection<DAGNode> nodes,
-			Collection<DAGEdge> edges, boolean forceRebuild) {
+	public boolean initialisationComplete(TIndexedCollection<DAGNode> nodes,
+			TIndexedCollection<DAGEdge> edges, boolean forceRebuild) {
 		if (!relatedEdges_.isEmpty() && !forceRebuild)
 			return false;
 

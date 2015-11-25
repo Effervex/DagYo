@@ -20,6 +20,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import util.collection.trove.TIndexedCollection;
 import util.serialisation.DefaultSerialisationMechanism;
 import util.serialisation.SerialisationMechanism;
 
@@ -38,8 +39,8 @@ public abstract class DAGModule<T> implements Serializable {
 	protected DAGModule() {
 	}
 
-	protected void defaultRebuild(Collection<DAGNode> nodes,
-			boolean iterateNodes, Collection<DAGEdge> edges,
+	protected void defaultRebuild(TIndexedCollection<DAGNode> nodes,
+			boolean iterateNodes, TIndexedCollection<DAGEdge> edges,
 			boolean iterateEdges) {
 		if (iterateNodes) {
 			DAGNode[] nodeArray = nodes.toArray(new DAGNode[nodes.size()]);
@@ -119,8 +120,8 @@ public abstract class DAGModule<T> implements Serializable {
 	 *            up-to-date).
 	 * @return If something changed.
 	 */
-	public boolean initialisationComplete(Collection<DAGNode> nodes,
-			Collection<DAGEdge> edges, boolean forceRebuild) {
+	public boolean initialisationComplete(TIndexedCollection<DAGNode> nodes,
+			TIndexedCollection<DAGEdge> edges, boolean forceRebuild) {
 		return false;
 	}
 

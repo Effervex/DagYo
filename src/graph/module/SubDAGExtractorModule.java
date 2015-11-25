@@ -10,6 +10,14 @@
  ******************************************************************************/
 package graph.module;
 
+import gnu.trove.iterator.TIntObjectIterator;
+import graph.core.DAGEdge;
+import graph.core.DAGNode;
+import graph.core.DirectedAcyclicGraph;
+import graph.core.Edge;
+import graph.core.Node;
+import graph.core.StringNode;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,12 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import util.collection.MultiMap;
-import graph.core.DAGEdge;
-import graph.core.DAGNode;
-import graph.core.DirectedAcyclicGraph;
-import graph.core.Edge;
-import graph.core.Node;
-import graph.core.StringNode;
+import util.collection.trove.TIndexedCollection;
 
 /**
  * Extracts a subDAG form this DAG, using tagged nodes and edges.
@@ -286,11 +289,14 @@ public class SubDAGExtractorModule extends DAGModule<Boolean> {
 	}
 
 	@Override
-	public boolean initialisationComplete(Collection<DAGNode> nodes,
-			Collection<DAGEdge> edges, boolean forceRebuild) {
+	public boolean initialisationComplete(TIndexedCollection<DAGNode> nodes,
+			TIndexedCollection<DAGEdge> edges, boolean forceRebuild) {
 		if (taggedNodes_ == null) {
 			taggedNodes_ = MultiMap.createSortedSetMultiMap();
-			for (DAGNode n : nodes) {
+			TIntObjectIterator<DAGNode> iter = nodes.iterator();
+			for (int i = nodes.size(); i-- > 0;) {
+				iter.advance();
+				DAGNode n = iter.value();
 				String[] props = n.getProperties();
 				for (String prop : props) {
 					if (prop.startsWith(TAG_PREFIX)) {

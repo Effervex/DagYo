@@ -10,14 +10,17 @@
  ******************************************************************************/
 package graph.module;
 
+import gnu.trove.map.TIntObjectMap;
+import gnu.trove.map.hash.TIntObjectHashMap;
 import graph.core.DAGEdge;
 import graph.core.DAGNode;
 import graph.core.Edge;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * This class should be used in conjunction with RelatedEdgeModule as a faster
@@ -30,7 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class StringHashedEdgeModule extends DAGModule<Collection<Edge>> {
 	private static final long serialVersionUID = 1L;
 	public static final int DEFAULT_CAPACITY = 65536;
-	protected Collection<Edge>[] stringHashArray_;
+	protected TIntObjectMap<Collection<Edge>> stringHashMap_;
 
 	public StringHashedEdgeModule() {
 		this(DEFAULT_CAPACITY);
@@ -38,34 +41,43 @@ public class StringHashedEdgeModule extends DAGModule<Collection<Edge>> {
 
 	@SuppressWarnings("unchecked")
 	public StringHashedEdgeModule(int capacity) {
-		stringHashArray_ = new Collection[capacity];
+		stringHashMap_ = new TIntObjectHashMap<>(capacity);
 	}
 
-	private int getHash(Object o) {
-		int hash = o.toString().hashCode() % stringHashArray_.length;
-		if (hash < 0)
-			hash *= -1;
-		return hash;
-	}
-
-	@SuppressWarnings("unchecked")
 	@Override
 	public void clear() {
-		stringHashArray_ = new Collection[stringHashArray_.length];
+		stringHashMap_.clear();
 	}
 
 	@Override
 	public Collection<Edge> execute(Object... args)
 			throws IllegalArgumentException, ModuleException {
-		if (args == null || args.length < 1)
-			return null;
+		return locateEdgeCollection((Boolean) args[0], (String) args[1]);
+	}
 
-		int hash = getHash(args[0]);
-		Collection<Edge> edges = stringHashArray_[hash];
+	/**
+	 * Returns the collection associated with the string, creating a new
+	 * collection if createNew is true.
+	 *
+	 * @param createNew
+	 *            If a new collection should be added at the hash location.
+	 * @param str
+	 *            The string to access.
+	 * @return The edge collection at the given string hash.
+	 */
+	@SuppressWarnings("unchecked")
+	public synchronized Collection<Edge> locateEdgeCollection(
+			boolean createNew, String str) {
+		int hash = str.hashCode();
+		Collection<Edge> edges = stringHashMap_.get(hash);
 		if (edges == null) {
-			edges = Collections
-					.newSetFromMap(new ConcurrentHashMap<Edge, Boolean>());
-			stringHashArray_[hash] = edges;
+			if (createNew) {
+				edges = Collections
+						.newSetFromMap(new ConcurrentHashMap<Edge, Boolean>());
+				stringHashMap_.put(hash, edges);
+			} else {
+				return Collections.EMPTY_SET;
+			}
 		}
 		return edges;
 	}
