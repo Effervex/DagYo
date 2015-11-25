@@ -834,7 +834,7 @@ public class DirectedAcyclicGraph {
 		}
 	}
 
-	/**
+	/** 
 	 * Convenience node find/creation method with identified boolean args.
 	 * 
 	 * @param nodeStr
